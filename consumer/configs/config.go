@@ -19,10 +19,11 @@ type ServerConfig struct {
 type KafkaConfig struct {
 	Brokers []string `yaml:"brokers"`
 	Topic   string   `yaml:"topic"`
+	GroupID string   `yaml:"groupID"`
 }
 
 func Load() *Config {
-	data, err := os.ReadFile("./producer/configs/config.yaml")
+	data, err := os.ReadFile("./consumer/configs/config.yaml")
 	if err != nil {
 		panic(fmt.Sprintf("Error reading config file: %v", err))
 	}

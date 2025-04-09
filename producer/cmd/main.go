@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/maksroxx/DeliveryService/producer/configs"
@@ -15,8 +14,6 @@ import (
 func main() {
 	logger := logrus.New()
 	cfg := configs.Load()
-	fmt.Println("Kafka topic:", cfg.Kafka.Topic)
-	fmt.Println("Server port:", cfg.Server.Address)
 
 	kafkaProducer, err := kafka.NewProducer(kafka.Config{
 		Brokers: cfg.Kafka.Brokers,

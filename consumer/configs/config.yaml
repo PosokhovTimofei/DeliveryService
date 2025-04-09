@@ -1,0 +1,9 @@
+server:
+  address: ":1234"
+
+kafka:
+  brokers:
+    - "localhost:9092"
+  topic: "package-events"
+  groupID: "package-consumers"
+  version: "7.3.0"

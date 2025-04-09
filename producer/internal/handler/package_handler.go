@@ -32,12 +32,14 @@ func (h *PackageHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// send to kafka
 	createdPkg, err := h.service.CreatePackage(pkg)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
+	// send to user
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]string{
