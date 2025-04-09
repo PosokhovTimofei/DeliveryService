@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/maksroxx/DeliveryService/client/domain"
@@ -31,14 +32,17 @@ func (c *HTTPDeliveryClient) CreatePackage(ctx context.Context, req domain.Packa
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
+	rawBody, _ := io.ReadAll(resp.Body)
+
+	if resp.StatusCode != http.StatusCreated {
 		return "", fmt.Errorf("%d", resp.StatusCode)
 	}
 
 	var result struct {
-		ID string `json:"id"`
+		ID     string `json:"id"`
+		Status string `json:"status"`
 	}
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+	if err := json.Unmarshal(rawBody, &result); err != nil {
 		return "", err
 	}
 	return result.ID, nil

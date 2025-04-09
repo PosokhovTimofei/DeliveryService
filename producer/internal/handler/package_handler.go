@@ -1,0 +1,47 @@
+package handler
+
+import (
+	"encoding/json"
+	"net/http"
+
+	"github.com/maksroxx/DeliveryService/producer/internal/service"
+	"github.com/maksroxx/DeliveryService/producer/pkg"
+)
+
+type PackageHandler struct {
+	service *service.PackageService
+}
+
+func NewPackageHandler(svc *service.PackageService) *PackageHandler {
+	return &PackageHandler{service: svc}
+}
+
+func (h *PackageHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodPost:
+		h.Create(w, r)
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+func (h *PackageHandler) Create(w http.ResponseWriter, r *http.Request) {
+	var pkg pkg.Package
+	if err := json.NewDecoder(r.Body).Decode(&pkg); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	createdPkg, err := h.service.CreatePackage(pkg)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]string{
+		"id":     createdPkg.ID,
+		"status": "PROCESSING",
+	})
+}

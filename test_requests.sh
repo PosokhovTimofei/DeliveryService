@@ -1,20 +1,18 @@
 #!/bin/bash
 
-CLIENT="./bin/delivery-client"
+CLIENT="./bin/client"
 
 print_separator() {
     echo "----------------------------------------------------"
 }
 
 echo "Собираем проект..."
-make clean
-make build
+make client
 
 # Тест 1: Создание посылки
 print_separator
 echo "Тест 1: Создание посылки"
 $CLIENT create 5.2 Москва "Санкт-Петербург" "ул. Ленина, 1"
-ID1=$(./bin/delivery-client list | jq -r '.[0].id')
 
 # Тест 2: Проверка статуса
 print_separator
