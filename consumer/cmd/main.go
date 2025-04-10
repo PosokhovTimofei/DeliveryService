@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com/maksroxx/DeliveryService/consumer/configs"
+	"github.com/maksroxx/DeliveryService/consumer/internal/calculator"
 	"github.com/maksroxx/DeliveryService/consumer/internal/kafka"
 	"github.com/maksroxx/DeliveryService/consumer/internal/processor"
 	"github.com/sirupsen/logrus"
@@ -16,16 +17,17 @@ import (
 func main() {
 	var (
 		logger = logrus.New()
-		cfg    = configs.Load()
+		cfg    = configs.LoadConfig()
 		config = kafka.Config{
 			Brokers: cfg.Kafka.Brokers,
 			Topic:   cfg.Kafka.Topic,
 			GroupID: cfg.Kafka.GroupID,
 		}
+		calculator, err = calculator.NewClient(calculator.ClientType(cfg.Calculator.ClientType), cfg.Calculator.Address)
 		// groupHandler
-		processor     = processor.NewPackageProcessor(logger)
-		consumer, err = kafka.NewConsumer(config, processor, logger)
+		processor = processor.NewPackageProcessor(logger, calculator)
 	)
+	consumer, err := kafka.NewConsumer(config, processor, logger)
 	if err != nil {
 		log.Fatalf("Failed to create consumer: %v", err)
 	}

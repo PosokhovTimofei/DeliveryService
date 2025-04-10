@@ -8,8 +8,9 @@ import (
 )
 
 type Config struct {
-	Server ServerConfig `yaml:"server"`
-	Kafka  KafkaConfig  `yaml:"kafka"`
+	Server     ServerConfig     `yaml:"server"`
+	Kafka      KafkaConfig      `yaml:"kafka"`
+	Calculator CalculatorConfig `yaml:"calculator"`
 }
 
 type ServerConfig struct {
@@ -22,7 +23,12 @@ type KafkaConfig struct {
 	GroupID string   `yaml:"groupID"`
 }
 
-func Load() *Config {
+type CalculatorConfig struct {
+	ClientType string `yaml:"client_type"`
+	Address    string `yaml:"address"`
+}
+
+func LoadConfig() *Config {
 	data, err := os.ReadFile("./consumer/configs/config.yaml")
 	if err != nil {
 		panic(fmt.Sprintf("Error reading config file: %v", err))

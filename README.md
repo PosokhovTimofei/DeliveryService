@@ -7,6 +7,9 @@
 
 3. Producer Service -> Gateway -> Клиент
 
+## Calculator
+Route -> http://localhost:8121/calculator
+
 ## Dependences
 ```
 Kafka

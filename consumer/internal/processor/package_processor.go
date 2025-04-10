@@ -1,19 +1,22 @@
 package processor
 
 import (
+	"context"
 	"encoding/json"
 
 	"github.com/IBM/sarama"
+	"github.com/maksroxx/DeliveryService/consumer/internal/calculator"
 	"github.com/maksroxx/DeliveryService/consumer/types"
 	"github.com/sirupsen/logrus"
 )
 
 type PackageProcessor struct {
-	log *logrus.Logger
+	log              *logrus.Logger
+	calculatorClient calculator.Client
 }
 
-func NewPackageProcessor(logger *logrus.Logger) *PackageProcessor {
-	return &PackageProcessor{log: logger}
+func NewPackageProcessor(logger *logrus.Logger, client calculator.Client) *PackageProcessor {
+	return &PackageProcessor{log: logger, calculatorClient: client}
 }
 
 func (p *PackageProcessor) Setup(sarama.ConsumerGroupSession) error {
@@ -28,11 +31,6 @@ func (p *PackageProcessor) Cleanup(sarama.ConsumerGroupSession) error {
 
 func (p *PackageProcessor) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 	for message := range claim.Messages() {
-		p.log.WithFields(logrus.Fields{
-			"topic":     message.Topic,
-			"partition": message.Partition,
-			"offset":    message.Offset,
-		}).Debug("Received message")
 
 		var pkg types.Package
 		if err := json.Unmarshal(message.Value, &pkg); err != nil {
@@ -52,6 +50,11 @@ func (p *PackageProcessor) ConsumeClaim(session sarama.ConsumerGroupSession, cla
 		pkg.Status = "PROCESSED"
 		p.log.WithField("new_status", pkg.Status).
 			Info("Package processed")
+
+		if err := p.calculatorClient.Calculate(context.Background(), pkg); err != nil {
+			p.log.WithError(err).Error("Calculation failed")
+			continue
+		}
 
 		session.MarkMessage(message, "")
 	}
