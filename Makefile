@@ -23,6 +23,11 @@ consumer:
 	@$(GO) build -o $(BIN_DIR)/consumer ./consumer/cmd/
 	@$(BIN_DIR)/consumer
 
+calculate:
+	@echo "🚀 Запуск calculator..."
+	@$(GO) build -o $(BIN_DIR)/calculate ./calculator/cmd/
+	@$(BIN_DIR)/calculate
+
 
 test:
 	@echo "🧪 Запуск тестов..."
