@@ -1,22 +1,19 @@
 package processor
 
 import (
-	"context"
 	"encoding/json"
 
 	"github.com/IBM/sarama"
-	"github.com/maksroxx/DeliveryService/consumer/internal/calculator"
 	"github.com/maksroxx/DeliveryService/consumer/types"
 	"github.com/sirupsen/logrus"
 )
 
 type PackageProcessor struct {
-	log              *logrus.Logger
-	calculatorClient calculator.Client
+	log *logrus.Logger
 }
 
-func NewPackageProcessor(logger *logrus.Logger, client calculator.Client) *PackageProcessor {
-	return &PackageProcessor{log: logger, calculatorClient: client}
+func NewPackageProcessor(logger *logrus.Logger) *PackageProcessor {
+	return &PackageProcessor{log: logger}
 }
 
 func (p *PackageProcessor) Setup(sarama.ConsumerGroupSession) error {
@@ -42,19 +39,16 @@ func (p *PackageProcessor) ConsumeClaim(session sarama.ConsumerGroupSession, cla
 		}
 
 		p.log.WithFields(logrus.Fields{
-			"package_id": pkg.ID,
-			"status":     pkg.Status,
-			"weight":     pkg.Weight,
+			"package_id":      pkg.ID,
+			"status":          pkg.Status,
+			"weight":          pkg.Weight,
+			"cost":            pkg.Cost,
+			"estimated_hours": pkg.EstimatedHours,
 		}).Info("Processing package")
 
 		pkg.Status = "PROCESSED"
 		p.log.WithField("new_status", pkg.Status).
 			Info("Package processed")
-
-		if err := p.calculatorClient.Calculate(context.Background(), pkg); err != nil {
-			p.log.WithError(err).Error("Calculation failed")
-			continue
-		}
 
 		session.MarkMessage(message, "")
 	}

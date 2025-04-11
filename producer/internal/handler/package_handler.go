@@ -25,10 +25,23 @@ func (h *PackageHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+type PackageResponse struct {
+	ID             string  `json:"id"`
+	Status         string  `json:"status"`
+	Cost           float64 `json:"cost"`
+	EstimatedHours int     `json:"estimated_hours"`
+	Currency       string  `json:"currency"`
+}
+
 func (h *PackageHandler) Create(w http.ResponseWriter, r *http.Request) {
 	var pkg pkg.Package
 	if err := json.NewDecoder(r.Body).Decode(&pkg); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if pkg.Weight <= 0 {
+		http.Error(w, "Invalid weight", http.StatusBadRequest)
 		return
 	}
 
@@ -39,11 +52,15 @@ func (h *PackageHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// send to user
+	response := PackageResponse{
+		ID:             createdPkg.ID,
+		Status:         createdPkg.Status,
+		Cost:           createdPkg.Cost,
+		EstimatedHours: createdPkg.EstimatedHours,
+		Currency:       createdPkg.Currency,
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]string{
-		"id":     createdPkg.ID,
-		"status": "PROCESSING",
-	})
+	json.NewEncoder(w).Encode(response)
 }

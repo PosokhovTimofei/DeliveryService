@@ -6,3 +6,5 @@ kafka:
     - "localhost:9092"
   topic: "package-events"
   version: "7.3.0"
+calculator:
+  url: "http://localhost:8121"

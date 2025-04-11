@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/maksroxx/DeliveryService/producer/configs"
+	"github.com/maksroxx/DeliveryService/producer/internal/calculator"
 	"github.com/maksroxx/DeliveryService/producer/internal/delivery/kafka"
 	"github.com/maksroxx/DeliveryService/producer/internal/handler"
 	"github.com/maksroxx/DeliveryService/producer/internal/middleware"
@@ -25,7 +26,8 @@ func main() {
 	defer kafkaProducer.Close()
 
 	var (
-		svc            = service.NewPackageService(kafkaProducer)
+		client         = calculator.NewClient(cfg.Calculator.URL)
+		svc            = service.NewPackageService(kafkaProducer, client)
 		packageHandler = handler.NewPackageHandler(svc)
 		packageChain   = middleware.NewLogMiddleware(packageHandler, logger)
 	)

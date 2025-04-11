@@ -1,6 +1,8 @@
 package kafka
 
 import (
+	"encoding/json"
+
 	"github.com/IBM/sarama"
 	"github.com/maksroxx/DeliveryService/producer/pkg"
 )
@@ -24,7 +26,7 @@ func NewProducer(cfg Config) (*Producer, error) {
 }
 
 func (p *Producer) SendPackage(pkg pkg.Package) error {
-	pkgJson, err := pkg.ToJSON()
+	pkgJson, err := json.Marshal(pkg)
 	if err != nil {
 		return err
 	}

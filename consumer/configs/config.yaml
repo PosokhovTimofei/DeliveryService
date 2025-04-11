@@ -7,7 +7,3 @@ kafka:
   topic: "package-events"
   groupID: "package-consumers"
   version: "7.3.0"
-
-calculator:
-  client_type: "http" # "grpc"
-  address: "http://localhost:8121"

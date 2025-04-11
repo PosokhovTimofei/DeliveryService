@@ -8,8 +8,9 @@ import (
 )
 
 type Config struct {
-	Server ServerConfig `yaml:"server"`
-	Kafka  KafkaConfig  `yaml:"kafka"`
+	Server     ServerConfig     `yaml:"server"`
+	Kafka      KafkaConfig      `yaml:"kafka"`
+	Calculator CalculatorConfig `yaml:"calculator"`
 }
 
 type ServerConfig struct {
@@ -19,6 +20,10 @@ type ServerConfig struct {
 type KafkaConfig struct {
 	Brokers []string `yaml:"brokers"`
 	Topic   string   `yaml:"topic"`
+}
+
+type CalculatorConfig struct {
+	URL string `yaml:"url"`
 }
 
 func Load() *Config {

@@ -8,7 +8,7 @@ type Package struct {
 }
 
 type CalculationResult struct {
-	Cost           float64 `json:"const"`
+	Cost           float64 `json:"cost"`
 	EstimatedHours int     `json:"estimated_hours"`
 	Currency       string  `json:"currency"`
 }
