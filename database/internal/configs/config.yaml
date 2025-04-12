@@ -1,0 +1,9 @@
+server:
+  address: ":8333"
+  shutdown_timeout: 30s
+
+database:
+  type: "mongodb"
+  mongodb:
+    uri: "mongodb://localhost:27017"
+    database: "logistics"

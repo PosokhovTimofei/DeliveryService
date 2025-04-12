@@ -1,7 +1,7 @@
 BIN_DIR      := bin
 GO           := go
 
-.PHONY: client gateway producer consumer test
+.PHONY: client gateway producer calculate consumer test
 
 gateway:
 	@echo "🚀 Запуск API Gateway..."
@@ -27,6 +27,11 @@ calculate:
 	@echo "🚀 Запуск calculator..."
 	@$(GO) build -o $(BIN_DIR)/calculate ./calculator/cmd/
 	@$(BIN_DIR)/calculate
+
+db:
+	@echo "🚀 Запуск database..."
+	@$(GO) build -o $(BIN_DIR)/db ./database/cmd/
+	@$(BIN_DIR)/db
 
 
 test:

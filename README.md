@@ -23,4 +23,10 @@ go get gopkg.in/yaml.v3
 
 UUID
 go get github.com/google/uuid
+
+Mongo
+go get go.mongodb.org/mongo-driver
+
+Mux
+github.com/gorilla/mux
 ```
