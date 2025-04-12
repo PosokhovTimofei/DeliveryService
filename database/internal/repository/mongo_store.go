@@ -17,6 +17,18 @@ type MongoRepository struct {
 }
 
 func NewMongoRepository(db *mongo.Database, collectionName string) *MongoRepository {
+	collection := db.Collection(collectionName)
+
+	indexModel := mongo.IndexModel{
+		Keys:    bson.D{{Key: "package_id", Value: 1}},
+		Options: options.Index().SetUnique(true),
+	}
+
+	_, err := collection.Indexes().CreateOne(context.Background(), indexModel)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to create unique index: %v", err))
+	}
+
 	return &MongoRepository{
 		collection: db.Collection(collectionName),
 	}
@@ -42,6 +54,11 @@ func (r *MongoRepository) Create(ctx context.Context, route *models.Route) (*mod
 		return nil, errors.New("packageID is required")
 	}
 
+	existing, _ := r.GetByID(ctx, route.PackageID)
+	if existing != nil {
+		return nil, errors.New("route with this packageID already exists")
+	}
+
 	now := time.Now()
 
 	doc := bson.M{
@@ -63,7 +80,7 @@ func (r *MongoRepository) Create(ctx context.Context, route *models.Route) (*mod
 		if mongo.IsDuplicateKeyError(err) {
 			return nil, errors.New("route with this packageID already exists")
 		}
-		return nil, err
+		return nil, fmt.Errorf("failed to create package: %w", err)
 	}
 
 	return route, nil
