@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gorilla/mux"
 	"github.com/maksroxx/DeliveryService/database/internal/models"
 	"github.com/maksroxx/DeliveryService/database/internal/repository"
 )
@@ -21,17 +20,19 @@ func NewPackageHandler(rep repository.RouteRepository) *PackageHandler {
 	}
 }
 
-func (h *PackageHandler) RegisterRoutes(router *mux.Router) {
-	router.HandleFunc("/packages/{packageID}", h.GetPackage).Methods("GET")
-	router.HandleFunc("/packages", h.GetAllPackages).Methods("GET")
-	router.HandleFunc("/packages", h.CreatePackage).Methods("POST")
-	router.HandleFunc("/packages/{packageID}", h.UpdatePackage).Methods("PUT")
-	router.HandleFunc("/packages/{packageID}", h.DeletePackage).Methods("DELETE")
+func (h *PackageHandler) RegisterRoutes(mux *http.ServeMux) {
+	mux.HandleFunc("/packages/{packageID}", h.GetPackage)
+	mux.HandleFunc("/packages", h.GetAllPackages)
+	mux.HandleFunc("POST /packages", h.CreatePackage)
+	mux.HandleFunc("PUT /packages/{packageID}", h.UpdatePackage)
+	mux.HandleFunc("DELETE /packages/{packageID}", h.DeletePackage)
 }
 
 func (h *PackageHandler) GetPackage(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	packageID := vars["packageID"]
+	packageID := r.PathValue("packageID")
+	if packageID == "" {
+		respondWithError(w, http.StatusBadRequest, "Package id not found")
+	}
 
 	pkg, err := h.rep.GetByID(r.Context(), packageID)
 	if err != nil {
@@ -91,8 +92,10 @@ func (h *PackageHandler) CreatePackage(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *PackageHandler) UpdatePackage(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	packageID := vars["packageID"]
+	packageID := r.PathValue("packageID")
+	if packageID == "" {
+		respondWithError(w, http.StatusBadRequest, "Package id not found")
+	}
 
 	var update models.RouteUpdate
 	if err := json.NewDecoder(r.Body).Decode(&update); err != nil {
@@ -110,8 +113,10 @@ func (h *PackageHandler) UpdatePackage(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *PackageHandler) DeletePackage(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	packageID := vars["packageID"]
+	packageID := r.PathValue("packageID")
+	if packageID == "" {
+		respondWithError(w, http.StatusBadRequest, "Package id not found")
+	}
 
 	if err := h.rep.DeleteRoute(r.Context(), packageID); err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Failed to delete package")
