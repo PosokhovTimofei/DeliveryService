@@ -4,7 +4,8 @@ import (
 	"time"
 )
 
-type Route struct {
+type Package struct {
+	ID             string  `bson:"_id,omitempty" json:"id,omitempty"`
 	PackageID      string  `bson:"package_id" json:"package_id"`
 	Weight         float64 `bson:"weight" json:"weight"`
 	From           string  `bson:"from" json:"from"`

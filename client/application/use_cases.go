@@ -42,6 +42,6 @@ func (uc *GetStatusUseCase) Execute(id string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Package status %s: %s\nPrice: %.2f $.\n", status.ID, status.Status, status.Cost)
+	fmt.Printf("Package status %s\n", status.Status)
 	return nil
 }

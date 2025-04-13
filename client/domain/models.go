@@ -8,7 +8,5 @@ type PackageRequest struct {
 }
 
 type PackageStatus struct {
-	ID     string  `json:"id"`
-	Status string  `json:"status"`
-	Cost   float64 `json:"cost"`
+	Status string `json:"status"`
 }

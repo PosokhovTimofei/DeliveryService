@@ -9,18 +9,17 @@ import (
 )
 
 func main() {
-	var (
-		logger         = logrus.New()
-		packageHandler = handlers.NewPackageHandler("http://localhost:1234/packages", logger)
-		statusHandler  = handlers.NewStatusHandler("http://localhost:2345/status", logger)
-		packageChain   = middleware.NewLogMiddleware(
-			packageHandler,
-			logger,
-		)
+	logger := logrus.New()
+
+	packageHandler := handlers.NewPackageHandler(
+		"http://localhost:8333",
+		logger,
 	)
 
-	http.Handle("/api/packages", packageChain)
-	http.Handle("/api/status/", statusHandler)
+	chain := middleware.NewLogMiddleware(packageHandler, logger)
+
+	http.Handle("/api/packages/", chain)
+	http.Handle("/api/packages", chain) // post
 
 	logger.Info("Starting API Gateway on :8228")
 	if err := http.ListenAndServe(":8228", nil); err != nil {

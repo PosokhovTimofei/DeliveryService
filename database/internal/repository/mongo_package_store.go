@@ -8,6 +8,7 @@ import (
 
 	"github.com/maksroxx/DeliveryService/database/internal/models"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -34,10 +35,10 @@ func NewMongoRepository(db *mongo.Database, collectionName string) *MongoReposit
 	}
 }
 
-func (r *MongoRepository) GetByID(ctx context.Context, packageID string) (*models.Route, error) {
+func (r *MongoRepository) GetByID(ctx context.Context, packageID string) (*models.Package, error) {
 	filter := bson.M{"package_id": packageID}
 
-	var route models.Route
+	var route models.Package
 	err := r.collection.FindOne(ctx, filter).Decode(&route)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
@@ -45,18 +46,19 @@ func (r *MongoRepository) GetByID(ctx context.Context, packageID string) (*model
 		}
 		return nil, err
 	}
+	route.ID = ""
 
 	return &route, nil
 }
 
-func (r *MongoRepository) Create(ctx context.Context, route *models.Route) (*models.Route, error) {
+func (r *MongoRepository) Create(ctx context.Context, route *models.Package) (*models.Package, error) {
 	if route.PackageID == "" {
 		return nil, errors.New("packageID is required")
 	}
 
 	existing, _ := r.GetByID(ctx, route.PackageID)
 	if existing != nil {
-		return nil, errors.New("route with this packageID already exists")
+		return nil, errors.New("package has already exists")
 	}
 
 	now := time.Now()
@@ -75,18 +77,23 @@ func (r *MongoRepository) Create(ctx context.Context, route *models.Route) (*mod
 		"updated_at":      now,
 	}
 
-	_, err := r.collection.InsertOne(ctx, doc)
+	result, err := r.collection.InsertOne(ctx, doc)
 	if err != nil {
 		if mongo.IsDuplicateKeyError(err) {
-			return nil, errors.New("route with this packageID already exists")
+			return nil, errors.New("package has already exists")
 		}
 		return nil, fmt.Errorf("failed to create package: %w", err)
+	}
+	if oid, ok := result.InsertedID.(primitive.ObjectID); ok {
+		route.ID = oid.Hex()
+	} else {
+		return nil, errors.New("failed to get generated ID")
 	}
 
 	return route, nil
 }
 
-func (r *MongoRepository) GetAllRoutes(ctx context.Context, filter models.RouteFilter) ([]*models.Route, error) {
+func (r *MongoRepository) GetAllRoutes(ctx context.Context, filter models.RouteFilter) ([]*models.Package, error) {
 	bsonFilter := bson.M{}
 
 	if filter.Status != "" {
@@ -108,9 +115,10 @@ func (r *MongoRepository) GetAllRoutes(ctx context.Context, filter models.RouteF
 	}
 	defer cur.Close(ctx)
 
-	var routes []*models.Route
+	var routes []*models.Package
 	for cur.Next(ctx) {
-		var route models.Route
+		var route models.Package
+		route.ID = ""
 		if err := cur.Decode(&route); err != nil {
 			return nil, err
 		}
@@ -120,7 +128,7 @@ func (r *MongoRepository) GetAllRoutes(ctx context.Context, filter models.RouteF
 	return routes, nil
 }
 
-func (r *MongoRepository) UpdateRoute(ctx context.Context, packageID string, update models.RouteUpdate) (*models.Route, error) {
+func (r *MongoRepository) UpdateRoute(ctx context.Context, packageID string, update models.RouteUpdate) (*models.Package, error) {
 	filter := bson.M{"package_id": packageID}
 
 	updateDoc := bson.M{
@@ -133,7 +141,7 @@ func (r *MongoRepository) UpdateRoute(ctx context.Context, packageID string, upd
 	opts := options.FindOneAndUpdate().
 		SetReturnDocument(options.After)
 
-	var updatedRoute models.Route
+	var updatedRoute models.Package
 	err := r.collection.FindOneAndUpdate(
 		ctx,
 		filter,
@@ -147,7 +155,7 @@ func (r *MongoRepository) UpdateRoute(ctx context.Context, packageID string, upd
 		}
 		return nil, err
 	}
-
+	updatedRoute.ID = ""
 	return &updatedRoute, nil
 }
 

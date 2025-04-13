@@ -23,6 +23,7 @@ func NewPackageHandler(rep repository.RouteRepository) *PackageHandler {
 func (h *PackageHandler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/packages/{packageID}", h.GetPackage)
 	mux.HandleFunc("/packages", h.GetAllPackages)
+	mux.HandleFunc("/packages/{packageID}/status", h.GetPackageStatus)
 	mux.HandleFunc("POST /packages", h.CreatePackage)
 	mux.HandleFunc("PUT /packages/{packageID}", h.UpdatePackage)
 	mux.HandleFunc("DELETE /packages/{packageID}", h.DeletePackage)
@@ -76,7 +77,7 @@ func (h *PackageHandler) GetAllPackages(w http.ResponseWriter, r *http.Request) 
 }
 
 func (h *PackageHandler) CreatePackage(w http.ResponseWriter, r *http.Request) {
-	var req models.Route
+	var req models.Package
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		respondWithError(w, http.StatusBadRequest, "Invalid request body")
 		return
@@ -84,11 +85,28 @@ func (h *PackageHandler) CreatePackage(w http.ResponseWriter, r *http.Request) {
 
 	pkg, err := h.rep.Create(r.Context(), &req)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Failed to create package")
+		respondWithError(w, http.StatusInternalServerError, "wtf")
+		// err.Error()
+		return
+	}
+	pkg.ID = ""
+
+	respondWithJSON(w, http.StatusCreated, pkg)
+}
+
+func (h *PackageHandler) GetPackageStatus(w http.ResponseWriter, r *http.Request) {
+	packageID := r.PathValue("packageID")
+	if packageID == "" {
+		respondWithError(w, http.StatusBadRequest, "Package id not found")
+	}
+
+	pkg, err := h.rep.GetByID(r.Context(), packageID)
+	if err != nil {
+		respondWithError(w, http.StatusNotFound, "Package not found")
 		return
 	}
 
-	respondWithJSON(w, http.StatusCreated, pkg)
+	respondWithJSON(w, http.StatusOK, map[string]string{"status": pkg.Status})
 }
 
 func (h *PackageHandler) UpdatePackage(w http.ResponseWriter, r *http.Request) {

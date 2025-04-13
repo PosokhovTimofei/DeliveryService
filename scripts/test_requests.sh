@@ -31,8 +31,8 @@ $CLIENT create 8.1 Москва "Нижний Новгород"
 
 # Тест 5: Проверка несуществующего ID
 print_separator
-echo "Тест 5: Проверка несуществующего ID"
-$CLIENT status invalid_id_123
+echo "Тест 5: Проверка ID"
+$CLIENT status "PKG-2a146e6a-be08-455e-ba39-4ba28fd37e07"
 
 print_separator
 echo "Тестирование завершено"

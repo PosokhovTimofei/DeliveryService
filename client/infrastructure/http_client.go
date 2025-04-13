@@ -49,7 +49,7 @@ func (c *HTTPDeliveryClient) CreatePackage(ctx context.Context, req domain.Packa
 }
 
 func (c *HTTPDeliveryClient) GetStatus(ctx context.Context, id string) (domain.PackageStatus, error) {
-	url := c.baseURL + "/api/status/" + id
+	url := c.baseURL + "/api/packages/" + id
 	resp, err := http.Get(url)
 	if err != nil {
 		return domain.PackageStatus{}, err
