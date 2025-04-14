@@ -5,7 +5,7 @@ GO           := go
 
 gateway:
 	@echo "🚀 Запуск gateway..."
-	@$(GO) build -o $(BIN_DIR)/gateway ./gateway/cmd/gateway
+	@$(GO) build -o $(BIN_DIR)/gateway ./gateway/cmd
 	@$(BIN_DIR)/gateway
 
 client:

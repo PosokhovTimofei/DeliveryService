@@ -1,7 +1,11 @@
 package processor
 
 import (
+	"bytes"
 	"encoding/json"
+	"io"
+	"net/http"
+	"time"
 
 	"github.com/IBM/sarama"
 	"github.com/maksroxx/DeliveryService/consumer/types"
@@ -9,11 +13,15 @@ import (
 )
 
 type PackageProcessor struct {
-	log *logrus.Logger
+	log    *logrus.Logger
+	client *http.Client
 }
 
 func NewPackageProcessor(logger *logrus.Logger) *PackageProcessor {
-	return &PackageProcessor{log: logger}
+	return &PackageProcessor{
+		log:    logger,
+		client: &http.Client{Timeout: 5 * time.Second},
+	}
 }
 
 func (p *PackageProcessor) Setup(sarama.ConsumerGroupSession) error {
@@ -28,29 +36,47 @@ func (p *PackageProcessor) Cleanup(sarama.ConsumerGroupSession) error {
 
 func (p *PackageProcessor) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 	for message := range claim.Messages() {
+		func(msg *sarama.ConsumerMessage) {
+			var pkg types.Package
+			if err := json.Unmarshal(msg.Value, &pkg); err != nil {
+				p.log.WithError(err).Error("Error decoding message")
+				return
+			}
 
-		var pkg types.Package
-		if err := json.Unmarshal(message.Value, &pkg); err != nil {
-			p.log.WithFields(logrus.Fields{
-				"error": err,
-				"value": string(message.Value),
-			}).Error("Error decoding message")
-			continue
-		}
+			pkg.Status = "PROCESSED"
+			jsonData, err := json.Marshal(pkg)
+			if err != nil {
+				p.log.WithError(err).Error("Error marshaling package")
+				return
+			}
 
-		p.log.WithFields(logrus.Fields{
-			"package_id":      pkg.ID,
-			"status":          pkg.Status,
-			"weight":          pkg.Weight,
-			"cost":            pkg.Cost,
-			"estimated_hours": pkg.EstimatedHours,
-		}).Info("Processing package")
+			resp, err := p.client.Post(
+				"http://localhost:8333/packages",
+				"application/json",
+				bytes.NewBuffer(jsonData),
+			)
+			if err != nil {
+				p.log.WithError(err).Error("Failed to send package")
+				return
+			}
 
-		pkg.Status = "PROCESSED"
-		p.log.WithField("new_status", pkg.Status).
-			Info("Package processed")
+			defer func() {
+				if err := resp.Body.Close(); err != nil {
+					p.log.WithError(err).Warn("Failed to close response body")
+				}
+			}()
 
-		session.MarkMessage(message, "")
+			if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+				session.MarkMessage(msg, "")
+				p.log.WithField("package_id", pkg.ID).Info("Package processed successfully")
+			} else {
+				body, _ := io.ReadAll(resp.Body)
+				p.log.WithFields(logrus.Fields{
+					"status":   resp.StatusCode,
+					"response": string(body),
+				}).Error("Unexpected API response")
+			}
+		}(message)
 	}
 	return nil
 }

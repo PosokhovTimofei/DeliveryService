@@ -83,10 +83,18 @@ func (h *PackageHandler) CreatePackage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if req.Weight <= 0 {
+		http.Error(w, "Invalid weight", http.StatusBadRequest)
+		return
+	}
+	if req.From == "" || req.To == "" || req.Address == "" {
+		http.Error(w, "Invalid location", http.StatusBadRequest)
+		return
+	}
+
 	pkg, err := h.rep.Create(r.Context(), &req)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "wtf")
-		// err.Error()
+		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 	pkg.ID = ""

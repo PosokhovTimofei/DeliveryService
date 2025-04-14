@@ -1,7 +1,7 @@
 package types
 
 type Package struct {
-	ID             string  `json:"id"`
+	ID             string  `json:"package_id"`
 	Weight         float64 `json:"weight"`
 	From           string  `json:"from"`
 	To             string  `json:"to"`

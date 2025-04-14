@@ -24,6 +24,15 @@ func (h *HTTPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if pkg.Weight <= 0 {
+		http.Error(w, "Invalid weight", http.StatusBadRequest)
+		return
+	}
+	if pkg.From == "" || pkg.To == "" || pkg.Address == "" {
+		http.Error(w, "Invalid location", http.StatusBadRequest)
+		return
+	}
+
 	result, err := h.service.Calculate(pkg)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

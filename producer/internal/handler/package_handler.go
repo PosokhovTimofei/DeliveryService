@@ -26,7 +26,7 @@ func (h *PackageHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 type PackageResponse struct {
-	ID             string  `json:"id"`
+	ID             string  `json:"package_id"`
 	Status         string  `json:"status"`
 	Cost           float64 `json:"cost"`
 	EstimatedHours int     `json:"estimated_hours"`
@@ -42,6 +42,10 @@ func (h *PackageHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	if pkg.Weight <= 0 {
 		http.Error(w, "Invalid weight", http.StatusBadRequest)
+		return
+	}
+	if pkg.From == "" || pkg.To == "" || pkg.Address == "" {
+		http.Error(w, "Invalid location", http.StatusBadRequest)
 		return
 	}
 

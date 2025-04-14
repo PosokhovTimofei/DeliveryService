@@ -32,7 +32,7 @@ func main() {
 		packageChain   = middleware.NewLogMiddleware(packageHandler, logger)
 	)
 
-	http.Handle("/packages", packageChain)
+	http.Handle("/producer", packageChain)
 
 	logger.Infof("Starting API Gateway on %s", cfg.Server.Address)
 	if err := http.ListenAndServe(cfg.Server.Address, nil); err != nil {
