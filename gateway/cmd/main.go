@@ -5,8 +5,34 @@ import (
 
 	"github.com/maksroxx/DeliveryService/gateway/internal/handlers"
 	"github.com/maksroxx/DeliveryService/gateway/internal/middleware"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 )
+
+var (
+	httpRequestsTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "http_requests_total",
+			Help: "Total number of HTTP requests",
+		},
+		[]string{"method", "path", "status"},
+	)
+
+	httpResponseTimeSeconds = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "http_response_time_seconds",
+			Help:    "Response time of HTTP requests",
+			Buckets: prometheus.DefBuckets,
+		},
+		[]string{"method", "path", "status"},
+	)
+)
+
+func init() {
+	prometheus.MustRegister(httpRequestsTotal)
+	prometheus.MustRegister(httpResponseTimeSeconds)
+}
 
 func main() {
 	logger := logrus.New()
@@ -28,8 +54,10 @@ func main() {
 		},
 	}
 
+	http.Handle("/metrics", promhttp.Handler())
+
 	mainHandler := handlers.NewRouter(routes, logger)
-	chain := middleware.NewLogMiddleware(mainHandler, logger)
+	chain := middleware.NewLogMiddleware(mainHandler, logger, httpRequestsTotal, httpResponseTimeSeconds)
 
 	http.Handle("/", chain)
 

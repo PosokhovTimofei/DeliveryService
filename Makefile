@@ -43,6 +43,10 @@ insert:
 	@chmod +x ./scripts/insertPackages.sh
 	@./scripts/insertPackages.sh
 
+reqcalculate:
+	@echo "🚀 Calculating..."
+	@go run ./scripts/calculator/calculator_calcs.go
+
 testReq:
 	@chmod +x ./scripts/test_requests.sh
 	@./scripts/test_requests.sh

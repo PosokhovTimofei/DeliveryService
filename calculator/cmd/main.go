@@ -6,6 +6,7 @@ import (
 	"github.com/maksroxx/DeliveryService/calculator/internal/middleware"
 	"github.com/maksroxx/DeliveryService/calculator/internal/service"
 	"github.com/maksroxx/DeliveryService/calculator/internal/transport"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 )
 
@@ -13,10 +14,12 @@ func main() {
 	cfg := transport.Load()
 	log := logrus.New()
 	chain := middleware.NewChain(
+		middleware.NewMetricsMiddleware(),
 		middleware.NewLogMiddleware(log),
 	)
 
 	svc := service.NewCalculator()
+	http.Handle("/metrics", promhttp.Handler())
 
 	startHTTPServer(cfg.HTTPPort, svc, chain, log)
 }
