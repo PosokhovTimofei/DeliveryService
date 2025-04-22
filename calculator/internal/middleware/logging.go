@@ -2,8 +2,10 @@ package middleware
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
+	"github.com/maksroxx/DeliveryService/calculator/internal/metrics"
 	"github.com/maksroxx/DeliveryService/calculator/internal/transport"
 	"github.com/sirupsen/logrus"
 )
@@ -23,6 +25,34 @@ func (c *Chain) Then(h http.Handler) http.Handler {
 		h = c.middlewares[i](h)
 	}
 	return h
+}
+
+func NewMetricsMiddleware() Middleware {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			start := time.Now()
+			lrw := transport.NewLoggingResponseWriter(w)
+
+			defer func() {
+				duration := time.Since(start).Seconds()
+				status := strconv.Itoa(lrw.StatusCode)
+
+				metrics.HTTPRequestsTotal.WithLabelValues(
+					r.Method,
+					r.URL.Path,
+					status,
+				).Inc()
+
+				metrics.HTTPResponseTime.WithLabelValues(
+					r.Method,
+					r.URL.Path,
+					status,
+				).Observe(duration)
+			}()
+
+			next.ServeHTTP(lrw, r)
+		})
+	}
 }
 
 func NewLogMiddleware(logger *logrus.Logger) Middleware {

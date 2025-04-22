@@ -9,12 +9,15 @@ import (
 	"github.com/maksroxx/DeliveryService/producer/internal/handler"
 	"github.com/maksroxx/DeliveryService/producer/internal/middleware"
 	"github.com/maksroxx/DeliveryService/producer/internal/service"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 )
 
 func main() {
 	logger := logrus.New()
 	cfg := configs.Load()
+
+	http.Handle("/metrics", promhttp.Handler())
 
 	kafkaProducer, err := kafka.NewProducer(kafka.Config{
 		Brokers: cfg.Kafka.Brokers,
