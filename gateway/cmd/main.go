@@ -36,7 +36,21 @@ func init() {
 
 func main() {
 	logger := logrus.New()
-	routes := []handlers.RouteConfig{
+
+	publicRoutes := []handlers.RouteConfig{
+		{
+			Prefix:      "/api/register",
+			TargetURL:   "http://localhost:1703",
+			PathRewrite: "/register",
+		},
+		{
+			Prefix:      "/api/login",
+			TargetURL:   "http://localhost:1703",
+			PathRewrite: "/login",
+		},
+	}
+
+	protectedRoutes := []handlers.RouteConfig{
 		{
 			Prefix:      "/api/packages",
 			TargetURL:   "http://localhost:8333",
@@ -52,14 +66,25 @@ func main() {
 			TargetURL:   "http://localhost:1234",
 			PathRewrite: "/producer",
 		},
+		{
+			Prefix:      "/api/profile",
+			TargetURL:   "http://localhost:1704",
+			PathRewrite: "/profile",
+		},
 	}
 
+	publicHandler := handlers.NewRouter(publicRoutes, logger)
+	protectedHandler := handlers.NewRouter(protectedRoutes, logger)
+
+	authProtected := middleware.NewAuthMiddleware(protectedHandler, logger)
+	fullProtectedChain := middleware.NewLogMiddleware(authProtected, logger, httpRequestsTotal, httpResponseTimeSeconds)
+
+	publicChain := middleware.NewLogMiddleware(publicHandler, logger, httpRequestsTotal, httpResponseTimeSeconds)
+
 	http.Handle("/metrics", promhttp.Handler())
-
-	mainHandler := handlers.NewRouter(routes, logger)
-	chain := middleware.NewLogMiddleware(mainHandler, logger, httpRequestsTotal, httpResponseTimeSeconds)
-
-	http.Handle("/", chain)
+	http.Handle("/api/", fullProtectedChain)
+	http.Handle("/api/register", publicChain)
+	http.Handle("/api/login", publicChain)
 
 	logger.Info("Starting API Gateway on :8228")
 	if err := http.ListenAndServe(":8228", nil); err != nil {
