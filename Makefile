@@ -1,7 +1,7 @@
 BIN_DIR      := bin
 GO           := go
 
-.PHONY: client gateway producer calculate consumer db insert testReq test
+.PHONY: client gateway producer calculate consumer db insert testReq auth test
 
 gateway:
 	@echo "🚀 Запуск gateway..."
@@ -32,6 +32,11 @@ db:
 	@echo "🚀 Запуск database..."
 	@$(GO) build -o $(BIN_DIR)/db ./database/cmd/
 	@$(BIN_DIR)/db
+
+auth:
+	@echo "🚀 Запуск auth..."
+	@$(GO) build -o $(BIN_DIR)/auth ./auth/
+	@$(BIN_DIR)/auth
 
 
 test:
