@@ -34,6 +34,11 @@ type PackageResponse struct {
 }
 
 func (h *PackageHandler) Create(w http.ResponseWriter, r *http.Request) {
+	userID := r.Header.Get("X-User-ID")
+	if userID == "" {
+		http.Error(w, "Missing user ID", http.StatusUnauthorized)
+		return
+	}
 	var pkg pkg.Package
 	if err := json.NewDecoder(r.Body).Decode(&pkg); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -50,7 +55,7 @@ func (h *PackageHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// send to kafka
-	createdPkg, err := h.service.CreatePackage(pkg)
+	createdPkg, err := h.service.CreatePackage(pkg, userID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

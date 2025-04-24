@@ -16,7 +16,7 @@ func NewPackageService(producer *kafka.Producer, client *calculator.Client) *Pac
 	return &PackageService{producer: producer, calculatorClient: client}
 }
 
-func (s *PackageService) CreatePackage(pkg pkg.Package) (*pkg.Package, error) {
+func (s *PackageService) CreatePackage(pkg pkg.Package, userID string) (*pkg.Package, error) {
 	pkg.ID = "PKG-" + uuid.New().String()
 	pkg.Status = "CREATED"
 
@@ -30,7 +30,7 @@ func (s *PackageService) CreatePackage(pkg pkg.Package) (*pkg.Package, error) {
 	pkg.Currency = result.Currency
 	pkg.Status = "PROCESSED"
 
-	if err := s.producer.SendPackage(pkg); err != nil {
+	if err := s.producer.SendPackage(pkg, userID); err != nil {
 		return nil, err
 	}
 	return &pkg, nil

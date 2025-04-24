@@ -71,7 +71,7 @@ func (m *AuthMiddleware) validateToken(token string) (string, string) {
 	}
 
 	var response struct {
-		Valid  string `json:"valid"`
+		Valid  string `json:"status"`
 		UserID string `json:"user_id"`
 	}
 

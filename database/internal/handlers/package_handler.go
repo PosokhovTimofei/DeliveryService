@@ -20,13 +20,17 @@ func NewPackageHandler(rep repository.RouteRepository) *PackageHandler {
 	}
 }
 
-func (h *PackageHandler) RegisterRoutes(mux *http.ServeMux) {
-	mux.HandleFunc("/packages/{packageID}", h.GetPackage)
-	mux.HandleFunc("/packages", h.GetAllPackages)
-	mux.HandleFunc("/packages/{packageID}/status", h.GetPackageStatus)
-	mux.HandleFunc("POST /packages", h.CreatePackage)
+func (h *PackageHandler) RegisterDefaultRoutes(mux *http.ServeMux) {
+	mux.HandleFunc("GET /packages/{packageID}", h.GetPackage)
+	mux.HandleFunc("GET /packages", h.GetAllPackages)
+	mux.HandleFunc("GET /packages/{packageID}/status", h.GetPackageStatus)
 	mux.HandleFunc("PUT /packages/{packageID}", h.UpdatePackage)
 	mux.HandleFunc("DELETE /packages/{packageID}", h.DeletePackage)
+}
+
+func (h *PackageHandler) RegisterUserRoutes(mux *http.ServeMux) {
+	mux.HandleFunc("POST /packages", h.CreatePackage)
+	mux.HandleFunc("GET /my/packages", h.GetUserPackages)
 }
 
 func (h *PackageHandler) GetPackage(w http.ResponseWriter, r *http.Request) {
@@ -42,6 +46,39 @@ func (h *PackageHandler) GetPackage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondWithJSON(w, http.StatusOK, pkg)
+}
+
+func (h *PackageHandler) GetUserPackages(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value("user_id").(string)
+	if !ok || userID == "" {
+		respondWithError(w, http.StatusUnauthorized, "User authentication required")
+		return
+	}
+
+	filter := models.RouteFilter{
+		UserID: userID,
+		Status: r.URL.Query().Get("status"),
+	}
+
+	if limit := r.URL.Query().Get("limit"); limit != "" {
+		if l, err := strconv.ParseInt(limit, 10, 64); err == nil {
+			filter.Limit = l
+		}
+	}
+
+	if offset := r.URL.Query().Get("offset"); offset != "" {
+		if o, err := strconv.ParseInt(offset, 10, 64); err == nil {
+			filter.Offset = o
+		}
+	}
+
+	packages, err := h.rep.GetAllRoutes(r.Context(), filter)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, packages)
 }
 
 func (h *PackageHandler) GetAllPackages(w http.ResponseWriter, r *http.Request) {
@@ -77,6 +114,11 @@ func (h *PackageHandler) GetAllPackages(w http.ResponseWriter, r *http.Request) 
 }
 
 func (h *PackageHandler) CreatePackage(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value("user_id").(string)
+	if !ok || userID == "" {
+		respondWithError(w, http.StatusUnauthorized, "User authentication required")
+		return
+	}
 	var req models.Package
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		respondWithError(w, http.StatusBadRequest, "Invalid request body")
@@ -92,6 +134,8 @@ func (h *PackageHandler) CreatePackage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	req.UserID = userID
+	req.CreatedAt = time.Now()
 	pkg, err := h.rep.Create(r.Context(), &req)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())

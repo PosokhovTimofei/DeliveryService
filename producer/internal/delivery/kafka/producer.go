@@ -25,14 +25,23 @@ func NewProducer(cfg Config) (*Producer, error) {
 	}, nil
 }
 
-func (p *Producer) SendPackage(pkg pkg.Package) error {
+func (p *Producer) SendPackage(pkg pkg.Package, userID string) error {
 	pkgJson, err := json.Marshal(pkg)
 	if err != nil {
 		return err
 	}
+
+	headers := []sarama.RecordHeader{
+		{
+			Key:   []byte("User-ID"),
+			Value: []byte(userID),
+		},
+	}
+
 	msg := &sarama.ProducerMessage{
-		Topic: p.topic,
-		Value: sarama.ByteEncoder(pkgJson),
+		Headers: headers,
+		Topic:   p.topic,
+		Value:   sarama.ByteEncoder(pkgJson),
 	}
 
 	_, _, err = p.syncProducer.SendMessage(msg)

@@ -14,12 +14,14 @@ import (
 	"github.com/maksroxx/DeliveryService/auth/middleware"
 	"github.com/maksroxx/DeliveryService/auth/repository"
 	"github.com/maksroxx/DeliveryService/auth/service"
+	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func main() {
 	cfg := configs.Load()
+	logger := logrus.New()
 
 	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(cfg.DBUri))
 	if err != nil {
@@ -36,8 +38,8 @@ func main() {
 	svc := service.NewAuthService(repo, cfg.JWTSecret)
 	authHandler := handler.NewAuthHandler(svc)
 
-	mainServer := createMainServer(authHandler)
-	protectedServer := createProtectedServer(svc, repo)
+	mainServer := createMainServer(authHandler, logger)
+	protectedServer := createProtectedServer(svc, repo, logger)
 
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
@@ -60,14 +62,16 @@ func main() {
 	}
 }
 
-func createMainServer(h *handler.AuthHandler) *http.Server {
+func createMainServer(h *handler.AuthHandler, logger *logrus.Logger) *http.Server {
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /register", h.Register)
 	mux.HandleFunc("POST /login", h.Login)
-	return &http.Server{Handler: mux}
+	loggedMux := middleware.NewLogMiddleware(mux, logger)
+
+	return &http.Server{Handler: loggedMux}
 }
 
-func createProtectedServer(svc *service.AuthService, repo repository.UserRepository) *http.Server {
+func createProtectedServer(svc *service.AuthService, repo repository.UserRepository, logger *logrus.Logger) *http.Server {
 	protected := http.NewServeMux()
 	protected.HandleFunc("GET /profile", func(w http.ResponseWriter, r *http.Request) {
 		userID := r.Context().Value(middleware.UserIDKey).(string)
@@ -87,7 +91,9 @@ func createProtectedServer(svc *service.AuthService, repo repository.UserReposit
 	})
 
 	authMiddleware := middleware.JWTAuth(svc)
-	return &http.Server{Handler: authMiddleware(protected)}
+	loggedHandler := middleware.NewLogMiddleware(authMiddleware(protected), logger)
+
+	return &http.Server{Handler: loggedHandler}
 }
 
 func startServer(name, port string, server *http.Server) {

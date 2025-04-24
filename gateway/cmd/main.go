@@ -71,6 +71,11 @@ func main() {
 			TargetURL:   "http://localhost:1704",
 			PathRewrite: "/profile",
 		},
+		{
+			Prefix:      "/api/my/packages",
+			TargetURL:   "http://localhost:8333",
+			PathRewrite: "/my/packages",
+		},
 	}
 
 	publicHandler := handlers.NewRouter(publicRoutes, logger)

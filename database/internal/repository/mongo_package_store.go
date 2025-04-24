@@ -52,6 +52,9 @@ func (r *MongoRepository) GetByID(ctx context.Context, packageID string) (*model
 }
 
 func (r *MongoRepository) Create(ctx context.Context, route *models.Package) (*models.Package, error) {
+	if route.UserID == "" {
+		return nil, errors.New("user ID is required")
+	}
 	if route.PackageID == "" {
 		return nil, errors.New("packageID is required")
 	}
@@ -64,6 +67,7 @@ func (r *MongoRepository) Create(ctx context.Context, route *models.Package) (*m
 	now := time.Now()
 
 	doc := bson.M{
+		"user_id":         route.UserID,
 		"package_id":      route.PackageID,
 		"weight":          route.Weight,
 		"from":            route.From,
@@ -73,7 +77,7 @@ func (r *MongoRepository) Create(ctx context.Context, route *models.Package) (*m
 		"cost":            route.Cost,
 		"estimated_hours": route.EstimatedHours,
 		"currency":        route.Currency,
-		"created_at":      now,
+		"created_at":      route.CreatedAt,
 		"updated_at":      now,
 	}
 
@@ -95,6 +99,10 @@ func (r *MongoRepository) Create(ctx context.Context, route *models.Package) (*m
 
 func (r *MongoRepository) GetAllRoutes(ctx context.Context, filter models.RouteFilter) ([]*models.Package, error) {
 	bsonFilter := bson.M{}
+
+	if filter.UserID != "" {
+		bsonFilter["user_id"] = filter.UserID
+	}
 
 	if filter.Status != "" {
 		bsonFilter["status"] = filter.Status
@@ -124,7 +132,6 @@ func (r *MongoRepository) GetAllRoutes(ctx context.Context, filter models.RouteF
 		}
 		routes = append(routes, &route)
 	}
-
 	return routes, nil
 }
 

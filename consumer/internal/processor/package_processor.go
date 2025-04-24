@@ -37,6 +37,19 @@ func (p *PackageProcessor) Cleanup(sarama.ConsumerGroupSession) error {
 func (p *PackageProcessor) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 	for message := range claim.Messages() {
 		func(msg *sarama.ConsumerMessage) {
+			var userID string
+			for _, header := range msg.Headers {
+				if string(header.Key) == "User-ID" {
+					userID = string(header.Value)
+					break
+				}
+			}
+
+			if userID == "" {
+				p.log.Warn("Missing User-ID header in Kafka message")
+				return
+			}
+
 			var pkg types.Package
 			if err := json.Unmarshal(msg.Value, &pkg); err != nil {
 				p.log.WithError(err).Error("Error decoding message")
@@ -50,11 +63,20 @@ func (p *PackageProcessor) ConsumeClaim(session sarama.ConsumerGroupSession, cla
 				return
 			}
 
-			resp, err := p.client.Post(
+			req, err := http.NewRequest(
+				"POST",
 				"http://localhost:8333/packages",
-				"application/json",
 				bytes.NewBuffer(jsonData),
 			)
+			if err != nil {
+				p.log.WithError(err).Error("Failed to create request")
+				return
+			}
+
+			req.Header.Set("X-User-ID", userID)
+			req.Header.Set("Content-Type", "application/json")
+
+			resp, err := p.client.Do(req)
 			if err != nil {
 				p.log.WithError(err).Error("Failed to send package")
 				return
@@ -68,12 +90,16 @@ func (p *PackageProcessor) ConsumeClaim(session sarama.ConsumerGroupSession, cla
 
 			if resp.StatusCode >= 200 && resp.StatusCode < 300 {
 				session.MarkMessage(msg, "")
-				p.log.WithField("package_id", pkg.ID).Info("Package processed successfully")
+				p.log.WithFields(logrus.Fields{
+					"package_id": pkg.ID,
+					"user_id":    userID,
+				}).Info("Package processed successfully")
 			} else {
 				body, _ := io.ReadAll(resp.Body)
 				p.log.WithFields(logrus.Fields{
 					"status":   resp.StatusCode,
 					"response": string(body),
+					"user_id":  userID,
 				}).Error("Unexpected API response")
 			}
 		}(message)
