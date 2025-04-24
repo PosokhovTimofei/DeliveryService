@@ -2,44 +2,51 @@ package middleware
 
 import (
 	"context"
-	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
+	"time"
 
+	"github.com/maksroxx/DeliveryService/auth/metrics"
 	"github.com/maksroxx/DeliveryService/auth/service"
+	"github.com/sirupsen/logrus"
 )
 
 const UserIDKey = "user_id"
 
-func JWTAuth(authService *service.AuthService) func(http.Handler) http.Handler {
+func JWTAuth(svc *service.AuthService, logger *logrus.Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			authHeader := r.Header.Get("Authorization")
-			if authHeader == "" {
-				respondError(w, http.StatusUnauthorized, "authorization header required")
+			start := time.Now()
+			token := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
+
+			defer func() {
+				duration := time.Since(start).Seconds()
+				metrics.HTTPResponseTime.WithLabelValues(
+					r.Method,
+					r.URL.Path,
+					strconv.Itoa(w.(*LoggingResponseWriter).Status),
+				).Observe(duration)
+			}()
+
+			if token == "" {
+				metrics.ValidateFailureTotal.WithLabelValues(r.Method, "missing_token").Inc()
+				logger.Warn("Missing authorization token")
+				http.Error(w, `{"error": "Authorization header required"}`, http.StatusUnauthorized)
 				return
 			}
 
-			tokenParts := strings.Split(authHeader, " ")
-			if len(tokenParts) != 2 || strings.ToLower(tokenParts[0]) != "bearer" {
-				respondError(w, http.StatusUnauthorized, "invalid token format")
-				return
-			}
-
-			claims, err := authService.ValidateToken(tokenParts[1])
+			claims, err := svc.ValidateToken(token)
 			if err != nil {
-				respondError(w, http.StatusUnauthorized, "invalid token")
+				metrics.ValidateFailureTotal.WithLabelValues(r.Method, "invalid_token").Inc()
+				logger.WithError(err).Warn("Invalid token")
+				http.Error(w, `{"error": "Invalid token"}`, http.StatusUnauthorized)
 				return
 			}
 
+			metrics.ValidateSuccessTotal.WithLabelValues(r.Method).Inc()
 			ctx := context.WithValue(r.Context(), UserIDKey, claims.UserID)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
-}
-
-func respondError(w http.ResponseWriter, code int, message string) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(code)
-	fmt.Fprintf(w, `{"error": "%s"}`, message)
 }

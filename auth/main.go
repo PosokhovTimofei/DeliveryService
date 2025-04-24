@@ -14,6 +14,7 @@ import (
 	"github.com/maksroxx/DeliveryService/auth/middleware"
 	"github.com/maksroxx/DeliveryService/auth/repository"
 	"github.com/maksroxx/DeliveryService/auth/service"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -66,6 +67,7 @@ func createMainServer(h *handler.AuthHandler, logger *logrus.Logger) *http.Serve
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /register", h.Register)
 	mux.HandleFunc("POST /login", h.Login)
+	mux.Handle("/metrics", promhttp.Handler())
 	loggedMux := middleware.NewLogMiddleware(mux, logger)
 
 	return &http.Server{Handler: loggedMux}
@@ -90,7 +92,7 @@ func createProtectedServer(svc *service.AuthService, repo repository.UserReposit
 		})
 	})
 
-	authMiddleware := middleware.JWTAuth(svc)
+	authMiddleware := middleware.JWTAuth(svc, logger)
 	loggedHandler := middleware.NewLogMiddleware(authMiddleware(protected), logger)
 
 	return &http.Server{Handler: loggedHandler}

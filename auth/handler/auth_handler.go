@@ -3,7 +3,11 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
+	"time"
 
+	"github.com/maksroxx/DeliveryService/auth/metrics"
+	"github.com/maksroxx/DeliveryService/auth/middleware"
 	"github.com/maksroxx/DeliveryService/auth/models"
 	"github.com/maksroxx/DeliveryService/auth/service"
 )
@@ -17,6 +21,14 @@ func NewAuthHandler(service *service.AuthService) *AuthHandler {
 }
 
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
+	defer func(start time.Time) {
+		duration := time.Since(start).Seconds()
+		metrics.HTTPResponseTime.WithLabelValues(
+			r.Method,
+			r.URL.Path,
+			strconv.Itoa(w.(*middleware.LoggingResponseWriter).Status),
+		).Observe(duration)
+	}(time.Now())
 	var req struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`
@@ -40,6 +52,14 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
+	defer func(start time.Time) {
+		duration := time.Since(start).Seconds()
+		metrics.HTTPResponseTime.WithLabelValues(
+			r.Method,
+			r.URL.Path,
+			strconv.Itoa(w.(*middleware.LoggingResponseWriter).Status),
+		).Observe(duration)
+	}(time.Now())
 	var req struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`

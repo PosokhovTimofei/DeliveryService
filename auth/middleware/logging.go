@@ -2,8 +2,10 @@ package middleware
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
+	"github.com/maksroxx/DeliveryService/auth/metrics"
 	"github.com/sirupsen/logrus"
 )
 
@@ -21,26 +23,41 @@ func NewLogMiddleware(next http.Handler, logger *logrus.Logger) *LogMiddleware {
 
 func (m *LogMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
+	lrw := &LoggingResponseWriter{ResponseWriter: w}
 
-	lrw := &loggingResponseWriter{ResponseWriter: w}
+	defer func() {
+		duration := time.Since(start).Seconds()
+		status := strconv.Itoa(lrw.Status)
+
+		metrics.HTTPRequestsTotal.WithLabelValues(
+			r.Method,
+			r.URL.Path,
+			status,
+		).Inc()
+
+		metrics.HTTPResponseTime.WithLabelValues(
+			r.Method,
+			r.URL.Path,
+			status,
+		).Observe(duration)
+
+		m.logger.WithFields(logrus.Fields{
+			"method":   r.Method,
+			"path":     r.URL.Path,
+			"duration": duration,
+			"status":   status,
+		}).Info("Request processed")
+	}()
 
 	m.next.ServeHTTP(lrw, r)
-
-	duration := time.Since(start)
-	m.logger.WithFields(logrus.Fields{
-		"status":   lrw.status,
-		"duration": duration,
-		"method":   r.Method,
-		"path":     r.URL.Path,
-	}).Info("Request completed")
 }
 
-type loggingResponseWriter struct {
+type LoggingResponseWriter struct {
 	http.ResponseWriter
-	status int
+	Status int
 }
 
-func (lrw *loggingResponseWriter) WriteHeader(code int) {
-	lrw.status = code
+func (lrw *LoggingResponseWriter) WriteHeader(code int) {
+	lrw.Status = code
 	lrw.ResponseWriter.WriteHeader(code)
 }
