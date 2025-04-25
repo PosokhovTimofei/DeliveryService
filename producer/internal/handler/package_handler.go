@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
@@ -55,7 +56,7 @@ func (h *PackageHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// send to kafka
-	createdPkg, err := h.service.CreatePackage(pkg, userID)
+	createdPkg, err := h.service.CreatePackage(context.Background(), pkg, userID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

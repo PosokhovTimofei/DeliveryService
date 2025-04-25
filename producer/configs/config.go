@@ -9,12 +9,18 @@ import (
 
 type Config struct {
 	Server     ServerConfig     `yaml:"server"`
+	Database   DatabaseConfig   `yaml:"database"`
 	Kafka      KafkaConfig      `yaml:"kafka"`
 	Calculator CalculatorConfig `yaml:"calculator"`
 }
 
 type ServerConfig struct {
 	Address string `yaml:"address"`
+}
+
+type DatabaseConfig struct {
+	Uri  string `yaml:"uri"`
+	Name string `yaml:"name"`
 }
 
 type KafkaConfig struct {

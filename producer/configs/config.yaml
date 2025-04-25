@@ -1,6 +1,10 @@
 server:
   address: ":1234"
 
+database:
+  uri: "mongodb://localhost:27017"
+  name: "logistics"
+
 kafka:
   brokers:
     - "localhost:9092"

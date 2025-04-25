@@ -26,6 +26,11 @@ func NewAuthMiddleware(next http.Handler, logger *logrus.Logger) *AuthMiddleware
 }
 
 func (m *AuthMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "OPTIONS" {
+		m.next.ServeHTTP(w, r)
+		return
+	}
+
 	if strings.HasPrefix(r.URL.Path, "/api/register") {
 		m.next.ServeHTTP(w, r)
 		return

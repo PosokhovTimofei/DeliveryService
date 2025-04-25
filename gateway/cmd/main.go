@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/maksroxx/DeliveryService/gateway/internal/handlers"
 	"github.com/maksroxx/DeliveryService/gateway/internal/middleware"
@@ -32,6 +33,22 @@ var (
 func init() {
 	prometheus.MustRegister(httpRequestsTotal)
 	prometheus.MustRegister(httpResponseTimeSeconds)
+}
+
+func enableCORS(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		w.Header().Set("Access-Control-Max-Age", "86400")
+
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }
 
 func main() {
@@ -79,20 +96,37 @@ func main() {
 	}
 
 	publicHandler := handlers.NewRouter(publicRoutes, logger)
+	publicChain := middleware.NewLogMiddleware(
+		enableCORS(publicHandler),
+		logger,
+		httpRequestsTotal,
+		httpResponseTimeSeconds,
+	)
+
 	protectedHandler := handlers.NewRouter(protectedRoutes, logger)
-
-	authProtected := middleware.NewAuthMiddleware(protectedHandler, logger)
-	fullProtectedChain := middleware.NewLogMiddleware(authProtected, logger, httpRequestsTotal, httpResponseTimeSeconds)
-
-	publicChain := middleware.NewLogMiddleware(publicHandler, logger, httpRequestsTotal, httpResponseTimeSeconds)
+	authProtected := middleware.NewAuthMiddleware(
+		enableCORS(protectedHandler),
+		logger,
+	)
+	fullProtectedChain := middleware.NewLogMiddleware(
+		authProtected,
+		logger,
+		httpRequestsTotal,
+		httpResponseTimeSeconds,
+	)
 
 	http.Handle("/metrics", promhttp.Handler())
-	http.Handle("/api/", fullProtectedChain)
 	http.Handle("/api/register", publicChain)
 	http.Handle("/api/login", publicChain)
+	http.Handle("/api/", fullProtectedChain)
 
 	logger.Info("Starting API Gateway on :8228")
-	if err := http.ListenAndServe(":8228", nil); err != nil {
-		logger.Fatal("Server failed to start:", err)
+	server := &http.Server{
+		Addr:              ":8228",
+		ReadHeaderTimeout: 5 * time.Second,
+	}
+
+	if err := server.ListenAndServe(); err != nil {
+		logger.Fatal("Server failed to start: ", err)
 	}
 }

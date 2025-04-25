@@ -3,15 +3,16 @@ package pkg
 import "encoding/json"
 
 type Package struct {
-	ID             string  `json:"package_id"`
-	Weight         float64 `json:"weight"`
-	From           string  `json:"from"`
-	To             string  `json:"to"`
-	Address        string  `json:"address"`
-	Status         string  `json:"status"`
-	Cost           float64 `json:"cost"`
-	EstimatedHours int     `json:"estimated_hours"`
-	Currency       string  `json:"currency"`
+	ID             string  `bson:"package_id" json:"package_id"`
+	UserID         string  `bson:"user_id" json:"-"`
+	Weight         float64 `bson:"weight" json:"weight"`
+	From           string  `bson:"from" json:"from"`
+	To             string  `bson:"to" json:"to"`
+	Address        string  `bson:"address" json:"address"`
+	Status         string  `bson:"status" json:"status"`
+	Cost           float64 `bson:"cost" json:"cost"`
+	EstimatedHours int     `bson:"estimated_hours" json:"estimated_hours"`
+	Currency       string  `bson:"currency" json:"currency"`
 }
 
 func (p *Package) ToJSON() ([]byte, error) {
