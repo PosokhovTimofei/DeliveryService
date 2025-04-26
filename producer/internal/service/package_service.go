@@ -22,12 +22,12 @@ func NewPackageService(producer *kafka.Producer, client *calculator.Client, rep 
 	return &PackageService{producer: producer, calculatorClient: client, repo: rep}
 }
 
-func (s *PackageService) CreatePackage(ctx context.Context, pkg pkg.Package, userID string) (*pkg.Package, error) {
-	pkg.UserID = userID
-	pkg.ID = "PKG-" + uuid.New().String()
-	pkg.Status = "CREATED"
+func (s *PackageService) CreatePackage(ctx context.Context, pack pkg.Package, userID string) (*pkg.Package, error) {
+	pack.UserID = userID
+	pack.ID = "PKG-" + uuid.New().String()
+	pack.Status = "CREATED"
 
-	exists, err := s.repo.PackageExists(ctx, pkg)
+	exists, err := s.repo.PackageExists(ctx, pack)
 	if err != nil {
 		return nil, fmt.Errorf("failed to check package existence: %w", err)
 	}
@@ -35,23 +35,34 @@ func (s *PackageService) CreatePackage(ctx context.Context, pkg pkg.Package, use
 		return nil, errors.New("package already exists for this user")
 	}
 
-	result, err := s.calculatorClient.Calculate(pkg)
+	result, err := s.calculatorClient.Calculate(pack)
 	if err != nil {
 		return nil, fmt.Errorf("calculation failed: %w", err)
 	}
 
-	pkg.Cost = result.Cost
-	pkg.EstimatedHours = result.EstimatedHours
-	pkg.Currency = result.Currency
-	pkg.Status = "PROCESSED"
+	pack.Cost = result.Cost
+	pack.EstimatedHours = result.EstimatedHours
+	pack.Currency = result.Currency
+	pack.Status = "PROCESSED"
 
-	if err := s.repo.CreatePackage(ctx, pkg); err != nil {
+	if err := s.repo.CreatePackage(ctx, pack); err != nil {
 		return nil, fmt.Errorf("failed to save package: %w", err)
 	}
 
-	if err := s.producer.SendPackage(pkg, userID); err != nil {
+	if err := s.producer.SendPackage(pack, userID); err != nil {
 		return nil, fmt.Errorf("failed to send package: %w", err)
 	}
 
-	return &pkg, nil
+	paymentEvent := pkg.PaymentEvent{
+		UserID:    userID,
+		PackageID: pack.ID,
+		Cost:      pack.Cost,
+		Currency:  pack.Currency,
+	}
+
+	if err := s.producer.SendPaymentEvent(paymentEvent); err != nil {
+		return nil, fmt.Errorf("failed to send payment event: %w", err)
+	}
+
+	return &pack, nil
 }

@@ -37,8 +37,9 @@ func main() {
 	http.Handle("/metrics", promhttp.Handler())
 
 	kafkaProducer, err := kafka.NewProducer(kafka.Config{
-		Brokers: cfg.Kafka.Brokers,
-		Topic:   cfg.Kafka.Topic,
+		Brokers:      cfg.Kafka.Brokers,
+		Topic:        cfg.Kafka.Topic,
+		PaymentTopic: cfg.Kafka.PaymentTopic,
 	})
 	if err != nil {
 		logger.Fatal(err)

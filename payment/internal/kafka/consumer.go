@@ -18,7 +18,7 @@ type Consumer struct {
 	log      *logrus.Logger
 }
 
-func NewConsumer(cfg Config, handler sarama.ConsumerGroupHandler, log *logrus.Logger) (*Consumer, error) {
+func NewConsumer(cfg ConfigConsumer, handler sarama.ConsumerGroupHandler, log *logrus.Logger) (*Consumer, error) {
 	config := NewConsumerConfig()
 
 	consumer, err := sarama.NewConsumerGroup(cfg.Brokers, cfg.GroupID, config)

@@ -1,0 +1,14 @@
+server:
+  address: ":5678"
+
+database:
+  uri: "mongodb://localhost:27017"
+  name: "logistics"
+
+kafka:
+  brokers:
+    - "localhost:9092"
+  consumerTopic: "payment-events"
+  producerTopic: "pay-events"
+  groupID: "payment-consumers"
+  version: "7.3.0"

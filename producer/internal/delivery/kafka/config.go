@@ -3,9 +3,10 @@ package kafka
 import "github.com/IBM/sarama"
 
 type Config struct {
-	Brokers []string
-	Topic   string
-	Version string
+	Brokers      []string
+	Topic        string
+	PaymentTopic string
+	Version      string
 }
 
 func NewProducerConfig() *sarama.Config {

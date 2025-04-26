@@ -9,7 +9,8 @@ import (
 
 type Producer struct {
 	syncProducer sarama.SyncProducer
-	topic        string
+	packageTopic string
+	paymentTopic string
 }
 
 func NewProducer(cfg Config) (*Producer, error) {
@@ -21,7 +22,8 @@ func NewProducer(cfg Config) (*Producer, error) {
 	}
 	return &Producer{
 		syncProducer: producer,
-		topic:        cfg.Topic,
+		packageTopic: cfg.Topic,
+		paymentTopic: cfg.PaymentTopic,
 	}, nil
 }
 
@@ -40,8 +42,23 @@ func (p *Producer) SendPackage(pkg pkg.Package, userID string) error {
 
 	msg := &sarama.ProducerMessage{
 		Headers: headers,
-		Topic:   p.topic,
+		Topic:   p.packageTopic,
 		Value:   sarama.ByteEncoder(pkgJson),
+	}
+
+	_, _, err = p.syncProducer.SendMessage(msg)
+	return err
+}
+
+func (p *Producer) SendPaymentEvent(event pkg.PaymentEvent) error {
+	eventJson, err := json.Marshal(event)
+	if err != nil {
+		return err
+	}
+
+	msg := &sarama.ProducerMessage{
+		Topic: p.paymentTopic,
+		Value: sarama.ByteEncoder(eventJson),
 	}
 
 	_, _, err = p.syncProducer.SendMessage(msg)

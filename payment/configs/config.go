@@ -8,10 +8,9 @@ import (
 )
 
 type Config struct {
-	Server     ServerConfig     `yaml:"server"`
-	Database   DatabaseConfig   `yaml:"database"`
-	Kafka      KafkaConfig      `yaml:"kafka"`
-	Calculator CalculatorConfig `yaml:"calculator"`
+	Server   ServerConfig   `yaml:"server"`
+	Database DatabaseConfig `yaml:"database"`
+	Kafka    KafkaConfig    `yaml:"kafka"`
 }
 
 type ServerConfig struct {
@@ -24,17 +23,15 @@ type DatabaseConfig struct {
 }
 
 type KafkaConfig struct {
-	Brokers      []string `yaml:"brokers"`
-	Topic        string   `yaml:"topic"`
-	PaymentTopic string   `yaml:"paymentTopic"`
-}
-
-type CalculatorConfig struct {
-	URL string `yaml:"url"`
+	Brokers       []string `yaml:"brokers"`
+	ConsumerTopic string   `yaml:"consumerTopic"`
+	ProducerTopic string   `yaml:"producerTopic"`
+	GroupID       string   `yaml:"groupID"`
+	Version       string   `yaml:"version"`
 }
 
 func Load() *Config {
-	data, err := os.ReadFile("./producer/configs/config.yaml")
+	data, err := os.ReadFile("./payment/configs/config.yaml")
 	if err != nil {
 		panic(fmt.Sprintf("Error reading config file: %v", err))
 	}
