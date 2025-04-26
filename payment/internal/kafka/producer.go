@@ -40,6 +40,7 @@ func (p *Producer) PaymentMessage(payment models.Payment, userID string) error {
 
 	msg := &sarama.ProducerMessage{
 		Headers: headers,
+		Key:     sarama.StringEncoder(payment.PackageID),
 		Topic:   p.topic,
 		Value:   sarama.ByteEncoder(paymentJson),
 	}

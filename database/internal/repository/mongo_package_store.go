@@ -73,6 +73,7 @@ func (r *MongoRepository) Create(ctx context.Context, route *models.Package) (*m
 		"from":            route.From,
 		"to":              route.To,
 		"address":         route.Address,
+		"payment_status":  "PENDING",
 		"status":          route.Status,
 		"cost":            route.Cost,
 		"estimated_hours": route.EstimatedHours,
@@ -138,11 +139,17 @@ func (r *MongoRepository) GetAllRoutes(ctx context.Context, filter models.RouteF
 func (r *MongoRepository) UpdateRoute(ctx context.Context, packageID string, update models.RouteUpdate) (*models.Package, error) {
 	filter := bson.M{"package_id": packageID}
 
+	setFields := bson.M{}
+	if update.Status != "" {
+		setFields["status"] = update.Status
+	}
+	if update.PaymentStatus != "" {
+		setFields["payment_status"] = update.PaymentStatus
+	}
+	setFields["updated_at"] = time.Now()
+
 	updateDoc := bson.M{
-		"$set": bson.M{
-			"status":     update.Status,
-			"updated_at": time.Now(),
-		},
+		"$set": setFields,
 	}
 
 	opts := options.FindOneAndUpdate().

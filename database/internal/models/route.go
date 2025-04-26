@@ -12,6 +12,7 @@ type Package struct {
 	From           string    `bson:"from" json:"from"`
 	To             string    `bson:"to" json:"to"`
 	Address        string    `bson:"address" json:"address"`
+	PaymentStatus  string    `bson:"payment_status" json:"payment_status"`
 	Status         string    `bson:"status" json:"status"`
 	Cost           float64   `bson:"cost" json:"cost"`
 	EstimatedHours int       `bson:"estimated_hours" json:"estimated_hours"`
@@ -28,5 +29,6 @@ type RouteFilter struct {
 }
 
 type RouteUpdate struct {
-	Status string `json:"status" validate:"oneof=created processing delivered canceled"`
+	Status        string `json:"status" validate:"oneof=created processing delivered canceled"`
+	PaymentStatus string `json:"payment_status"`
 }

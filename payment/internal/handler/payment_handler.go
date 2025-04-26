@@ -47,11 +47,14 @@ func (h *PaymentHandler) ConfirmPayment(w http.ResponseWriter, r *http.Request) 
 		Status:    "PAID",
 	})
 	if err != nil {
+		if err.Error() == "payment already confirmed" {
+			http.Error(w, err.Error(), http.StatusConflict)
+			return
+		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// Отправляем сообщение о подтверждённой оплате в Kafka
 	if err := h.producer.PaymentMessage(*updatedPayment, updatedPayment.UserID); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

@@ -1,13 +1,4 @@
-package models
-
-const (
-	PaymentStatusPending   = "PENDING"
-	PaymentStatusPaid      = "PAID"
-	PaymentStatusFailed    = "FAILED"
-	PaymentStatusCancelled = "CANCELLED"
-	PaymentStatusRefunded  = "REFUNDED"
-	PaymentStatusExpired   = "EXPIRED"
-)
+package types
 
 type Payment struct {
 	UserID    string  `bson:"user_id" json:"user_id"`

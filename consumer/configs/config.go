@@ -18,7 +18,7 @@ type ServerConfig struct {
 
 type KafkaConfig struct {
 	Brokers []string `yaml:"brokers"`
-	Topic   string   `yaml:"topic"`
+	Topic   []string `yaml:"topics"`
 	GroupID string   `yaml:"groupID"`
 }
 

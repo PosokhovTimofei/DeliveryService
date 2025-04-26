@@ -28,7 +28,7 @@ func (r *PaymentMongoRepository) CreatePayment(ctx context.Context, payment mode
 		"package_id": payment.PackageID,
 		"cost":       payment.Cost,
 		"currency":   payment.Currency,
-		"status":     payment.Status,
+		"status":     models.PaymentStatusPending,
 		"created_at": now,
 		"updated_at": now,
 	}
@@ -43,22 +43,28 @@ func (r *PaymentMongoRepository) CreatePayment(ctx context.Context, payment mode
 }
 
 func (r *PaymentMongoRepository) UpdatePayment(ctx context.Context, update models.Payment) (*models.Payment, error) {
-	filter := bson.M{"user_id": update.UserID, "package_id": update.PackageID}
+	filter := bson.M{
+		"user_id":    update.UserID,
+		"package_id": update.PackageID,
+		"status":     bson.M{"$ne": "PAID"},
+	}
+
 	updateDoc := bson.M{
-		"set": bson.M{
+		"$set": bson.M{
 			"status":     update.Status,
 			"updated_at": time.Now(),
 		},
 	}
+
 	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
+
 	var updatedPayment models.Payment
-	err := r.collection.FindOneAndUpdate(
-		ctx, filter, updateDoc, opts,
-	).Decode(&updatedPayment)
+	err := r.collection.FindOneAndUpdate(ctx, filter, updateDoc, opts).Decode(&updatedPayment)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			return nil, fmt.Errorf("payment not found")
+			return nil, fmt.Errorf("payment already confirmed")
 		}
+		return nil, err
 	}
 	return &updatedPayment, nil
 }

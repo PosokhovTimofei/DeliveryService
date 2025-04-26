@@ -14,7 +14,7 @@ import (
 type Consumer struct {
 	consumer sarama.ConsumerGroup
 	handler  sarama.ConsumerGroupHandler
-	topic    string
+	topics   []string
 	log      *logrus.Logger
 }
 
@@ -29,7 +29,7 @@ func NewConsumer(cfg Config, handler sarama.ConsumerGroupHandler, log *logrus.Lo
 	return &Consumer{
 		consumer: consumer,
 		handler:  handler,
-		topic:    cfg.Topic,
+		topics:   cfg.Topic,
 		log:      log,
 	}, nil
 }
@@ -66,8 +66,8 @@ func (c *Consumer) Run(ctx context.Context) {
 }
 
 func (c *Consumer) consume(ctx context.Context) error {
-	c.log.Infof("Starting consumption on topic: %s", c.topic)
-	err := c.consumer.Consume(ctx, []string{c.topic}, c.handler)
+	c.log.Infof("Starting consumption on topic: %s", c.topics)
+	err := c.consumer.Consume(ctx, c.topics, c.handler)
 	if err != nil {
 		c.log.WithError(err).Error("Error during consumption")
 	}

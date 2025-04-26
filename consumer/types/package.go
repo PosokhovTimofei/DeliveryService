@@ -6,6 +6,7 @@ type Package struct {
 	From           string  `json:"from"`
 	To             string  `json:"to"`
 	Address        string  `json:"address"`
+	PaymentStatus  string  `json:"payment_status"`
 	Status         string  `json:"status"`
 	Cost           float64 `json:"cost"`
 	EstimatedHours int     `json:"estimated_hours"`
