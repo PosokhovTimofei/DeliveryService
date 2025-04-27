@@ -26,11 +26,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to connect to MongoDB: %v", err)
 	}
-	defer func() {
-		if err := mongoClient.Disconnect(context.Background()); err != nil {
-			log.Printf("Error disconnecting MongoDB: %v", err)
-		}
-	}()
+	defer mongoClient.Disconnect(context.Background())
 
 	db := mongoClient.Database(cfg.Database.Name)
 
@@ -38,25 +34,23 @@ func main() {
 
 	kafkaProducer, err := kafka.NewProducer(kafka.Config{
 		Brokers:      cfg.Kafka.Brokers,
-		Topic:        cfg.Kafka.Topic,
+		PackageTopic: cfg.Kafka.PackageTopic,
 		PaymentTopic: cfg.Kafka.PaymentTopic,
+		Version:      cfg.Kafka.Version,
 	})
 	if err != nil {
 		logger.Fatal(err)
 	}
 	defer kafkaProducer.Close()
 
-	var (
-		client         = calculator.NewClient(cfg.Calculator.URL)
-		rep            = repository.NewPackageRepository(db, "producer")
-		svc            = service.NewPackageService(kafkaProducer, client, rep)
-		packageHandler = handler.NewPackageHandler(svc)
-		packageChain   = middleware.NewLogMiddleware(packageHandler, logger)
-	)
+	client := calculator.NewClient(cfg.Calculator.URL)
+	repo := repository.NewPackageRepository(db, "producer")
+	svc := service.NewPackageService(kafkaProducer, client, repo)
+	handler := handler.NewPackageHandler(svc)
 
-	http.Handle("/producer", packageChain)
+	http.Handle("/producer", middleware.NewLogMiddleware(handler, logger))
 
-	logger.Infof("Starting API Gateway on %s", cfg.Server.Address)
+	logger.Infof("Starting Producer service on %s", cfg.Server.Address)
 	if err := http.ListenAndServe(cfg.Server.Address, nil); err != nil {
 		logger.Fatal("Server failed to start:", err)
 	}

@@ -18,8 +18,12 @@ type PackageService struct {
 	calculatorClient *calculator.Client
 }
 
-func NewPackageService(producer *kafka.Producer, client *calculator.Client, rep repository.Packager) *PackageService {
-	return &PackageService{producer: producer, calculatorClient: client, repo: rep}
+func NewPackageService(producer *kafka.Producer, client *calculator.Client, repo repository.Packager) *PackageService {
+	return &PackageService{
+		producer:         producer,
+		calculatorClient: client,
+		repo:             repo,
+	}
 }
 
 func (s *PackageService) CreatePackage(ctx context.Context, pack pkg.Package, userID string) (*pkg.Package, error) {
@@ -49,7 +53,17 @@ func (s *PackageService) CreatePackage(ctx context.Context, pack pkg.Package, us
 		return nil, fmt.Errorf("failed to save package: %w", err)
 	}
 
-	if err := s.producer.SendPackage(pack, userID); err != nil {
+	if err := s.producer.BeginTransaction(); err != nil {
+		return nil, fmt.Errorf("failed to begin transaction: %w", err)
+	}
+
+	defer func() {
+		if err != nil {
+			_ = s.producer.AbortTransaction()
+		}
+	}()
+
+	if err = s.producer.SendPackage(pack, userID); err != nil {
 		return nil, fmt.Errorf("failed to send package: %w", err)
 	}
 
@@ -60,8 +74,12 @@ func (s *PackageService) CreatePackage(ctx context.Context, pack pkg.Package, us
 		Currency:  pack.Currency,
 	}
 
-	if err := s.producer.SendPaymentEvent(paymentEvent); err != nil {
+	if err = s.producer.SendPaymentEvent(paymentEvent); err != nil {
 		return nil, fmt.Errorf("failed to send payment event: %w", err)
+	}
+
+	if err = s.producer.CommitTransaction(); err != nil {
+		return nil, fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
 	return &pack, nil

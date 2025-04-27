@@ -25,8 +25,9 @@ type DatabaseConfig struct {
 
 type KafkaConfig struct {
 	Brokers      []string `yaml:"brokers"`
-	Topic        string   `yaml:"topic"`
+	PackageTopic string   `yaml:"packageTopic"`
 	PaymentTopic string   `yaml:"paymentTopic"`
+	Version      string   `yaml:"version"`
 }
 
 type CalculatorConfig struct {

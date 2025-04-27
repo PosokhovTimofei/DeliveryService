@@ -8,7 +8,7 @@ database:
 kafka:
   brokers:
     - "localhost:9092"
-  topic: "package-events"
+  packageTopic: "package-events"
   paymentTopic: "payment-events"
   version: "7.3.0"
 calculator:
