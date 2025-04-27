@@ -1,0 +1,100 @@
+{
+    "id": null,
+    "title": "DeliveryService - API Gateway Metrics",
+    "timezone": "browser",
+    "schemaVersion": 36,
+    "version": 1,
+    "refresh": "5s",
+    "panels": [
+        {
+            "type": "stat",
+            "title": "Total HTTP Requests",
+            "targets": [
+                {
+                    "expr": "sum(http_requests_total{job=\"api-gateway\"})",
+                    "legendFormat": "Total Requests",
+                    "interval": ""
+                }
+            ],
+            "datasource": "Prometheus",
+            "gridPos": {
+                "h": 4,
+                "w": 8,
+                "x": 0,
+                "y": 0
+            }
+        },
+        {
+            "type": "stat",
+            "title": "2xx Responses",
+            "targets": [
+                {
+                    "expr": "sum(http_requests_total{job=\"api-gateway\", status=~\"2..\"})",
+                    "legendFormat": "Success 2xx",
+                    "interval": ""
+                }
+            ],
+            "datasource": "Prometheus",
+            "gridPos": {
+                "h": 4,
+                "w": 8,
+                "x": 8,
+                "y": 0
+            }
+        },
+        {
+            "type": "stat",
+            "title": "5xx Responses",
+            "targets": [
+                {
+                    "expr": "sum(http_requests_total{job=\"api-gateway\", status=~\"5..\"})",
+                    "legendFormat": "Errors 5xx",
+                    "interval": ""
+                }
+            ],
+            "datasource": "Prometheus",
+            "gridPos": {
+                "h": 4,
+                "w": 8,
+                "x": 16,
+                "y": 0
+            }
+        },
+        {
+            "type": "graph",
+            "title": "HTTP Request Rate",
+            "targets": [
+                {
+                    "expr": "rate(http_requests_total{job=\"api-gateway\"}[5m])",
+                    "legendFormat": "{{method}} {{path}}",
+                    "interval": ""
+                }
+            ],
+            "datasource": "Prometheus",
+            "gridPos": {
+                "h": 8,
+                "w": 24,
+                "x": 0,
+                "y": 4
+            }
+        },
+        {
+            "type": "graph",
+            "title": "HTTP Response Time (95th percentile)",
+            "targets": [
+                {
+                    "expr": "histogram_quantile(0.95, sum(rate(http_response_time_seconds_bucket{job=\"api-gateway\"}[5m])) by (le, method, path))",
+                    "legendFormat": "{{method}} {{path}}",
+                    "interval": ""
+                }
+            ],
+            "datasource": "Prometheus",
+            "gridPos": {
+                "h": 8,
+                "w": 24,
+                "x": 0,
+                "y": 12
+            }
+        }
+    ]
+}

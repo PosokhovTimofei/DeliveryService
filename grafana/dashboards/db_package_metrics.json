@@ -1,0 +1,100 @@
+{
+  "id": null,
+  "title": "DeliveryService - Package Metrics",
+  "timezone": "browser",
+  "schemaVersion": 36,
+  "version": 1,
+  "refresh": "5s",
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Created Packages",
+      "targets": [
+        {
+          "expr": "sum(created_packages_total{job=\"db-service\"})",
+          "legendFormat": "Created",
+          "interval": ""
+        }
+      ],
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Delivered Packages",
+      "targets": [
+        {
+          "expr": "sum(delivered_packages_total{job=\"db-service\"})",
+          "legendFormat": "Delivered",
+          "interval": ""
+        }
+      ],
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Updated Packages (Manual)",
+      "targets": [
+        {
+          "expr": "sum(updated_packages_total{job=\"db-service\"})",
+          "legendFormat": "Updated",
+          "interval": ""
+        }
+      ],
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 0
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Failed Package Creations",
+      "targets": [
+        {
+          "expr": "sum(failed_package_creations_total{job=\"db-service\"})",
+          "legendFormat": "Failed Creations",
+          "interval": ""
+        }
+      ],
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      }
+    },
+    {
+      "type": "graph",
+      "title": "Package Delivery Duration (seconds)",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(package_delivery_duration_seconds_bucket{job=\"db-service\"}[5m])) by (le))",
+          "legendFormat": "95th percentile",
+          "interval": ""
+        }
+      ],
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 4
+      }
+    }
+  ]
+}

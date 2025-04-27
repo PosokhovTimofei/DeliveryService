@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/maksroxx/DeliveryService/database/internal/metrics"
 	"github.com/maksroxx/DeliveryService/database/internal/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -46,8 +47,7 @@ func (r *MongoRepository) GetByID(ctx context.Context, packageID string) (*model
 		}
 		return nil, err
 	}
-	route.ID = ""
-
+	route.RemainingHours = r.calculateRemainingHours(ctx, &route)
 	return &route, nil
 }
 
@@ -61,6 +61,7 @@ func (r *MongoRepository) Create(ctx context.Context, route *models.Package) (*m
 
 	existing, _ := r.GetByID(ctx, route.PackageID)
 	if existing != nil {
+		metrics.FailedPackageCreations.Inc()
 		return nil, errors.New("package has already exists")
 	}
 
@@ -84,11 +85,15 @@ func (r *MongoRepository) Create(ctx context.Context, route *models.Package) (*m
 
 	result, err := r.collection.InsertOne(ctx, doc)
 	if err != nil {
+		metrics.FailedPackageCreations.Inc()
 		if mongo.IsDuplicateKeyError(err) {
 			return nil, errors.New("package has already exists")
 		}
 		return nil, fmt.Errorf("failed to create package: %w", err)
 	}
+
+	metrics.CreatedPackages.Inc()
+
 	if oid, ok := result.InsertedID.(primitive.ObjectID); ok {
 		route.ID = oid.Hex()
 	} else {
@@ -127,10 +132,10 @@ func (r *MongoRepository) GetAllRoutes(ctx context.Context, filter models.RouteF
 	var routes []*models.Package
 	for cur.Next(ctx) {
 		var route models.Package
-		route.ID = ""
 		if err := cur.Decode(&route); err != nil {
 			return nil, err
 		}
+		route.RemainingHours = r.calculateRemainingHours(ctx, &route)
 		routes = append(routes, &route)
 	}
 	return routes, nil
@@ -169,6 +174,8 @@ func (r *MongoRepository) UpdateRoute(ctx context.Context, packageID string, upd
 		}
 		return nil, err
 	}
+
+	metrics.UpdatedPackages.Inc()
 	updatedRoute.ID = ""
 	return &updatedRoute, nil
 }
@@ -190,4 +197,32 @@ func (r *MongoRepository) DeleteRoute(ctx context.Context, packageID string) err
 
 func (r *MongoRepository) Ping(ctx context.Context) error {
 	return r.collection.Database().Client().Ping(ctx, nil)
+}
+
+func (r *MongoRepository) calculateRemainingHours(ctx context.Context, route *models.Package) int {
+	elapsed := int(time.Since(route.CreatedAt).Hours())
+	remaining := route.EstimatedHours - elapsed
+	if remaining < 0 {
+		remaining = 0
+	}
+
+	if remaining == 0 && route.Status != "Delivered" {
+		filter := bson.M{"package_id": route.PackageID}
+		update := bson.M{
+			"$set": bson.M{
+				"status":     "Delivered",
+				"updated_at": time.Now(),
+			},
+		}
+		_, err := r.collection.UpdateOne(ctx, filter, update)
+		if err == nil {
+			route.Status = "Delivered"
+			metrics.DeliveredPackagesTotal.Inc()
+
+			duration := time.Since(route.CreatedAt).Seconds()
+			metrics.PackageDeliveryDuration.Observe(duration)
+		}
+	}
+
+	return remaining
 }

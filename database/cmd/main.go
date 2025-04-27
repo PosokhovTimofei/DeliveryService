@@ -9,6 +9,7 @@ import (
 	"github.com/maksroxx/DeliveryService/database/internal/handlers"
 	"github.com/maksroxx/DeliveryService/database/internal/middleware"
 	"github.com/maksroxx/DeliveryService/database/internal/repository"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -41,6 +42,7 @@ func main() {
 	protectedHandler := middleware.AuthMiddleware(protected)
 
 	mux.Handle("/", protectedHandler)
+	mux.Handle("/metrics", promhttp.Handler())
 
 	log.Printf("Server starting on %s", cfg.Server.Address)
 

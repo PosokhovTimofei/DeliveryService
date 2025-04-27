@@ -10,19 +10,22 @@ import (
 	"github.com/maksroxx/DeliveryService/producer/internal/delivery/kafka"
 	"github.com/maksroxx/DeliveryService/producer/internal/repository"
 	"github.com/maksroxx/DeliveryService/producer/pkg"
+	"github.com/sirupsen/logrus"
 )
 
 type PackageService struct {
 	repo             repository.Packager
 	producer         *kafka.Producer
 	calculatorClient *calculator.Client
+	logger           *logrus.Logger
 }
 
-func NewPackageService(producer *kafka.Producer, client *calculator.Client, repo repository.Packager) *PackageService {
+func NewPackageService(producer *kafka.Producer, client *calculator.Client, repo repository.Packager, logger *logrus.Logger) *PackageService {
 	return &PackageService{
 		producer:         producer,
 		calculatorClient: client,
 		repo:             repo,
+		logger:           logger,
 	}
 }
 
@@ -33,14 +36,17 @@ func (s *PackageService) CreatePackage(ctx context.Context, pack pkg.Package, us
 
 	exists, err := s.repo.PackageExists(ctx, pack)
 	if err != nil {
+		s.logger.WithError(err).Error("Failed to check package existence")
 		return nil, fmt.Errorf("failed to check package existence: %w", err)
 	}
 	if exists {
+		s.logger.Warnf("Package already exists for user: %s", userID)
 		return nil, errors.New("package already exists for this user")
 	}
 
 	result, err := s.calculatorClient.Calculate(pack)
 	if err != nil {
+		s.logger.WithError(err).Error("Cost calculation failed")
 		return nil, fmt.Errorf("calculation failed: %w", err)
 	}
 
@@ -50,20 +56,24 @@ func (s *PackageService) CreatePackage(ctx context.Context, pack pkg.Package, us
 	pack.Status = "PROCESSED"
 
 	if err := s.repo.CreatePackage(ctx, pack); err != nil {
+		s.logger.WithError(err).Error("Failed to save package into repository")
 		return nil, fmt.Errorf("failed to save package: %w", err)
 	}
 
 	if err := s.producer.BeginTransaction(); err != nil {
+		s.logger.WithError(err).Error("Failed to begin Kafka transaction")
 		return nil, fmt.Errorf("failed to begin transaction: %w", err)
 	}
 
 	defer func() {
 		if err != nil {
 			_ = s.producer.AbortTransaction()
+			s.logger.Warn("Transaction aborted due to an error")
 		}
 	}()
 
 	if err = s.producer.SendPackage(pack, userID); err != nil {
+		s.logger.WithError(err).Error("Failed to send package to Kafka")
 		return nil, fmt.Errorf("failed to send package: %w", err)
 	}
 
@@ -75,10 +85,12 @@ func (s *PackageService) CreatePackage(ctx context.Context, pack pkg.Package, us
 	}
 
 	if err = s.producer.SendPaymentEvent(paymentEvent); err != nil {
+		s.logger.WithError(err).Error("Failed to send payment event to Kafka")
 		return nil, fmt.Errorf("failed to send payment event: %w", err)
 	}
 
 	if err = s.producer.CommitTransaction(); err != nil {
+		s.logger.WithError(err).Error("Failed to commit Kafka transaction")
 		return nil, fmt.Errorf("failed to commit transaction: %w", err)
 	}
 

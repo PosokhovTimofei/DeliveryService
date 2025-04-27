@@ -1,7 +1,7 @@
 BIN_DIR      := bin
 GO           := go
 
-.PHONY: client gateway producer calculate consumer payment db insert testReq auth test
+.PHONY: client gateway producer calculate consumer payment db insert testReq auth test up down restart logs
 
 gateway:
 	@echo "🚀 Запуск gateway..."
@@ -60,3 +60,15 @@ reqcalculate:
 testReq:
 	@chmod +x ./scripts/test_requests.sh
 	@./scripts/test_requests.sh
+
+up:
+	docker-compose up -d
+
+down:
+	docker-compose down
+
+restart:
+	docker-compose down && docker-compose up -d
+
+logs:
+	docker-compose logs -f

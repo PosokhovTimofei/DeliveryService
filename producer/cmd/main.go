@@ -45,7 +45,7 @@ func main() {
 
 	client := calculator.NewClient(cfg.Calculator.URL)
 	repo := repository.NewPackageRepository(db, "producer")
-	svc := service.NewPackageService(kafkaProducer, client, repo)
+	svc := service.NewPackageService(kafkaProducer, client, repo, logger)
 	handler := handler.NewPackageHandler(svc)
 
 	http.Handle("/producer", middleware.NewLogMiddleware(handler, logger))

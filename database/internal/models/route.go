@@ -5,7 +5,7 @@ import (
 )
 
 type Package struct {
-	ID             string    `bson:"_id,omitempty" json:"id,omitempty"`
+	ID             string    `bson:"_id,omitempty" json:"-"`
 	PackageID      string    `bson:"package_id" json:"package_id"`
 	UserID         string    `bson:"user_id" json:"-"`
 	Weight         float64   `bson:"weight" json:"weight"`
@@ -16,6 +16,7 @@ type Package struct {
 	Status         string    `bson:"status" json:"status"`
 	Cost           float64   `bson:"cost" json:"cost"`
 	EstimatedHours int       `bson:"estimated_hours" json:"estimated_hours"`
+	RemainingHours int       `bson:"-" json:"remaining_hours"`
 	Currency       string    `bson:"currency" json:"currency"`
 	CreatedAt      time.Time `bson:"created_at" json:"created_at"`
 }
