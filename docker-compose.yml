@@ -3,36 +3,64 @@ version: '3.8'
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:7.3.0
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
 
   kafka:
     image: confluentinc/cp-kafka:7.3.0
+    container_name: kafka
     depends_on:
       - zookeeper
     ports:
       - "9092:9092"
+      - "29092:29092"
     environment:
+      KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
 
-  mongodb:
+  kafka-exporter:
+    image: danielqsj/kafka-exporter:latest
+    container_name: kafka-exporter
+    ports:
+      - "9308:9308"
+    environment:
+      KAFKA_SERVER: kafka:29092
+    depends_on:
+      - kafka
+
+  mongo:
     image: mongo:6
+    container_name: mongo
     ports:
       - "27017:27017"
+    command: ["mongod", "--bind_ip_all"]
     volumes:
-      - mongodb_data:/data/db
-    command: mongod --bind_ip_all
+      - mongo_data:/data/db
     healthcheck:
       test: echo 'db.runCommand("ping").ok' | mongo localhost:27017/test --quiet
       interval: 10s
       timeout: 5s
       retries: 5
+
+  mongodb-exporter:
+    image: bitnami/mongodb-exporter:latest
+    container_name: mongodb-exporter
+    environment:
+      MONGODB_URI: mongodb://mongo:27017
+    ports:
+      - "9216:9216"
+    depends_on:
+      - mongo
 
   prometheus:
     image: prom/prometheus
@@ -41,12 +69,24 @@ services:
       - "9090:9090"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    depends_on:
+      - kafka-exporter
+      - mongodb-exporter
 
   grafana:
     image: grafana/grafana
     container_name: grafana
     ports:
       - "3033:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
 
   kafdrop:
     image: obsidiandynamics/kafdrop
@@ -54,10 +94,11 @@ services:
     ports:
       - "9003:9000"
     environment:
-      KAFKA_BROKER_CONNECT: kafka:9092
+      KAFKA_BROKER_CONNECT: kafka:29092
       JVM_OPTS: "-Xms32M -Xmx64M"
     depends_on:
       - kafka
 
 volumes:
-  mongodb_data:
+  mongo_data:
+  grafana_data:

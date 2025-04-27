@@ -41,12 +41,14 @@ func main() {
 
 	mainServer := createMainServer(authHandler, logger)
 	protectedServer := createProtectedServer(svc, repo, logger)
+	metricsServer := createMetricsServer()
 
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
 	go startServer("main", cfg.ServerPort, mainServer)
 	go startServer("protected", cfg.ProtectedPort, protectedServer)
+	go startServer("metrics", cfg.MetricsPort, metricsServer)
 
 	log.Printf("Servers started")
 	<-done
@@ -55,19 +57,15 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := mainServer.Shutdown(ctx); err != nil {
-		log.Printf("Main server shutdown error: %v", err)
-	}
-	if err := protectedServer.Shutdown(ctx); err != nil {
-		log.Printf("Protected server shutdown error: %v", err)
-	}
+	shutdownServer(ctx, "main", mainServer)
+	shutdownServer(ctx, "protected", protectedServer)
+	shutdownServer(ctx, "metrics", metricsServer)
 }
 
 func createMainServer(h *handler.AuthHandler, logger *logrus.Logger) *http.Server {
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /register", h.Register)
 	mux.HandleFunc("POST /login", h.Login)
-	mux.Handle("/metrics", promhttp.Handler())
 	loggedMux := middleware.NewLogMiddleware(mux, logger)
 
 	return &http.Server{Handler: loggedMux}
@@ -98,10 +96,24 @@ func createProtectedServer(svc *service.AuthService, repo repository.UserReposit
 	return &http.Server{Handler: loggedHandler}
 }
 
+func createMetricsServer() *http.Server {
+	mux := http.NewServeMux()
+	mux.Handle("/metrics", promhttp.Handler())
+
+	return &http.Server{Handler: mux}
+}
+
 func startServer(name, port string, server *http.Server) {
 	server.Addr = port
 	log.Printf("%s server starting on %s", name, port)
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatalf("%s server failed: %v", name, err)
+	}
+}
+
+func shutdownServer(ctx context.Context, name string, server *http.Server) {
+	log.Printf("Shutting down %s server...", name)
+	if err := server.Shutdown(ctx); err != nil {
+		log.Printf("%s server shutdown error: %v", name, err)
 	}
 }

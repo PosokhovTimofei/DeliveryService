@@ -1,5 +1,6 @@
 SERVER_PORT: ":1703"
 PROTECTED_PORT: ":1704"
+METRICS_PORT: ":1705"
 DB_URI: "mongodb://localhost:27017"
 DB_NAME: "logistics"
 JWT_SECRET: "very_secret_key"

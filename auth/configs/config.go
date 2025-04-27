@@ -13,6 +13,7 @@ type Config struct {
 	DBUri         string `yaml:"DB_URI"`
 	DBName        string `yaml:"DB_NAME"`
 	JWTSecret     string `yaml:"JWT_SECRET"`
+	MetricsPort   string `yaml:"METRICS_PORT"`
 }
 
 func Load() *Config {
