@@ -43,9 +43,14 @@ func main() {
 	}
 	defer kafkaProducer.Close()
 
-	client := calculator.NewClient(cfg.Calculator.URL)
+	grpcClient, err := calculator.NewCalculatorClient(cfg.Calculator.GRPCAddress)
+	if err != nil {
+		logger.Fatalf("Failed to connect to Calculator gRPC: %v", err)
+	}
+	defer grpcClient.Close()
+
 	repo := repository.NewPackageRepository(db, "producer")
-	svc := service.NewPackageService(kafkaProducer, client, repo, logger)
+	svc := service.NewPackageService(kafkaProducer, grpcClient, repo, logger)
 	handler := handler.NewPackageHandler(svc)
 
 	http.Handle("/producer", middleware.NewLogMiddleware(handler, logger))

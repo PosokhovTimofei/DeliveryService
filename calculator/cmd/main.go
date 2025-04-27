@@ -19,8 +19,14 @@ func main() {
 	)
 
 	svc := service.NewCalculator()
-	http.Handle("/metrics", promhttp.Handler())
 
+	go func() {
+		if err := transport.StartGRPCServer(cfg.GRPCPort, svc, log); err != nil {
+			log.Fatalf("gRPC server failed: %v", err)
+		}
+	}()
+
+	http.Handle("/metrics", promhttp.Handler())
 	startHTTPServer(cfg.HTTPPort, svc, chain, log)
 }
 

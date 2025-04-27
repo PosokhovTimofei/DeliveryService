@@ -16,11 +16,11 @@ import (
 type PackageService struct {
 	repo             repository.Packager
 	producer         *kafka.Producer
-	calculatorClient *calculator.Client
+	calculatorClient *calculator.CalculatorGRPCClient
 	logger           *logrus.Logger
 }
 
-func NewPackageService(producer *kafka.Producer, client *calculator.Client, repo repository.Packager, logger *logrus.Logger) *PackageService {
+func NewPackageService(producer *kafka.Producer, client *calculator.CalculatorGRPCClient, repo repository.Packager, logger *logrus.Logger) *PackageService {
 	return &PackageService{
 		producer:         producer,
 		calculatorClient: client,
@@ -34,6 +34,17 @@ func (s *PackageService) CreatePackage(ctx context.Context, pack pkg.Package, us
 	pack.ID = "PKG-" + uuid.New().String()
 	pack.Status = "CREATED"
 
+	result, err := s.calculatorClient.Calculate(pack.Weight, pack.From, pack.To, pack.Address)
+	if err != nil {
+		s.logger.WithError(err).Error("Cost calculation failed")
+		return nil, fmt.Errorf("calculation failed: %w", err)
+	}
+
+	pack.Cost = result.Cost
+	pack.EstimatedHours = int(result.EstimatedHours)
+	pack.Currency = result.Currency
+	pack.Status = "PROCESSED"
+
 	exists, err := s.repo.PackageExists(ctx, pack)
 	if err != nil {
 		s.logger.WithError(err).Error("Failed to check package existence")
@@ -43,17 +54,6 @@ func (s *PackageService) CreatePackage(ctx context.Context, pack pkg.Package, us
 		s.logger.Warnf("Package already exists for user: %s", userID)
 		return nil, errors.New("package already exists for this user")
 	}
-
-	result, err := s.calculatorClient.Calculate(pack)
-	if err != nil {
-		s.logger.WithError(err).Error("Cost calculation failed")
-		return nil, fmt.Errorf("calculation failed: %w", err)
-	}
-
-	pack.Cost = result.Cost
-	pack.EstimatedHours = result.EstimatedHours
-	pack.Currency = result.Currency
-	pack.Status = "PROCESSED"
 
 	if err := s.repo.CreatePackage(ctx, pack); err != nil {
 		s.logger.WithError(err).Error("Failed to save package into repository")

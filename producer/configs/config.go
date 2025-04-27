@@ -31,7 +31,8 @@ type KafkaConfig struct {
 }
 
 type CalculatorConfig struct {
-	URL string `yaml:"url"`
+	URL         string `yaml:"url"`
+	GRPCAddress string `yaml:"grpc_address"`
 }
 
 func Load() *Config {

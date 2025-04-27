@@ -1,7 +1,7 @@
 BIN_DIR      := bin
 GO           := go
 
-.PHONY: client gateway producer calculate consumer payment db insert testReq auth test up down restart logs
+.PHONY: client gateway producer calculate consumer payment db insert testReq auth test up down restart logs proto
 
 gateway:
 	@echo "🚀 Запуск gateway..."
@@ -72,3 +72,9 @@ restart:
 
 logs:
 	docker-compose logs -f
+
+proto:
+	/opt/homebrew/bin/protoc --proto_path=proto \
+		--go_out=paths=source_relative:proto \
+		--go-grpc_out=paths=source_relative:proto \
+		proto/calculator/calculator.proto

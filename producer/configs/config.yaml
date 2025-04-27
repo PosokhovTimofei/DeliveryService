@@ -13,3 +13,4 @@ kafka:
   version: "7.3.0"
 calculator:
   url: "http://localhost:8121"
+  grpc_address: "localhost:50051"

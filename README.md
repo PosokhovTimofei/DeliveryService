@@ -29,4 +29,9 @@ go get go.mongodb.org/mongo-driver
 
 Mux
 github.com/gorilla/mux
+
+gRPC
+go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+go get google.golang.org/grpc
 ```

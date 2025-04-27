@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/maksroxx/DeliveryService/gateway/internal/grpcclient"
 	"github.com/maksroxx/DeliveryService/gateway/internal/handlers"
 	"github.com/maksroxx/DeliveryService/gateway/internal/middleware"
 	"github.com/prometheus/client_golang/prometheus"
@@ -54,6 +55,12 @@ func enableCORS(next http.Handler) http.Handler {
 func main() {
 	logger := logrus.New()
 
+	grpcClient, err := grpcclient.NewCalculatorClient("localhost:50051")
+	if err != nil {
+		logger.Fatalf("Failed to connect to calculator gRPC: %v", err)
+	}
+	defer grpcClient.Close()
+
 	publicRoutes := []handlers.RouteConfig{
 		{
 			Prefix:      "/api/register",
@@ -73,11 +80,11 @@ func main() {
 			TargetURL:   "http://localhost:8333",
 			PathRewrite: "/packages",
 		},
-		{
-			Prefix:      "/api/calculate",
-			TargetURL:   "http://localhost:8121",
-			PathRewrite: "/calculate",
-		},
+		// {
+		//     Prefix: "/api/calculate",
+		//     TargetURL: "http://localhost:8121",
+		//     PathRewrite: "/calculate",
+		// },
 		{
 			Prefix:      "/api/create",
 			TargetURL:   "http://localhost:1234",
@@ -120,9 +127,18 @@ func main() {
 		httpResponseTimeSeconds,
 	)
 
+	calculateHandler := handlers.NewCalculateHandler(grpcClient, logger)
+	calculateChain := middleware.NewLogMiddleware(
+		enableCORS(calculateHandler),
+		logger,
+		httpRequestsTotal,
+		httpResponseTimeSeconds,
+	)
+
 	http.Handle("/metrics", promhttp.Handler())
 	http.Handle("/api/register", publicChain)
 	http.Handle("/api/login", publicChain)
+	http.Handle("/api/calculate", calculateChain)
 	http.Handle("/api/", fullProtectedChain)
 
 	logger.Info("Starting API Gateway on :8228")

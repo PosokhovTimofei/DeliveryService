@@ -1,0 +1,59 @@
+package transport
+
+import (
+	"context"
+	"net"
+
+	"github.com/maksroxx/DeliveryService/calculator/internal/service"
+	"github.com/maksroxx/DeliveryService/calculator/models"
+	calculatorpb "github.com/maksroxx/DeliveryService/proto/calculator"
+	"github.com/sirupsen/logrus"
+	"google.golang.org/grpc"
+)
+
+type GRPCServer struct {
+	calculatorpb.UnimplementedCalculatorServiceServer
+	service service.Calculator
+	logger  *logrus.Logger
+}
+
+func NewGRPCServer(calc service.Calculator, logger *logrus.Logger) *GRPCServer {
+	return &GRPCServer{
+		service: calc,
+		logger:  logger,
+	}
+}
+
+func (s *GRPCServer) CalculateDeliveryCost(ctx context.Context, req *calculatorpb.CalculateDeliveryCostRequest) (*calculatorpb.CalculateDeliveryCostResponse, error) {
+	pkg := models.Package{
+		Weight:  req.GetWeight(),
+		From:    req.GetFrom(),
+		To:      req.GetTo(),
+		Address: req.GetAddress(),
+	}
+
+	result, err := s.service.Calculate(pkg)
+	if err != nil {
+		s.logger.Errorf("gRPC CalculateDeliveryCost error: %v", err)
+		return nil, err
+	}
+
+	return &calculatorpb.CalculateDeliveryCostResponse{
+		Cost:           result.Cost,
+		EstimatedHours: int32(result.EstimatedHours),
+		Currency:       result.Currency,
+	}, nil
+}
+
+func StartGRPCServer(port string, calc service.Calculator, logger *logrus.Logger) error {
+	lis, err := net.Listen("tcp", ":"+port)
+	if err != nil {
+		return err
+	}
+
+	grpcServer := grpc.NewServer()
+	calculatorpb.RegisterCalculatorServiceServer(grpcServer, NewGRPCServer(calc, logger))
+
+	logger.Infof("gRPC server listening on :%s", port)
+	return grpcServer.Serve(lis)
+}

@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package calculator;
+
+option go_package = "github.com/maksroxx/DeliveryService/proto/calculator;calculatorpb";
+
+service CalculatorService {
+  rpc CalculateDeliveryCost (CalculateDeliveryCostRequest) returns (CalculateDeliveryCostResponse);
+}
+
+message CalculateDeliveryCostRequest {
+  double weight = 1;
+  string from = 2;
+  string to = 3;
+  string address = 4;
+}
+
+message CalculateDeliveryCostResponse {
+  double cost = 1;
+  int32 estimated_hours = 2;
+  string currency = 3;
+}
