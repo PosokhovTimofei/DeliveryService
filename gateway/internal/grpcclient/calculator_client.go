@@ -6,6 +6,8 @@ import (
 
 	calculatorpb "github.com/maksroxx/DeliveryService/proto/calculator"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/metadata"
 )
 
 type CalculatorGRPCClient struct {
@@ -14,10 +16,11 @@ type CalculatorGRPCClient struct {
 }
 
 func NewCalculatorClient(address string) (*CalculatorGRPCClient, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	conn, err := grpc.DialContext(ctx, address, grpc.WithInsecure(), grpc.WithBlock())
+	conn, err := grpc.NewClient(
+		address,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithConnectParams(grpc.ConnectParams{MinConnectTimeout: 5 * time.Second}),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -31,8 +34,12 @@ func (c *CalculatorGRPCClient) Close() error {
 	return c.conn.Close()
 }
 
-func (c *CalculatorGRPCClient) Calculate(weight float64, from, to, address string) (*calculatorpb.CalculateDeliveryCostResponse, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+func (c *CalculatorGRPCClient) Calculate(weight float64, userID, from, to, address string) (*calculatorpb.CalculateDeliveryCostResponse, error) {
+	md := metadata.New(map[string]string{
+		"authorization": userID,
+	})
+	ctx := metadata.NewOutgoingContext(context.Background(), md)
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
 	return c.client.CalculateDeliveryCost(ctx, &calculatorpb.CalculateDeliveryCostRequest{

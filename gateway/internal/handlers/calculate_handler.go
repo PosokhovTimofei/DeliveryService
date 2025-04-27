@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/maksroxx/DeliveryService/gateway/internal/grpcclient"
+	"github.com/maksroxx/DeliveryService/gateway/internal/middleware"
 	"github.com/sirupsen/logrus"
 )
 
@@ -28,6 +29,12 @@ type CalculateRequest struct {
 }
 
 func (h *CalculateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || userID == "" {
+		http.Error(w, "missing user id in context", http.StatusUnauthorized)
+		return
+	}
+
 	var req CalculateRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		h.logger.Errorf("Failed to decode request: %v", err)
@@ -35,7 +42,7 @@ func (h *CalculateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	grpcResp, err := h.client.Calculate(req.Weight, req.From, req.To, req.Address)
+	grpcResp, err := h.client.Calculate(req.Weight, userID, req.From, req.To, req.Address)
 	if err != nil {
 		h.logger.Errorf("Failed to call gRPC: %v", err)
 		http.Error(w, "Failed to calculate cost", http.StatusInternalServerError)

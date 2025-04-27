@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/maksroxx/DeliveryService/calculator/internal/metrics"
-	"github.com/maksroxx/DeliveryService/calculator/internal/transport"
+	"github.com/maksroxx/DeliveryService/calculator/internal/util"
 	"github.com/sirupsen/logrus"
 )
 
@@ -31,7 +31,7 @@ func NewMetricsMiddleware() Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			start := time.Now()
-			lrw := transport.NewLoggingResponseWriter(w)
+			lrw := util.NewLoggingResponseWriter(w)
 
 			defer func() {
 				duration := time.Since(start).Seconds()
@@ -59,7 +59,7 @@ func NewLogMiddleware(logger *logrus.Logger) Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			start := time.Now()
-			lrw := transport.NewLoggingResponseWriter(w)
+			lrw := util.NewLoggingResponseWriter(w)
 
 			defer func() {
 				logger.WithFields(logrus.Fields{

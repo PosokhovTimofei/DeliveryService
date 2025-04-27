@@ -4,6 +4,7 @@ import (
 	"context"
 	"net"
 
+	"github.com/maksroxx/DeliveryService/calculator/internal/middleware"
 	"github.com/maksroxx/DeliveryService/calculator/internal/service"
 	"github.com/maksroxx/DeliveryService/calculator/models"
 	calculatorpb "github.com/maksroxx/DeliveryService/proto/calculator"
@@ -51,7 +52,12 @@ func StartGRPCServer(port string, calc service.Calculator, logger *logrus.Logger
 		return err
 	}
 
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(
+		grpc.ChainUnaryInterceptor(
+			middleware.AuthInterceptor(),
+			middleware.NewLoggingInterceptor(logger),
+		),
+	)
 	calculatorpb.RegisterCalculatorServiceServer(grpcServer, NewGRPCServer(calc, logger))
 
 	logger.Infof("gRPC server listening on :%s", port)

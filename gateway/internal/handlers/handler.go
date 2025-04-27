@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/maksroxx/DeliveryService/gateway/internal/middleware"
 	"github.com/maksroxx/DeliveryService/gateway/internal/utils"
 	"github.com/sirupsen/logrus"
 )
@@ -37,6 +38,10 @@ func (rt *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 
 			rt.logger.Debugf("Routing %s -> %s", r.URL.Path, targetURL)
+
+			if userID, ok := middleware.UserIDFromContext(r.Context()); ok {
+				r.Header.Set("X-User-ID", userID)
+			}
 
 			if err := utils.ProxyRequest(w, r, targetURL); err != nil {
 				rt.logger.Errorf("Proxy error: %v", err)

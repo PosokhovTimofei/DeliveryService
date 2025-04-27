@@ -116,20 +116,24 @@ func main() {
 	)
 
 	protectedHandler := handlers.NewRouter(protectedRoutes, logger)
-	authProtected := middleware.NewAuthMiddleware(
+	protectedWithAuth := middleware.NewAuthMiddleware(
 		enableCORS(protectedHandler),
 		logger,
 	)
 	fullProtectedChain := middleware.NewLogMiddleware(
-		authProtected,
+		protectedWithAuth,
 		logger,
 		httpRequestsTotal,
 		httpResponseTimeSeconds,
 	)
 
 	calculateHandler := handlers.NewCalculateHandler(grpcClient, logger)
-	calculateChain := middleware.NewLogMiddleware(
+	calculateWithAuth := middleware.NewAuthMiddleware(
 		enableCORS(calculateHandler),
+		logger,
+	)
+	calculateChain := middleware.NewLogMiddleware(
+		calculateWithAuth,
 		logger,
 		httpRequestsTotal,
 		httpResponseTimeSeconds,

@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"strings"
@@ -8,6 +9,15 @@ import (
 
 	"github.com/sirupsen/logrus"
 )
+
+type contextKey string
+
+const userIDContextKey contextKey = "userID"
+
+func UserIDFromContext(ctx context.Context) (string, bool) {
+	val, ok := ctx.Value(userIDContextKey).(string)
+	return val, ok
+}
 
 type AuthMiddleware struct {
 	next        http.Handler
@@ -50,7 +60,9 @@ func (m *AuthMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	r.Header.Set("X-User-ID", userID)
+	ctx := context.WithValue(r.Context(), userIDContextKey, userID)
+
+	r = r.WithContext(ctx)
 	m.next.ServeHTTP(w, r)
 }
 
