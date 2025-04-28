@@ -7,34 +7,9 @@ import (
 	"github.com/maksroxx/DeliveryService/gateway/internal/grpcclient"
 	"github.com/maksroxx/DeliveryService/gateway/internal/handlers"
 	"github.com/maksroxx/DeliveryService/gateway/internal/middleware"
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 )
-
-var (
-	httpRequestsTotal = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Name: "http_requests_total",
-			Help: "Total number of HTTP requests",
-		},
-		[]string{"method", "path", "status"},
-	)
-
-	httpResponseTimeSeconds = prometheus.NewHistogramVec(
-		prometheus.HistogramOpts{
-			Name:    "http_response_time_seconds",
-			Help:    "Response time of HTTP requests",
-			Buckets: prometheus.DefBuckets,
-		},
-		[]string{"method", "path", "status"},
-	)
-)
-
-func init() {
-	prometheus.MustRegister(httpRequestsTotal)
-	prometheus.MustRegister(httpResponseTimeSeconds)
-}
 
 func enableCORS(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -55,24 +30,30 @@ func enableCORS(next http.Handler) http.Handler {
 func main() {
 	logger := logrus.New()
 
-	grpcClient, err := grpcclient.NewCalculatorClient("localhost:50051")
+	authClient, err := grpcclient.NewAuthGRPCClient("localhost:50052")
+	if err != nil {
+		logger.Fatalf("Failed to connect to auth gRPC: %v", err)
+	}
+	defer authClient.Close()
+
+	calculatorClient, err := grpcclient.NewCalculatorClient("localhost:50051")
 	if err != nil {
 		logger.Fatalf("Failed to connect to calculator gRPC: %v", err)
 	}
-	defer grpcClient.Close()
+	defer calculatorClient.Close()
 
-	publicRoutes := []handlers.RouteConfig{
-		{
-			Prefix:      "/api/register",
-			TargetURL:   "http://localhost:1703",
-			PathRewrite: "/register",
-		},
-		{
-			Prefix:      "/api/login",
-			TargetURL:   "http://localhost:1703",
-			PathRewrite: "/login",
-		},
-	}
+	// publicRoutes := []handlers.RouteConfig{
+	// 	{
+	// 		Prefix:      "/api/register",
+	// 		TargetURL:   "http://localhost:1703",
+	// 		PathRewrite: "/register",
+	// 	},
+	// 	{
+	// 		Prefix:      "/api/login",
+	// 		TargetURL:   "http://localhost:1703",
+	// 		PathRewrite: "/login",
+	// 	},
+	// }
 
 	protectedRoutes := []handlers.RouteConfig{
 		{
@@ -107,41 +88,47 @@ func main() {
 		},
 	}
 
-	publicHandler := handlers.NewRouter(publicRoutes, logger)
-	publicChain := middleware.NewLogMiddleware(
-		enableCORS(publicHandler),
-		logger,
-		httpRequestsTotal,
-		httpResponseTimeSeconds,
-	)
+	authHandlers := handlers.NewAuthHandlers(authClient, logger)
+	// publicHandler := handlers.NewRouter(publicRoutes, logger)
+	// publicChain := middleware.NewLogMiddleware(
+	// 	enableCORS(publicHandler),
+	// 	logger,
+	// )
 
 	protectedHandler := handlers.NewRouter(protectedRoutes, logger)
 	protectedWithAuth := middleware.NewAuthMiddleware(
 		enableCORS(protectedHandler),
 		logger,
+		authClient,
 	)
 	fullProtectedChain := middleware.NewLogMiddleware(
 		protectedWithAuth,
 		logger,
-		httpRequestsTotal,
-		httpResponseTimeSeconds,
 	)
 
-	calculateHandler := handlers.NewCalculateHandler(grpcClient, logger)
+	calculateHandler := handlers.NewCalculateHandler(calculatorClient, logger)
 	calculateWithAuth := middleware.NewAuthMiddleware(
 		enableCORS(calculateHandler),
 		logger,
+		authClient,
 	)
 	calculateChain := middleware.NewLogMiddleware(
 		calculateWithAuth,
 		logger,
-		httpRequestsTotal,
-		httpResponseTimeSeconds,
 	)
 
 	http.Handle("/metrics", promhttp.Handler())
-	http.Handle("/api/register", publicChain)
-	http.Handle("/api/login", publicChain)
+	http.Handle("/api/register", middleware.NewLogMiddleware(
+		enableCORS(http.HandlerFunc(authHandlers.Register)),
+		logger,
+	))
+
+	http.Handle("/api/login", middleware.NewLogMiddleware(
+		enableCORS(http.HandlerFunc(authHandlers.Login)),
+		logger,
+	))
+	// http.Handle("/api/register", publicChain)
+	// http.Handle("/api/login", publicChain)
 	http.Handle("/api/calculate", calculateChain)
 	http.Handle("/api/", fullProtectedChain)
 

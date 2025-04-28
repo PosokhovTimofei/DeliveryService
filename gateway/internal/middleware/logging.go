@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/maksroxx/DeliveryService/gateway/internal/metrics"
 	"github.com/maksroxx/DeliveryService/gateway/internal/utils"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/sirupsen/logrus"
@@ -20,14 +21,12 @@ type LogMiddleware struct {
 func NewLogMiddleware(
 	next http.Handler,
 	logger *logrus.Logger,
-	requestsTotal *prometheus.CounterVec,
-	responseTime *prometheus.HistogramVec,
 ) *LogMiddleware {
 	return &LogMiddleware{
 		next:          next,
 		logger:        logger,
-		requestsTotal: requestsTotal,
-		responseTime:  responseTime,
+		requestsTotal: metrics.HttpRequestsTotal,
+		responseTime:  metrics.HttpResponseTimeSeconds,
 	}
 }
 

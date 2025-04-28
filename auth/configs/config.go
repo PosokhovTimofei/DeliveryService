@@ -14,6 +14,7 @@ type Config struct {
 	DBName        string `yaml:"DB_NAME"`
 	JWTSecret     string `yaml:"JWT_SECRET"`
 	MetricsPort   string `yaml:"METRICS_PORT"`
+	GRPCPort      string `yaml:"GRPC_PORT"`
 }
 
 func Load() *Config {

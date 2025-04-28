@@ -2,11 +2,13 @@ package middleware
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 	"strings"
 	"time"
 
+	"github.com/maksroxx/DeliveryService/gateway/internal/grpcclient"
+	"github.com/maksroxx/DeliveryService/gateway/internal/metrics"
+	"github.com/maksroxx/DeliveryService/gateway/internal/utils"
 	"github.com/sirupsen/logrus"
 )
 
@@ -20,82 +22,74 @@ func UserIDFromContext(ctx context.Context) (string, bool) {
 }
 
 type AuthMiddleware struct {
-	next        http.Handler
-	logger      *logrus.Logger
-	validateURL string
-	httpClient  *http.Client
+	next       http.Handler
+	logger     *logrus.Logger
+	authClient *grpcclient.AuthGRPCClient
 }
 
-func NewAuthMiddleware(next http.Handler, logger *logrus.Logger) *AuthMiddleware {
+func NewAuthMiddleware(next http.Handler, logger *logrus.Logger, authClient *grpcclient.AuthGRPCClient) *AuthMiddleware {
 	return &AuthMiddleware{
-		next:        next,
-		logger:      logger,
-		validateURL: "http://localhost:1704/validate",
-		httpClient:  &http.Client{Timeout: 5 * time.Second},
+		next:       next,
+		logger:     logger,
+		authClient: authClient,
 	}
 }
 
 func (m *AuthMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	lrw := utils.NewLoggingResponseWriter(w)
+
 	if r.Method == "OPTIONS" {
-		m.next.ServeHTTP(w, r)
+		m.next.ServeHTTP(lrw, r)
+		m.observeMetrics(r, lrw.StatusCode, start)
 		return
 	}
 
-	if strings.HasPrefix(r.URL.Path, "/api/register") {
-		m.next.ServeHTTP(w, r)
+	if strings.HasPrefix(r.URL.Path, "/api/register") || strings.HasPrefix(r.URL.Path, "/api/login") {
+		m.next.ServeHTTP(lrw, r)
+		m.observeMetrics(r, lrw.StatusCode, start)
 		return
 	}
 
 	token := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
 	if token == "" {
 		m.logger.Warn("Missing authorization token")
-		http.Error(w, `{"error": "Authorization header required"}`, http.StatusUnauthorized)
+		http.Error(lrw, `{"error": "Authorization header required"}`, http.StatusUnauthorized)
+		m.observeMetrics(r, http.StatusUnauthorized, start)
 		return
 	}
 
 	userID, valid := m.validateToken(token)
-	if valid != "ok" {
+	if !valid {
 		m.logger.Warn("Invalid token")
-		http.Error(w, `{"error": "Invalid token"}`, http.StatusUnauthorized)
+		http.Error(lrw, `{"error": "Invalid token"}`, http.StatusUnauthorized)
+		m.observeMetrics(r, http.StatusUnauthorized, start)
 		return
 	}
 
 	ctx := context.WithValue(r.Context(), userIDContextKey, userID)
-
 	r = r.WithContext(ctx)
-	m.next.ServeHTTP(w, r)
+	m.next.ServeHTTP(lrw, r)
+	m.observeMetrics(r, lrw.StatusCode, start)
 }
 
-func (m *AuthMiddleware) validateToken(token string) (string, string) {
-	req, err := http.NewRequest("GET", m.validateURL, nil)
+func (m *AuthMiddleware) validateToken(token string) (string, bool) {
+	resp, err := m.authClient.Validate(token)
 	if err != nil {
-		m.logger.Error("Error creating request:", err)
-		return "", ""
+		m.logger.Errorf("Failed to validate token: %v", err)
+		return "", false
 	}
 
-	req.Header.Set("Authorization", "Bearer "+token)
-
-	resp, err := m.httpClient.Do(req)
-	if err != nil {
-		m.logger.Error("Error making validation request:", err)
-		return "", ""
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		m.logger.Warnf("Validation service returned status: %d", resp.StatusCode)
-		return "", ""
+	if resp.Valid != "ok" {
+		m.logger.Warnf("Token validation failed: valid=%s", resp.Valid)
+		return "", false
 	}
 
-	var response struct {
-		Valid  string `json:"status"`
-		UserID string `json:"user_id"`
-	}
+	return resp.UserId, true
+}
 
-	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-		m.logger.Error("Error decoding response:", err)
-		return "", ""
-	}
-
-	return response.UserID, response.Valid
+func (m *AuthMiddleware) observeMetrics(r *http.Request, statusCode int, start time.Time) {
+	duration := time.Since(start).Seconds()
+	metrics.HttpRequestsTotal.WithLabelValues(r.Method, r.URL.Path, http.StatusText(statusCode)).Inc()
+	metrics.HttpResponseTimeSeconds.WithLabelValues(r.Method, r.URL.Path, http.StatusText(statusCode)).Observe(duration)
 }

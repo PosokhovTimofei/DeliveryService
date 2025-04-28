@@ -59,19 +59,20 @@ func (s *AuthService) GenerateToken(user *models.User) (string, error) {
 	return token.SignedString([]byte(s.jwtSecret))
 }
 
-func (s *AuthService) Login(ctx context.Context, email, password string) (string, error) {
+func (s *AuthService) Login(ctx context.Context, email, password string) (*models.User, string, error) {
 	user, err := s.repo.GetByEmail(ctx, email)
 	if err != nil {
-		return "", models.ErrInvalidCredentials
+		return nil, "", models.ErrInvalidCredentials
 	}
 
 	if err := bcrypt.CompareHashAndPassword(
 		[]byte(user.EncryptedPassword),
 		[]byte(password),
 	); err != nil {
-		return "", models.ErrInvalidCredentials
+		return nil, "", models.ErrInvalidCredentials
 	}
-	return s.GenerateToken(user)
+	token, err := s.GenerateToken(user)
+	return user, token, err
 }
 
 func (s *AuthService) ValidateToken(tokenString string) (*models.JWTClaims, error) {

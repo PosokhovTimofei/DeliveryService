@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -14,10 +15,12 @@ import (
 	"github.com/maksroxx/DeliveryService/auth/middleware"
 	"github.com/maksroxx/DeliveryService/auth/repository"
 	"github.com/maksroxx/DeliveryService/auth/service"
+	authpb "github.com/maksroxx/DeliveryService/proto/auth"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"google.golang.org/grpc"
 )
 
 func main() {
@@ -43,12 +46,25 @@ func main() {
 	protectedServer := createProtectedServer(svc, repo, logger)
 	metricsServer := createMetricsServer()
 
+	authInterceptor := middleware.NewAuthInterceptor(svc)
+	grpcServer := grpc.NewServer(
+		grpc.UnaryInterceptor(authInterceptor.Unary()),
+	)
+	grpcHandler := handler.NewAuthGRPCServer(svc)
+	authpb.RegisterAuthServiceServer(grpcServer, grpcHandler)
+
+	grpcLis, err := net.Listen("tcp", cfg.GRPCPort)
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
+
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
 	go startServer("main", cfg.ServerPort, mainServer)
 	go startServer("protected", cfg.ProtectedPort, protectedServer)
 	go startServer("metrics", cfg.MetricsPort, metricsServer)
+	go startGRPCServer(grpcServer, grpcLis)
 
 	log.Printf("Servers started")
 	<-done
@@ -60,6 +76,9 @@ func main() {
 	shutdownServer(ctx, "main", mainServer)
 	shutdownServer(ctx, "protected", protectedServer)
 	shutdownServer(ctx, "metrics", metricsServer)
+
+	grpcServer.GracefulStop()
+	log.Println("gRPC server shutdown complete")
 }
 
 func createMainServer(h *handler.AuthHandler, logger *logrus.Logger) *http.Server {
@@ -115,5 +134,12 @@ func shutdownServer(ctx context.Context, name string, server *http.Server) {
 	log.Printf("Shutting down %s server...", name)
 	if err := server.Shutdown(ctx); err != nil {
 		log.Printf("%s server shutdown error: %v", name, err)
+	}
+}
+
+func startGRPCServer(grpcServer *grpc.Server, lis net.Listener) {
+	log.Printf("gRPC server starting on %s", lis.Addr())
+	if err := grpcServer.Serve(lis); err != nil {
+		log.Fatalf("gRPC server failed: %v", err)
 	}
 }
