@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -10,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/maksroxx/DeliveryService/payment/configs"
 	"github.com/maksroxx/DeliveryService/payment/internal/db"
 	"github.com/maksroxx/DeliveryService/payment/internal/handler"
@@ -24,6 +26,7 @@ var (
 	logger      = logrus.New()
 	cfg         *configs.Config
 	mongoClient *mongo.Client
+	pgPool      *pgxpool.Pool
 	repo        db.Paymenter
 	producer    *kafka.Producer
 	consumer    *kafka.Consumer
@@ -33,11 +36,19 @@ var (
 func main() {
 	initializeLogger()
 	loadConfig()
-	connectMongoDB()
+
+	switch strings.ToLower(cfg.Database.Driver) {
+	case "postgres":
+		connectPostgreSQL()
+	case "mongo":
+		connectMongoDB()
+	default:
+		logger.Fatalf("Unsupported database driver: %s", cfg.Database.Driver)
+	}
+
 	setupKafka()
 	startConsumer()
 	setupHTTPServer()
-
 	gracefulShutdown()
 }
 
@@ -60,6 +71,22 @@ func connectMongoDB() {
 	mongoClient = client
 	dbInstance := mongoClient.Database(cfg.Database.Name)
 	repo = db.NewPaymentMongoRepository(dbInstance, "payments")
+}
+
+func connectPostgreSQL() {
+	cfg := cfg.Postgres
+	dsn := fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=%s",
+		cfg.User, cfg.Password, cfg.Host, cfg.Port, cfg.DBName, cfg.SSLMode,
+	)
+
+	var err error
+	pgPool, err = pgxpool.Connect(context.Background(), dsn)
+	if err != nil {
+		logger.Fatalf("Failed to connect to PostgreSQL: %v", err)
+	}
+	repo = db.NewPostgresPaymenter(pgPool)
+
+	logger.Info("Connected to PostgreSQL")
 }
 
 func setupKafka() {
@@ -148,8 +175,14 @@ func gracefulShutdown() {
 		logger.Errorf("Error closing Kafka producer: %v", err)
 	}
 
-	if err := mongoClient.Disconnect(context.Background()); err != nil {
-		logger.Errorf("Error closing MongoDB connection: %v", err)
+	if mongoClient != nil {
+		if err := mongoClient.Disconnect(context.Background()); err != nil {
+			logger.Errorf("Error closing MongoDB connection: %v", err)
+		}
+	}
+
+	if pgPool != nil {
+		pgPool.Close()
 	}
 
 	logger.Info("Server gracefully stopped")

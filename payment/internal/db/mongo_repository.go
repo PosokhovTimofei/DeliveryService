@@ -18,6 +18,17 @@ type PaymentMongoRepository struct {
 
 func NewPaymentMongoRepository(db *mongo.Database, collectionName string) *PaymentMongoRepository {
 	collection := db.Collection(collectionName)
+	indexModel := mongo.IndexModel{
+		Keys: bson.D{
+			{Key: "user_id", Value: 1},
+			{Key: "package_id", Value: 1},
+		},
+		Options: options.Index().SetUnique(true),
+	}
+	_, err := collection.Indexes().CreateOne(context.Background(), indexModel)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to create index: %v", err))
+	}
 	return &PaymentMongoRepository{collection: collection}
 }
 

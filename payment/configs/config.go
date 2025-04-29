@@ -10,6 +10,7 @@ import (
 type Config struct {
 	Server   ServerConfig   `yaml:"server"`
 	Database DatabaseConfig `yaml:"database"`
+	Postgres PostgresConfig `yaml:"postgres"`
 	Kafka    KafkaConfig    `yaml:"kafka"`
 }
 
@@ -18,8 +19,18 @@ type ServerConfig struct {
 }
 
 type DatabaseConfig struct {
-	Uri  string `yaml:"uri"`
-	Name string `yaml:"name"`
+	Driver string `yaml:"driver"`
+	Uri    string `yaml:"uri"`
+	Name   string `yaml:"name"`
+}
+
+type PostgresConfig struct {
+	Host     string `yaml:"host"`
+	Port     int    `yaml:"port"`
+	User     string `yaml:"user"`
+	Password string `yaml:"password"`
+	DBName   string `yaml:"dbname"`
+	SSLMode  string `yaml:"sslmode"`
 }
 
 type KafkaConfig struct {

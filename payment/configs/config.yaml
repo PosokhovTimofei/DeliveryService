@@ -2,8 +2,18 @@ server:
   address: ":5678"
 
 database:
+  driver: "postgres"
   uri: "mongodb://localhost:27017"
   name: "logistics"
+
+
+postgres:
+  host: "localhost"
+  port: 5432
+  user: "myuser"
+  password: "mypassword"
+  dbname: "mydatabase"
+  sslmode: "disable"
 
 kafka:
   brokers:
