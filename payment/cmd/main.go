@@ -28,8 +28,8 @@ var (
 	mongoClient *mongo.Client
 	pgPool      *pgxpool.Pool
 	repo        db.Paymenter
-	producer    *kafka.Producer
-	consumer    *kafka.Consumer
+	producer    kafka.Producerer
+	consumer    kafka.Consumerer
 	httpServer  *http.Server
 )
 

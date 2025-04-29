@@ -12,10 +12,10 @@ import (
 
 type PaymentHandler struct {
 	repo     db.Paymenter
-	producer *kafka.Producer
+	producer kafka.Producerer
 }
 
-func NewPaymentHandler(repo db.Paymenter, producer *kafka.Producer) *PaymentHandler {
+func NewPaymentHandler(repo db.Paymenter, producer kafka.Producerer) *PaymentHandler {
 	return &PaymentHandler{repo: repo, producer: producer}
 }
 

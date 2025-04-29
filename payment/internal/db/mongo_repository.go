@@ -57,7 +57,7 @@ func (r *PaymentMongoRepository) UpdatePayment(ctx context.Context, update model
 	filter := bson.M{
 		"user_id":    update.UserID,
 		"package_id": update.PackageID,
-		"status":     bson.M{"$ne": "PAID"},
+		"status":     bson.M{"$ne": models.PaymentStatusPaid},
 	}
 
 	updateDoc := bson.M{

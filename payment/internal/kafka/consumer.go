@@ -34,6 +34,20 @@ func NewConsumer(cfg ConfigConsumer, handler sarama.ConsumerGroupHandler, log *l
 	}, nil
 }
 
+func NewTestableConsumer(
+	group sarama.ConsumerGroup,
+	handler sarama.ConsumerGroupHandler,
+	topic string,
+	log *logrus.Logger,
+) *Consumer {
+	return &Consumer{
+		consumer: group,
+		handler:  handler,
+		topic:    topic,
+		log:      log,
+	}
+}
+
 func (c *Consumer) Run(ctx context.Context) {
 	var retryCount int
 	for {
@@ -50,7 +64,7 @@ func (c *Consumer) Run(ctx context.Context) {
 				}
 
 				retryCount++
-				backoffDuration := calculateBackoff(retryCount)
+				backoffDuration := CalculateBackoff(retryCount)
 				c.log.WithFields(logrus.Fields{
 					"error":            err,
 					"retry_in_seconds": backoffDuration.Seconds(),
@@ -84,7 +98,11 @@ func (c *Consumer) Close() error {
 	return nil
 }
 
-func calculateBackoff(retryCount int) time.Duration {
+func (c *Consumer) RunOnce(ctx context.Context) error {
+	return c.consume(ctx)
+}
+
+func CalculateBackoff(retryCount int) time.Duration {
 	const (
 		baseDelay = 2 * time.Second
 		maxDelay  = 1 * time.Minute
