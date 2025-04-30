@@ -2,7 +2,6 @@ package transport
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/maksroxx/DeliveryService/calculator/internal/metrics"
@@ -21,32 +20,41 @@ func NewHTTPHandler(s service.Calculator) *HTTPHandler {
 func (h *HTTPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var pkg models.Package
 	if err := json.NewDecoder(r.Body).Decode(&pkg); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		RespondError(w, http.StatusBadRequest, "Invalid JSON: "+err.Error())
 		metrics.CalculationFailureTotal.WithLabelValues("POST", "decode").Inc()
 		return
 	}
 
 	if pkg.Weight <= 0 {
-		http.Error(w, "Invalid weight", http.StatusBadRequest)
+		RespondError(w, http.StatusBadRequest, "Invalid weight")
 		metrics.CalculationFailureTotal.WithLabelValues("POST", "validation_weight").Inc()
 		return
 	}
 	if pkg.From == "" || pkg.To == "" || pkg.Address == "" {
-		http.Error(w, "Invalid location", http.StatusBadRequest)
+		RespondError(w, http.StatusBadRequest, "Invalid location data")
 		metrics.CalculationFailureTotal.WithLabelValues("POST", "validation_location").Inc()
 		return
 	}
 
 	result, err := h.service.Calculate(pkg)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		RespondError(w, http.StatusInternalServerError, "Calculation error: "+err.Error())
 		metrics.CalculationFailureTotal.WithLabelValues("POST", "calculation").Inc()
 		return
 	}
-	fmt.Println(result)
+
 	metrics.CalculationSuccessTotal.WithLabelValues("POST").Inc()
 	metrics.CalculatedCostValue.Observe(result.Cost)
 
+	RespondJSON(w, http.StatusOK, result)
+}
+
+func RespondJSON(w http.ResponseWriter, code int, payload interface{}) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(result)
+	w.WriteHeader(code)
+	json.NewEncoder(w).Encode(payload)
+}
+
+func RespondError(w http.ResponseWriter, code int, message string) {
+	RespondJSON(w, code, map[string]string{"error": message})
 }

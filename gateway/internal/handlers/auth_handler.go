@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/maksroxx/DeliveryService/gateway/internal/grpcclient"
+	"github.com/maksroxx/DeliveryService/gateway/internal/utils"
 	"github.com/sirupsen/logrus"
 )
 
@@ -34,18 +35,18 @@ func (h *AuthHandlers) Register(w http.ResponseWriter, r *http.Request) {
 	var req RegisterRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		h.logger.Error("Invalid register request: ", err)
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		utils.RespondError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
 	resp, err := h.authClient.Register(req.Email, req.Password)
 	if err != nil {
 		h.logger.Error("gRPC register error: ", err)
-		http.Error(w, "Registration failed", http.StatusInternalServerError)
+		utils.RespondError(w, http.StatusInternalServerError, "Registration failed")
 		return
 	}
 
-	json.NewEncoder(w).Encode(map[string]string{
+	utils.RespondJSON(w, http.StatusOK, map[string]string{
 		"user_id": resp.UserId,
 		"token":   resp.Token,
 	})
@@ -55,18 +56,18 @@ func (h *AuthHandlers) Login(w http.ResponseWriter, r *http.Request) {
 	var req LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		h.logger.Error("Invalid login request: ", err)
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		utils.RespondError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
 	resp, err := h.authClient.Login(req.Email, req.Password)
 	if err != nil {
 		h.logger.Error("gRPC login error: ", err)
-		http.Error(w, "Login failed", http.StatusUnauthorized)
+		utils.RespondError(w, http.StatusUnauthorized, "Login failed")
 		return
 	}
 
-	json.NewEncoder(w).Encode(map[string]string{
+	utils.RespondJSON(w, http.StatusOK, map[string]string{
 		"user_id": resp.UserId,
 		"token":   resp.Token,
 	})

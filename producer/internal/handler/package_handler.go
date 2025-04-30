@@ -22,7 +22,7 @@ func (h *PackageHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		h.Create(w, r)
 	default:
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondError(w, http.StatusMethodNotAllowed, "Method not allowed")
 	}
 }
 
@@ -37,28 +37,28 @@ type PackageResponse struct {
 func (h *PackageHandler) Create(w http.ResponseWriter, r *http.Request) {
 	userID := r.Header.Get("X-User-ID")
 	if userID == "" {
-		http.Error(w, "Missing user ID", http.StatusUnauthorized)
+		RespondError(w, http.StatusUnauthorized, "Missing user ID")
 		return
 	}
 	var pkg pkg.Package
 	if err := json.NewDecoder(r.Body).Decode(&pkg); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		RespondError(w, http.StatusBadRequest, "Invalid request: "+err.Error())
 		return
 	}
 
 	if pkg.Weight <= 0 {
-		http.Error(w, "Invalid weight", http.StatusBadRequest)
+		RespondError(w, http.StatusBadRequest, "Invalid weight")
 		return
 	}
 	if pkg.From == "" || pkg.To == "" || pkg.Address == "" {
-		http.Error(w, "Invalid location", http.StatusBadRequest)
+		RespondError(w, http.StatusBadRequest, "Invalid location fields")
 		return
 	}
 
 	// send to kafka
 	createdPkg, err := h.service.CreatePackage(context.Background(), pkg, userID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		RespondError(w, http.StatusInternalServerError, "Failed to create package: "+err.Error())
 		return
 	}
 
@@ -70,7 +70,5 @@ func (h *PackageHandler) Create(w http.ResponseWriter, r *http.Request) {
 		Currency:       createdPkg.Currency,
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(response)
+	RespondJSON(w, http.StatusCreated, response)
 }

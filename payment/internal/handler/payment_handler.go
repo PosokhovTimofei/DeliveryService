@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"strings"
 
@@ -24,19 +25,19 @@ func (h *PaymentHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.ConfirmPayment(w, r)
 		return
 	}
-	http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	RespondError(w, http.StatusMethodNotAllowed, "Method not allowed")
 }
 
 func (h *PaymentHandler) ConfirmPayment(w http.ResponseWriter, r *http.Request) {
 	userID := r.Header.Get("X-User-ID")
 	if userID == "" {
-		http.Error(w, "Missing X-User-ID header", http.StatusUnauthorized)
+		RespondError(w, http.StatusUnauthorized, "Missing X-User-ID header")
 		return
 	}
 
 	parts := strings.Split(r.URL.Path, "/")
 	if len(parts) < 3 || parts[2] == "" {
-		http.Error(w, "Missing package ID in URL", http.StatusBadRequest)
+		RespondError(w, http.StatusBadRequest, "Missing package ID in URL")
 		return
 	}
 	packageID := parts[2]
@@ -48,18 +49,29 @@ func (h *PaymentHandler) ConfirmPayment(w http.ResponseWriter, r *http.Request) 
 	})
 	if err != nil {
 		if err.Error() == "payment already confirmed" {
-			http.Error(w, err.Error(), http.StatusConflict)
+			RespondError(w, http.StatusConflict, err.Error())
 			return
 		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		RespondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	if err := h.producer.PaymentMessage(*updatedPayment, updatedPayment.UserID); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		RespondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Payment confirmed and event sent"))
+	RespondJSON(w, http.StatusOK, map[string]string{
+		"message": "Payment confirmed and event sent",
+	})
+}
+
+func RespondJSON(w http.ResponseWriter, code int, payload interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+	json.NewEncoder(w).Encode(payload)
+}
+
+func RespondError(w http.ResponseWriter, code int, message string) {
+	RespondJSON(w, code, map[string]string{"error": message})
 }

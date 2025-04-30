@@ -61,7 +61,7 @@ func TestConfirmPayment(t *testing.T) {
 				return nil
 			},
 			wantStatusCode: http.StatusOK,
-			wantBody:       "Payment confirmed and event sent",
+			wantBody:       "{\"message\":\"Payment confirmed and event sent\"}\n",
 		},
 		{
 			name:           "missing user header",
@@ -69,7 +69,7 @@ func TestConfirmPayment(t *testing.T) {
 			url:            "/payment/123",
 			header:         "",
 			wantStatusCode: http.StatusUnauthorized,
-			wantBody:       "Missing X-User-ID header\n",
+			wantBody:       "{\"error\":\"Missing X-User-ID header\"}\n",
 		},
 		{
 			name:           "method not allowed",
@@ -77,7 +77,7 @@ func TestConfirmPayment(t *testing.T) {
 			url:            "/paymen/123",
 			header:         "user1",
 			wantStatusCode: http.StatusMethodNotAllowed,
-			wantBody:       "Method not allowed\n",
+			wantBody:       "{\"error\":\"Method not allowed\"}\n",
 		},
 		{
 			name:           "missing package ID",
@@ -85,7 +85,7 @@ func TestConfirmPayment(t *testing.T) {
 			url:            "/payment/",
 			header:         "user1",
 			wantStatusCode: http.StatusBadRequest,
-			wantBody:       "Missing package ID in URL\n",
+			wantBody:       "{\"error\":\"Missing package ID in URL\"}\n",
 		},
 		{
 			name:   "already confirmed",
@@ -96,7 +96,7 @@ func TestConfirmPayment(t *testing.T) {
 				return nil, errors.New("payment already confirmed")
 			},
 			wantStatusCode: http.StatusConflict,
-			wantBody:       "payment already confirmed\n",
+			wantBody:       "{\"error\":\"payment already confirmed\"}\n",
 		},
 		{
 			name:   "internal server error",
@@ -107,7 +107,7 @@ func TestConfirmPayment(t *testing.T) {
 				return nil, errors.New("db error")
 			},
 			wantStatusCode: http.StatusInternalServerError,
-			wantBody:       "db error\n",
+			wantBody:       "{\"error\":\"db error\"}\n",
 		},
 		{
 			name:   "kafka send error",
@@ -121,7 +121,7 @@ func TestConfirmPayment(t *testing.T) {
 				return errors.New("kafka error")
 			},
 			wantStatusCode: http.StatusInternalServerError,
-			wantBody:       "kafka error\n",
+			wantBody:       "{\"error\":\"kafka error\"}\n",
 		},
 	}
 

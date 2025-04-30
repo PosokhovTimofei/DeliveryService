@@ -126,11 +126,11 @@ func (h *PackageHandler) CreatePackage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if req.Weight <= 0 {
-		http.Error(w, "Invalid weight", http.StatusBadRequest)
+		respondWithError(w, http.StatusBadRequest, "Invalid weight")
 		return
 	}
 	if req.From == "" || req.To == "" || req.Address == "" {
-		http.Error(w, "Invalid location", http.StatusBadRequest)
+		respondWithError(w, http.StatusBadRequest, "Invalid location")
 		return
 	}
 

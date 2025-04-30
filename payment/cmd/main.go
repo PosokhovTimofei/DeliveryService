@@ -126,13 +126,13 @@ func setupHTTPServer() {
 
 	http.HandleFunc("/payment/", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			handler.RespondError(w, http.StatusMethodNotAllowed, "Method not allowed")
 			return
 		}
 
 		pathParts := strings.Split(strings.TrimPrefix(r.URL.Path, "/payment/"), "/")
 		if len(pathParts) == 0 || pathParts[0] == "" {
-			http.Error(w, "Missing package ID", http.StatusBadRequest)
+			handler.RespondError(w, http.StatusBadRequest, "Missing package ID")
 			return
 		}
 

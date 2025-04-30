@@ -10,6 +10,8 @@ import (
 	calculatorpb "github.com/maksroxx/DeliveryService/proto/calculator"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type GRPCServer struct {
@@ -33,10 +35,22 @@ func (s *GRPCServer) CalculateDeliveryCost(ctx context.Context, req *calculatorp
 		Address: req.GetAddress(),
 	}
 
+	if pkg.Weight <= 0 {
+		err := status.Error(codes.InvalidArgument, "Invalid weight")
+		s.logger.Error("Weight validation error: ", err)
+		return nil, err
+	}
+
+	if pkg.From == "" || pkg.To == "" || pkg.Address == "" {
+		err := status.Error(codes.InvalidArgument, "Missing required address fields")
+		s.logger.Error("Address validation error: ", err)
+		return nil, err
+	}
+
 	result, err := s.service.Calculate(pkg)
 	if err != nil {
 		s.logger.Errorf("gRPC CalculateDeliveryCost error: %v", err)
-		return nil, err
+		return nil, status.Error(codes.Internal, "Calculation failed: "+err.Error())
 	}
 
 	return &calculatorpb.CalculateDeliveryCostResponse{
