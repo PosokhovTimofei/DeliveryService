@@ -30,17 +30,23 @@ func enableCORS(next http.Handler) http.Handler {
 func main() {
 	logger := logrus.New()
 
+	calculatorClient, err := grpcclient.NewCalculatorClient("localhost:50051")
+	if err != nil {
+		logger.Fatalf("Failed to connect to calculator gRPC: %v", err)
+	}
+	defer calculatorClient.Close()
+
 	authClient, err := grpcclient.NewAuthGRPCClient("localhost:50052")
 	if err != nil {
 		logger.Fatalf("Failed to connect to auth gRPC: %v", err)
 	}
 	defer authClient.Close()
 
-	calculatorClient, err := grpcclient.NewCalculatorClient("localhost:50051")
+	paymentClient, err := grpcclient.NewPaymentGRPCClient("localhost:50053")
 	if err != nil {
-		logger.Fatalf("Failed to connect to calculator gRPC: %v", err)
+		logger.Fatalf("Failed to connect to payment gRPC: %v", err)
 	}
-	defer calculatorClient.Close()
+	defer paymentClient.Close()
 
 	// publicRoutes := []handlers.RouteConfig{
 	// 	{
@@ -81,11 +87,11 @@ func main() {
 			TargetURL:   "http://localhost:8333",
 			PathRewrite: "/my/packages",
 		},
-		{
-			Prefix:      "/api/payment",
-			TargetURL:   "http://localhost:5678",
-			PathRewrite: "/payment",
-		},
+		// {
+		// 	Prefix:      "/api/payment",
+		// 	TargetURL:   "http://localhost:5678",
+		// 	PathRewrite: "/payment",
+		// },
 	}
 
 	authHandlers := handlers.NewAuthHandlers(authClient, logger)
@@ -117,6 +123,15 @@ func main() {
 		logger,
 	)
 
+	paymentHandler := handlers.NewPaymentHandler(paymentClient, logger)
+	paymentWithAuth := middleware.NewAuthMiddleware(
+		enableCORS(paymentHandler),
+		logger,
+		authClient,
+	)
+	paymentChain := middleware.NewLogMiddleware(paymentWithAuth, logger)
+
+	http.Handle("/api/payment/confirm", paymentChain)
 	http.Handle("/metrics", promhttp.Handler())
 	http.Handle("/api/register", middleware.NewLogMiddleware(
 		enableCORS(http.HandlerFunc(authHandlers.Register)),

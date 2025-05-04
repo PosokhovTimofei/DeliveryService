@@ -1,8 +1,9 @@
 server:
   address: ":5678"
+  grpc_address: ":50053"
 
 database:
-  driver: "postgres"
+  driver: "mongo"
   uri: "mongodb://localhost:27017"
   name: "logistics"
 

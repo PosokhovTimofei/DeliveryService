@@ -30,7 +30,7 @@ func (h *HTTPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		metrics.CalculationFailureTotal.WithLabelValues("POST", "validation_weight").Inc()
 		return
 	}
-	if pkg.From == "" || pkg.To == "" || pkg.Address == "" {
+	if ValidateAddress(pkg) != nil {
 		RespondError(w, http.StatusBadRequest, "Invalid location data")
 		metrics.CalculationFailureTotal.WithLabelValues("POST", "validation_location").Inc()
 		return

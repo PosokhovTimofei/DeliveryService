@@ -157,9 +157,13 @@ function getPackages() {
 function payForPackage(packageId) {
   const token = localStorage.getItem('token');
 
-  fetch(`${API_URL}/payment/${packageId}`, {
+  fetch(`${API_URL}/payment/confirm`, {
     method: 'POST',
-    headers: { 'Authorization': `Bearer ${token}` }
+    headers: { 
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ package_id: packageId })
   })
   .then(async res => {
     const contentType = res.headers.get("content-type");

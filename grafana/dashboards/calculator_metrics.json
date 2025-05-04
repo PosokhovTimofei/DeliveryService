@@ -65,7 +65,7 @@
             "title": "Calculated Delivery Cost Distribution",
             "targets": [
                 {
-                    "expr": "histogram_quantile(0.95, sum(rate(calculated_cost_value_bucket{job=\"calculator-service\"}[5m])) by (le))",
+                    "expr": "histogram_quantile(0.95, sum(rate(calculated_cost_value{job=\"calculator-service\"}[5m])) by (le))",
                     "legendFormat": "Cost 95th percentile",
                     "interval": ""
                 }

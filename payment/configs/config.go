@@ -15,7 +15,8 @@ type Config struct {
 }
 
 type ServerConfig struct {
-	Address string `yaml:"address"`
+	Address     string `yaml:"address"`
+	GRPCAddress string `yaml:"grpc_address"`
 }
 
 type DatabaseConfig struct {

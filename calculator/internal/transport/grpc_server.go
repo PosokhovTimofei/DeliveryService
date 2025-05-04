@@ -41,9 +41,7 @@ func (s *GRPCServer) CalculateDeliveryCost(ctx context.Context, req *calculatorp
 		return nil, err
 	}
 
-	if pkg.From == "" || pkg.To == "" || pkg.Address == "" {
-		err := status.Error(codes.InvalidArgument, "Missing required address fields")
-		s.logger.Error("Address validation error: ", err)
+	if err := ValidateAddress(pkg); err != nil {
 		return nil, err
 	}
 

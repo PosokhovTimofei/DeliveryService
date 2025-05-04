@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -17,9 +18,11 @@ import (
 	"github.com/maksroxx/DeliveryService/payment/internal/handler"
 	"github.com/maksroxx/DeliveryService/payment/internal/kafka"
 	"github.com/maksroxx/DeliveryService/payment/internal/processor"
+	pb "github.com/maksroxx/DeliveryService/proto/payment"
 	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"google.golang.org/grpc"
 )
 
 var (
@@ -31,6 +34,7 @@ var (
 	producer    kafka.Producerer
 	consumer    kafka.Consumerer
 	httpServer  *http.Server
+	grpcServer  *grpc.Server
 )
 
 func main() {
@@ -49,6 +53,7 @@ func main() {
 	setupKafka()
 	startConsumer()
 	setupHTTPServer()
+	setupGRPCServer()
 	gracefulShutdown()
 }
 
@@ -153,6 +158,23 @@ func setupHTTPServer() {
 	}()
 }
 
+func setupGRPCServer() {
+	lis, err := net.Listen("tcp", cfg.Server.GRPCAddress)
+	if err != nil {
+		logger.Fatalf("Failed to listen on %s: %v", cfg.Server.GRPCAddress, err)
+	}
+
+	grpcServer = grpc.NewServer()
+	pb.RegisterPaymentServiceServer(grpcServer, handler.NewPaymentGRPCServer(repo, producer))
+
+	go func() {
+		logger.Infof("gRPC server started at %s", cfg.Server.GRPCAddress)
+		if err := grpcServer.Serve(lis); err != nil {
+			logger.Fatalf("Failed to start gRPC server: %v", err)
+		}
+	}()
+}
+
 func gracefulShutdown() {
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
@@ -165,6 +187,10 @@ func gracefulShutdown() {
 
 	if err := httpServer.Shutdown(ctxShutdown); err != nil {
 		logger.Fatalf("HTTP shutdown error: %v", err)
+	}
+
+	if grpcServer != nil {
+		grpcServer.GracefulStop()
 	}
 
 	if err := consumer.Close(); err != nil {
