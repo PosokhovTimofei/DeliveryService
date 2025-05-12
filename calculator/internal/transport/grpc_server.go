@@ -5,6 +5,7 @@ import (
 	"net"
 
 	"github.com/maksroxx/DeliveryService/calculator/internal/middleware"
+	"github.com/maksroxx/DeliveryService/calculator/internal/repository"
 	"github.com/maksroxx/DeliveryService/calculator/internal/service"
 	"github.com/maksroxx/DeliveryService/calculator/models"
 	calculatorpb "github.com/maksroxx/DeliveryService/proto/calculator"
@@ -18,11 +19,13 @@ type GRPCServer struct {
 	calculatorpb.UnimplementedCalculatorServiceServer
 	service service.Calculator
 	logger  *logrus.Logger
+	rep     repository.CountryRepository
 }
 
-func NewGRPCServer(calc service.Calculator, logger *logrus.Logger) *GRPCServer {
+func NewGRPCServer(rep repository.CountryRepository, calc service.Calculator, logger *logrus.Logger) *GRPCServer {
 	return &GRPCServer{
 		service: calc,
+		rep:     rep,
 		logger:  logger,
 	}
 }
@@ -45,7 +48,7 @@ func (s *GRPCServer) CalculateDeliveryCost(ctx context.Context, req *calculatorp
 		return nil, err
 	}
 
-	result, err := s.service.Calculate(pkg)
+	result, err := s.service.Calculate(context.Background(), s.rep, pkg)
 	if err != nil {
 		s.logger.Errorf("gRPC CalculateDeliveryCost error: %v", err)
 		return nil, status.Error(codes.Internal, "Calculation failed: "+err.Error())
@@ -58,7 +61,7 @@ func (s *GRPCServer) CalculateDeliveryCost(ctx context.Context, req *calculatorp
 	}, nil
 }
 
-func StartGRPCServer(port string, calc service.Calculator, logger *logrus.Logger) error {
+func StartGRPCServer(port string, rep repository.CountryRepository, calc service.Calculator, logger *logrus.Logger) error {
 	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		return err
@@ -70,7 +73,7 @@ func StartGRPCServer(port string, calc service.Calculator, logger *logrus.Logger
 			middleware.NewLoggingInterceptor(logger),
 		),
 	)
-	calculatorpb.RegisterCalculatorServiceServer(grpcServer, NewGRPCServer(calc, logger))
+	calculatorpb.RegisterCalculatorServiceServer(grpcServer, NewGRPCServer(rep, calc, logger))
 
 	logger.Infof("gRPC server listening on :%s", port)
 	return grpcServer.Serve(lis)

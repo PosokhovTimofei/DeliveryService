@@ -1,20 +1,23 @@
 package transport
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
 	"github.com/maksroxx/DeliveryService/calculator/internal/metrics"
+	"github.com/maksroxx/DeliveryService/calculator/internal/repository"
 	"github.com/maksroxx/DeliveryService/calculator/internal/service"
 	"github.com/maksroxx/DeliveryService/calculator/models"
 )
 
 type HTTPHandler struct {
 	service service.Calculator
+	rep     repository.CountryRepository
 }
 
-func NewHTTPHandler(s service.Calculator) *HTTPHandler {
-	return &HTTPHandler{service: s}
+func NewHTTPHandler(s service.Calculator, rep repository.CountryRepository) *HTTPHandler {
+	return &HTTPHandler{service: s, rep: rep}
 }
 
 func (h *HTTPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -36,7 +39,7 @@ func (h *HTTPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := h.service.Calculate(pkg)
+	result, err := h.service.Calculate(context.Background(), h.rep, pkg)
 	if err != nil {
 		RespondError(w, http.StatusInternalServerError, "Calculation error: "+err.Error())
 		metrics.CalculationFailureTotal.WithLabelValues("POST", "calculation").Inc()

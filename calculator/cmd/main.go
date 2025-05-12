@@ -1,17 +1,36 @@
 package main
 
 import (
+	"context"
+	"log"
 	"net/http"
 
+	"github.com/maksroxx/DeliveryService/calculator/configs"
 	"github.com/maksroxx/DeliveryService/calculator/internal/middleware"
+	"github.com/maksroxx/DeliveryService/calculator/internal/repository"
 	"github.com/maksroxx/DeliveryService/calculator/internal/service"
 	"github.com/maksroxx/DeliveryService/calculator/internal/transport"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func main() {
-	cfg := transport.Load()
+	cfg := configs.Load()
+	mongoCfg := cfg.Database.MongoDB
+	clientOptions := options.Client().ApplyURI(mongoCfg.URI)
+	client, err := mongo.Connect(context.Background(), clientOptions)
+	if err != nil {
+		log.Fatalf("Failed to connect to MongoDB: %v", err)
+	}
+	defer func() {
+		if err = client.Disconnect(context.Background()); err != nil {
+			log.Printf("Error disconnecting MongoDB: %v", err)
+		}
+	}()
+	db := client.Database(mongoCfg.Database)
+	repo := repository.NewCityMongoRepository(db, "countries")
 	log := logrus.New()
 	chain := middleware.NewChain(
 		middleware.NewMetricsMiddleware(),
@@ -21,17 +40,17 @@ func main() {
 	svc := service.NewCalculator()
 
 	go func() {
-		if err := transport.StartGRPCServer(cfg.GRPCPort, svc, log); err != nil {
+		if err := transport.StartGRPCServer(cfg.GRPCPort, repo, svc, log); err != nil {
 			log.Fatalf("gRPC server failed: %v", err)
 		}
 	}()
 
 	http.Handle("/metrics", promhttp.Handler())
-	startHTTPServer(cfg.HTTPPort, svc, chain, log)
+	startHTTPServer(cfg.HTTPPort, repo, svc, chain, log)
 }
 
-func startHTTPServer(port string, calc service.Calculator, chain *middleware.Chain, log *logrus.Logger) {
-	handler := transport.NewHTTPHandler(calc)
+func startHTTPServer(port string, repo repository.CountryRepository, calc service.Calculator, chain *middleware.Chain, log *logrus.Logger) {
+	handler := transport.NewHTTPHandler(calc, repo)
 	wrappedHandler := chain.Then(handler)
 
 	http.Handle("/calculate", wrappedHandler)
