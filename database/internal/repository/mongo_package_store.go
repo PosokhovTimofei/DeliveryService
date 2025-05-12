@@ -176,7 +176,6 @@ func (r *MongoRepository) UpdateRoute(ctx context.Context, packageID string, upd
 	}
 
 	metrics.UpdatedPackages.Inc()
-	updatedRoute.ID = ""
 	return &updatedRoute, nil
 }
 

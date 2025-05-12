@@ -90,7 +90,7 @@ authClient := grpcclient.NewAuthGRPCClient("localhost:50052")
 calculatorClient := grpcclient.NewCalculatorClient("localhost:50051")
 paymentClient := grpcclient.NewPaymentGRPCClient("localhost:50053")
 ```
-
+---
 ## 📡 Метрики и мониторинг
 
 | Компонент  | URL                      |
@@ -109,7 +109,7 @@ paymentClient := grpcclient.NewPaymentGRPCClient("localhost:50053")
   static_configs:
     - targets: ["host.docker.internal:8228"]
 ```
-
+---
 ## 🌐 API Маршруты
 
 | Метод | Путь                   | Защищен | Описание                          |
@@ -122,7 +122,9 @@ paymentClient := grpcclient.NewPaymentGRPCClient("localhost:50053")
 | GET   | `/api/my/packages`     | ✅      | Получение своих посылок          |
 | GET   | `/api/profile`         | ✅      | Просмотр профиля пользователя    |
 | POST  | `/api/payment/confirm` | ✅      | Подтверждение оплаты             |
-
+| GET   | `/api/packages/{packageID}/status` |  ✅      | Просмотр статуса доставки             |
+| DELETE | `/api/packages/{packageID}` |  ✅      | Удаление посылки |
+---
 ## 📜 Генерация Protobuf
 
 ```bash
@@ -179,5 +181,3 @@ make protopay   # Протокол платежей
 - 🔒 Безопасную JWT-аутентификацию
 - 📊 Полноценный мониторинг через Grafana/Prometheus
 - 🐳 Простую развертку через Docker
----
-🚀 **Спасибо, что используете DeliveryService!** Ваши отзывы и предложения помогут сделать сервис лучше.

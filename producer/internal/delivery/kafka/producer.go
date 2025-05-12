@@ -17,6 +17,15 @@ const (
 	retryDelay       = 2 * time.Second
 )
 
+type ProducerInterface interface {
+	SendPackage(pkg pkg.Package, userID string) error
+	SendPaymentEvent(event pkg.PaymentEvent) error
+	BeginTransaction() error
+	CommitTransaction() error
+	AbortTransaction() error
+	Close() error
+}
+
 type Producer struct {
 	syncProducer sarama.SyncProducer
 	packageTopic string

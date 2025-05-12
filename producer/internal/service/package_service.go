@@ -15,12 +15,12 @@ import (
 
 type PackageService struct {
 	repo             repository.Packager
-	producer         *kafka.Producer
+	producer         kafka.ProducerInterface
 	calculatorClient *calculator.CalculatorGRPCClient
 	logger           *logrus.Logger
 }
 
-func NewPackageService(producer *kafka.Producer, client *calculator.CalculatorGRPCClient, repo repository.Packager, logger *logrus.Logger) *PackageService {
+func NewPackageService(producer kafka.ProducerInterface, client *calculator.CalculatorGRPCClient, repo repository.Packager, logger *logrus.Logger) *PackageService {
 	return &PackageService{
 		producer:         producer,
 		calculatorClient: client,
