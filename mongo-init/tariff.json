@@ -1,0 +1,32 @@
+[
+  {
+    "code": "STANDARD",
+    "name": "Standard",
+    "base_rate": 300,
+    "price_per_km": 5,
+    "price_per_kg": 50,
+    "currency": "RUB",
+    "volumetric_divider": 4000,
+    "speed_kmph": 60
+  },
+  {
+    "code": "EXPRESS",
+    "name": "Express",
+    "base_rate": 600,
+    "price_per_km": 8,
+    "price_per_kg": 70,
+    "currency": "RUB",
+    "volumetric_divider": 3000,
+    "speed_kmph": 80
+  },
+  {
+    "code": "ECONOMY",
+    "name": "Economy",
+    "base_rate": 200,
+    "price_per_km": 3,
+    "price_per_kg": 30,
+    "currency": "RUB",
+    "volumetric_divider": 5000,
+    "speed_kmph": 40
+  }
+]

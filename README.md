@@ -118,12 +118,15 @@ paymentClient := grpcclient.NewPaymentGRPCClient("localhost:50053")
 | POST  | `/api/register`        | ❌      | Регистрация пользователя         |
 | POST  | `/api/login`           | ❌      | Авторизация                      |
 | GET   | `/api/calculate`       | ✅      | Расчет стоимости доставки        |
+| POST | `/api/calculate-by-tariff` |  ✅      | Расчет по тарифу |
+| GET | `/api/tariffs` |  ✅      | Получение всех тарифов |
 | POST  | `/api/create`          | ✅      | Создание заказа (Kafka producer) |
 | GET   | `/api/packages`        | ✅      | Получение всех посылок           |
 | GET   | `/api/my/packages`     | ✅      | Получение своих посылок          |
 | GET   | `/api/profile`         | ✅      | Просмотр профиля пользователя    |
 | POST  | `/api/payment/confirm` | ✅      | Подтверждение оплаты             |
 | GET   | `/api/packages/{packageID}/status` |  ✅      | Просмотр статуса доставки             |
+| POST   | `/api/packages/{packageID}/cancel` |  ✅      | Отмена посылки |
 | DELETE | `/api/packages/{packageID}` |  ✅      | Удаление посылки |
 ---
 ## 📜 Генерация Protobuf

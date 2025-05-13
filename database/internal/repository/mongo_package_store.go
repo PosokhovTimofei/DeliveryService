@@ -202,13 +202,17 @@ func (r *MongoRepository) Ping(ctx context.Context) error {
 }
 
 func (r *MongoRepository) calculateRemainingHours(ctx context.Context, route *models.Package) int {
+	if route.Status == "Сanceled" || route.Status == "Delivered" {
+		return 0
+	}
+
 	elapsed := int(time.Since(route.CreatedAt).Hours())
 	remaining := route.EstimatedHours - elapsed
 	if remaining < 0 {
 		remaining = 0
 	}
 
-	if remaining == 0 && route.Status != "Delivered" {
+	if remaining == 0 && route.Status != "Delivered" && route.Status != "Сanceled" {
 		filter := bson.M{"package_id": route.PackageID}
 		update := bson.M{
 			"$set": bson.M{

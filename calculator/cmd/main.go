@@ -31,14 +31,14 @@ func main() {
 	}()
 	db := client.Database(mongoCfg.Database)
 	repo := repository.NewCityMongoRepository(db, "countries")
+	tariffRepo := repository.NewTariffMongoRepository(db, "tariffs")
 	log := logrus.New()
 	chain := middleware.NewChain(
 		middleware.NewMetricsMiddleware(),
 		middleware.NewLogMiddleware(log),
 	)
 
-	svc := service.NewCalculator(repo)
-
+	svc := service.NewExtendedCalculator(repo, tariffRepo)
 	go func() {
 		if err := transport.StartGRPCServer(cfg.GRPCPort, repo, svc, log); err != nil {
 			log.Fatalf("gRPC server failed: %v", err)
@@ -54,6 +54,12 @@ func startHTTPServer(port string, calc service.Calculator, chain *middleware.Cha
 	wrappedHandler := chain.Then(handler)
 
 	http.Handle("/calculate", wrappedHandler)
+	http.HandleFunc("/calculate-by-tariff", func(w http.ResponseWriter, r *http.Request) {
+		chain.Then(http.HandlerFunc(handler.HandleCalculateByTariff)).ServeHTTP(w, r)
+	})
+	http.HandleFunc("/tariffs", func(w http.ResponseWriter, r *http.Request) {
+		chain.Then(http.HandlerFunc(handler.HandleTariffList)).ServeHTTP(w, r)
+	})
 	log.Infof("HTTP server listening on :%s", port)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		log.Fatalf("HTTP server failed: %v", err)

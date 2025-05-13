@@ -26,6 +26,7 @@ func (h *PackageHandler) RegisterDefaultRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /packages/{packageID}/status", h.GetPackageStatus)
 	mux.HandleFunc("PUT /packages/{packageID}", h.UpdatePackage)
 	mux.HandleFunc("DELETE /packages/{packageID}", h.DeletePackage)
+	mux.HandleFunc("POST /packages/{packageID}/cancel", h.CancelPackage)
 }
 
 func (h *PackageHandler) RegisterUserRoutes(mux *http.ServeMux) {
@@ -199,4 +200,39 @@ func (h *PackageHandler) DeletePackage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+}
+
+func (h *PackageHandler) CancelPackage(w http.ResponseWriter, r *http.Request) {
+	packageID := r.PathValue("packageID")
+	if packageID == "" {
+		respondWithError(w, http.StatusBadRequest, "Package id not found")
+		return
+	}
+
+	pkg, err := h.rep.GetByID(r.Context(), packageID)
+	if err != nil {
+		respondWithError(w, http.StatusNotFound, "Package not found")
+		return
+	}
+
+	if pkg.Status == "Delivered" {
+		respondWithError(w, http.StatusBadRequest, "Cannot cancel a delivered package")
+		return
+	}
+	if pkg.Status == "Сanceled" {
+		respondWithError(w, http.StatusBadRequest, "Package is already canceled")
+		return
+	}
+
+	update := models.RouteUpdate{
+		Status: "Сanceled",
+	}
+
+	updatedPkg, err := h.rep.UpdateRoute(r.Context(), packageID, update)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Failed to cancel package")
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, updatedPkg)
 }
