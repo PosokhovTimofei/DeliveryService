@@ -32,7 +32,8 @@ DeliveryService/
 ├── interface/          # Сайт для рабоыт с сервисом
 ├── proto/              # Протобуф-схемы
 ├── grafana/            # Dashboards + Provisioning
-├── scripts/            # Тестовые скрипты и вставка данных
+├── scripts/            # Тестовые скрипты
+├── mongo-init/         # Данные для заполнения mongodb
 ├── docker-compose.yml
 ├── prometheus.yml
 └── Makefile
