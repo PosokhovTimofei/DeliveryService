@@ -37,7 +37,7 @@ func main() {
 		middleware.NewLogMiddleware(log),
 	)
 
-	svc := service.NewCalculator()
+	svc := service.NewCalculator(repo)
 
 	go func() {
 		if err := transport.StartGRPCServer(cfg.GRPCPort, repo, svc, log); err != nil {
@@ -46,11 +46,11 @@ func main() {
 	}()
 
 	http.Handle("/metrics", promhttp.Handler())
-	startHTTPServer(cfg.HTTPPort, repo, svc, chain, log)
+	startHTTPServer(cfg.HTTPPort, svc, chain, log)
 }
 
-func startHTTPServer(port string, repo repository.CountryRepository, calc service.Calculator, chain *middleware.Chain, log *logrus.Logger) {
-	handler := transport.NewHTTPHandler(calc, repo)
+func startHTTPServer(port string, calc service.Calculator, chain *middleware.Chain, log *logrus.Logger) {
+	handler := transport.NewHTTPHandler(calc)
 	wrappedHandler := chain.Then(handler)
 
 	http.Handle("/calculate", wrappedHandler)

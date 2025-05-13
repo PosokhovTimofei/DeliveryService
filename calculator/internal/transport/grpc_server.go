@@ -19,13 +19,11 @@ type GRPCServer struct {
 	calculatorpb.UnimplementedCalculatorServiceServer
 	service service.Calculator
 	logger  *logrus.Logger
-	rep     repository.CountryRepository
 }
 
-func NewGRPCServer(rep repository.CountryRepository, calc service.Calculator, logger *logrus.Logger) *GRPCServer {
+func NewGRPCServer(calc service.Calculator, logger *logrus.Logger) *GRPCServer {
 	return &GRPCServer{
 		service: calc,
-		rep:     rep,
 		logger:  logger,
 	}
 }
@@ -48,7 +46,7 @@ func (s *GRPCServer) CalculateDeliveryCost(ctx context.Context, req *calculatorp
 		return nil, err
 	}
 
-	result, err := s.service.Calculate(context.Background(), s.rep, pkg)
+	result, err := s.service.Calculate(context.Background(), pkg)
 	if err != nil {
 		s.logger.Errorf("gRPC CalculateDeliveryCost error: %v", err)
 		return nil, status.Error(codes.Internal, "Calculation failed: "+err.Error())
@@ -73,7 +71,7 @@ func StartGRPCServer(port string, rep repository.CountryRepository, calc service
 			middleware.NewLoggingInterceptor(logger),
 		),
 	)
-	calculatorpb.RegisterCalculatorServiceServer(grpcServer, NewGRPCServer(rep, calc, logger))
+	calculatorpb.RegisterCalculatorServiceServer(grpcServer, NewGRPCServer(calc, logger))
 
 	logger.Infof("gRPC server listening on :%s", port)
 	return grpcServer.Serve(lis)

@@ -16,8 +16,8 @@ type HTTPHandler struct {
 	rep     repository.CountryRepository
 }
 
-func NewHTTPHandler(s service.Calculator, rep repository.CountryRepository) *HTTPHandler {
-	return &HTTPHandler{service: s, rep: rep}
+func NewHTTPHandler(s service.Calculator) *HTTPHandler {
+	return &HTTPHandler{service: s}
 }
 
 func (h *HTTPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -39,7 +39,7 @@ func (h *HTTPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := h.service.Calculate(context.Background(), h.rep, pkg)
+	result, err := h.service.Calculate(context.Background(), pkg)
 	if err != nil {
 		RespondError(w, http.StatusInternalServerError, "Calculation error: "+err.Error())
 		metrics.CalculationFailureTotal.WithLabelValues("POST", "calculation").Inc()

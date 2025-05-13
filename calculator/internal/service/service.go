@@ -11,7 +11,7 @@ import (
 )
 
 type Calculator interface {
-	Calculate(ctx context.Context, rep repository.CountryRepository, pkg models.Package) (models.CalculationResult, error)
+	Calculate(ctx context.Context, pkg models.Package) (models.CalculationResult, error)
 }
 
 type DefaultCalculator struct {
@@ -19,25 +19,27 @@ type DefaultCalculator struct {
 	pricePerKm float64
 	pricePerKg float64
 	currency   string
+	repository repository.CountryRepository
 }
 
-func NewCalculator() *DefaultCalculator {
+func NewCalculator(rep repository.CountryRepository) *DefaultCalculator {
 	return &DefaultCalculator{
-		baseRate:   500,
-		pricePerKm: 30,
+		baseRate:   300,
+		pricePerKm: 5,
 		pricePerKg: 50,
 		currency:   "RUB",
+		repository: rep,
 	}
 }
 
-func (c *DefaultCalculator) Calculate(ctx context.Context, repo repository.CountryRepository, pkg models.Package) (models.CalculationResult, error) {
-	from, err := repo.GetCoordinates(ctx, pkg.From)
+func (c *DefaultCalculator) Calculate(ctx context.Context, pkg models.Package) (models.CalculationResult, error) {
+	from, err := c.repository.GetCoordinates(ctx, pkg.From)
 	if err != nil {
 		log.Printf("Failed to get coordinates for origin country '%s': %v", pkg.From, err)
 		return fallbackResult(pkg), nil
 	}
 
-	to, err := repo.GetCoordinates(ctx, pkg.To)
+	to, err := c.repository.GetCoordinates(ctx, pkg.To)
 	if err != nil {
 		log.Printf("Failed to get coordinates for destination country '%s': %v", pkg.To, err)
 		return fallbackResult(pkg), nil
