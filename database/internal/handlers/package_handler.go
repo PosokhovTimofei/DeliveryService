@@ -134,6 +134,11 @@ func (h *PackageHandler) CreatePackage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if req.Length <= 0 || req.Width <= 0 || req.Height <= 0 {
+		respondWithError(w, http.StatusBadRequest, "Invalid parameters")
+		return
+	}
+
 	req.UserID = userID
 	req.CreatedAt = time.Now()
 	pkg, err := h.rep.Create(r.Context(), &req)

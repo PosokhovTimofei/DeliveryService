@@ -34,7 +34,7 @@ func (s *PackageService) CreatePackage(ctx context.Context, pack pkg.Package, us
 	pack.ID = "PKG-" + uuid.New().String()
 	pack.Status = "CREATED"
 
-	result, err := s.calculatorClient.Calculate(pack.Weight, userID, pack.From, pack.To, pack.Address)
+	result, err := s.calculatorClient.Calculate(pack.Weight, userID, pack.From, pack.To, pack.Address, pack.Length, pack.Width, pack.Height)
 	if err != nil {
 		s.logger.WithError(err).Error("Cost calculation failed")
 		return nil, fmt.Errorf("calculation failed: %w", err)

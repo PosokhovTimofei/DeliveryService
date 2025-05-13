@@ -77,7 +77,7 @@ func (p *PackageProcessor) handlePackageEvent(session sarama.ConsumerGroupSessio
 
 	session.MarkMessage(msg, "")
 	p.log.WithFields(logrus.Fields{
-		"package_id": pack,
+		"package_id": pack.ID,
 		"user_id":    userID,
 	}).Info("Package created successfully")
 }

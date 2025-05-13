@@ -27,6 +27,9 @@ type CalculateRequest struct {
 	From    string  `json:"from"`
 	To      string  `json:"to"`
 	Address string  `json:"address"`
+	Length  int     `json:"length"`
+	Width   int     `json:"width"`
+	Height  int     `json:"height"`
 }
 
 func (h *CalculateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -43,7 +46,7 @@ func (h *CalculateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	grpcResp, err := h.client.Calculate(req.Weight, userID, req.From, req.To, req.Address)
+	grpcResp, err := h.client.Calculate(req.Weight, userID, req.From, req.To, req.Address, req.Length, req.Width, req.Height)
 	if err != nil {
 		h.logger.Errorf("Failed to call gRPC: %v", err)
 		utils.RespondError(w, http.StatusInternalServerError, "Failed to calculate cost")

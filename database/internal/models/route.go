@@ -9,6 +9,9 @@ type Package struct {
 	PackageID      string    `bson:"package_id" json:"package_id"`
 	UserID         string    `bson:"user_id" json:"-"`
 	Weight         float64   `bson:"weight" json:"weight"`
+	Length         int       `bson:"length" json:"length"`
+	Width          int       `bson:"width" json:"width"`
+	Height         int       `bson:"height" json:"height"`
 	From           string    `bson:"from" json:"from"`
 	To             string    `bson:"to" json:"to"`
 	Address        string    `bson:"address" json:"address"`

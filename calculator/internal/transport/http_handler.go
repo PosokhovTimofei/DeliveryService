@@ -6,14 +6,12 @@ import (
 	"net/http"
 
 	"github.com/maksroxx/DeliveryService/calculator/internal/metrics"
-	"github.com/maksroxx/DeliveryService/calculator/internal/repository"
 	"github.com/maksroxx/DeliveryService/calculator/internal/service"
 	"github.com/maksroxx/DeliveryService/calculator/models"
 )
 
 type HTTPHandler struct {
 	service service.Calculator
-	rep     repository.CountryRepository
 }
 
 func NewHTTPHandler(s service.Calculator) *HTTPHandler {
@@ -33,7 +31,7 @@ func (h *HTTPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		metrics.CalculationFailureTotal.WithLabelValues("POST", "validation_weight").Inc()
 		return
 	}
-	if ValidateAddress(pkg) != nil {
+	if Validate(pkg) != nil {
 		RespondError(w, http.StatusBadRequest, "Invalid location data")
 		metrics.CalculationFailureTotal.WithLabelValues("POST", "validation_location").Inc()
 		return

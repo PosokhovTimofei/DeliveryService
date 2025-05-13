@@ -22,6 +22,9 @@ func TestValidateAddress(t *testing.T) {
 				From:    "Sender",
 				To:      "Receiver",
 				Address: "123 Main St",
+				Length:  2,
+				Height:  2,
+				Width:   2,
 			},
 			expected: codes.OK,
 		},
@@ -31,6 +34,9 @@ func TestValidateAddress(t *testing.T) {
 				From:    "",
 				To:      "Receiver",
 				Address: "123 Main St",
+				Length:  2,
+				Height:  2,
+				Width:   2,
 			},
 			expected: codes.InvalidArgument,
 		},
@@ -40,6 +46,9 @@ func TestValidateAddress(t *testing.T) {
 				From:    "Sender",
 				To:      "",
 				Address: "123 Main St",
+				Length:  2,
+				Height:  2,
+				Width:   2,
 			},
 			expected: codes.InvalidArgument,
 		},
@@ -49,6 +58,9 @@ func TestValidateAddress(t *testing.T) {
 				From:    "Sender",
 				To:      "Receiver",
 				Address: "",
+				Length:  2,
+				Height:  2,
+				Width:   2,
 			},
 			expected: codes.InvalidArgument,
 		},
@@ -58,6 +70,9 @@ func TestValidateAddress(t *testing.T) {
 				From:    "Sender",
 				To:      "Receiver",
 				Address: "123456",
+				Length:  2,
+				Height:  2,
+				Width:   2,
 			},
 			expected: codes.InvalidArgument,
 		},
@@ -67,6 +82,9 @@ func TestValidateAddress(t *testing.T) {
 				From:    "123456",
 				To:      "Receiver",
 				Address: "123 Main St",
+				Length:  2,
+				Height:  2,
+				Width:   2,
 			},
 			expected: codes.InvalidArgument,
 		},
@@ -76,6 +94,9 @@ func TestValidateAddress(t *testing.T) {
 				From:    "Sender",
 				To:      "123456",
 				Address: "123 Main St",
+				Length:  2,
+				Height:  2,
+				Width:   2,
 			},
 			expected: codes.InvalidArgument,
 		},
@@ -83,7 +104,7 @@ func TestValidateAddress(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := transport.ValidateAddress(tt.pkg)
+			err := transport.Validate(tt.pkg)
 			if tt.expected == codes.OK {
 				assert.NoError(t, err)
 			} else {

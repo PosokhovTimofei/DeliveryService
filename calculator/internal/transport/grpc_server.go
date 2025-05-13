@@ -34,6 +34,9 @@ func (s *GRPCServer) CalculateDeliveryCost(ctx context.Context, req *calculatorp
 		From:    req.GetFrom(),
 		To:      req.GetTo(),
 		Address: req.GetAddress(),
+		Length:  int(req.GetLength()),
+		Height:  int(req.GetHeight()),
+		Width:   int(req.GetWidth()),
 	}
 
 	if pkg.Weight <= 0 {
@@ -42,7 +45,7 @@ func (s *GRPCServer) CalculateDeliveryCost(ctx context.Context, req *calculatorp
 		return nil, err
 	}
 
-	if err := ValidateAddress(pkg); err != nil {
+	if err := Validate(pkg); err != nil {
 		return nil, err
 	}
 

@@ -34,7 +34,7 @@ func (c *CalculatorGRPCClient) Close() error {
 	return c.conn.Close()
 }
 
-func (c *CalculatorGRPCClient) Calculate(weight float64, userID, from, to, address string) (*calculatorpb.CalculateDeliveryCostResponse, error) {
+func (c *CalculatorGRPCClient) Calculate(weight float64, userID, from, to, address string, length, width, height int) (*calculatorpb.CalculateDeliveryCostResponse, error) {
 	md := metadata.New(map[string]string{
 		"authorization": userID,
 	})
@@ -47,5 +47,8 @@ func (c *CalculatorGRPCClient) Calculate(weight float64, userID, from, to, addre
 		From:    from,
 		To:      to,
 		Address: address,
+		Width:   int32(width),
+		Length:  int32(length),
+		Height:  int32(height),
 	})
 }

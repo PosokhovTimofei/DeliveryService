@@ -27,6 +27,9 @@ type CalculateDeliveryCostRequest struct {
 	From          string                 `protobuf:"bytes,2,opt,name=from,proto3" json:"from,omitempty"`
 	To            string                 `protobuf:"bytes,3,opt,name=to,proto3" json:"to,omitempty"`
 	Address       string                 `protobuf:"bytes,4,opt,name=address,proto3" json:"address,omitempty"`
+	Length        int32                  `protobuf:"varint,5,opt,name=length,proto3" json:"length,omitempty"`
+	Width         int32                  `protobuf:"varint,6,opt,name=width,proto3" json:"width,omitempty"`
+	Height        int32                  `protobuf:"varint,7,opt,name=height,proto3" json:"height,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -87,6 +90,27 @@ func (x *CalculateDeliveryCostRequest) GetAddress() string {
 		return x.Address
 	}
 	return ""
+}
+
+func (x *CalculateDeliveryCostRequest) GetLength() int32 {
+	if x != nil {
+		return x.Length
+	}
+	return 0
+}
+
+func (x *CalculateDeliveryCostRequest) GetWidth() int32 {
+	if x != nil {
+		return x.Width
+	}
+	return 0
+}
+
+func (x *CalculateDeliveryCostRequest) GetHeight() int32 {
+	if x != nil {
+		return x.Height
+	}
+	return 0
 }
 
 type CalculateDeliveryCostResponse struct {
@@ -154,12 +178,15 @@ var File_calculator_calculator_proto protoreflect.FileDescriptor
 const file_calculator_calculator_proto_rawDesc = "" +
 	"\n" +
 	"\x1bcalculator/calculator.proto\x12\n" +
-	"calculator\"t\n" +
+	"calculator\"\xba\x01\n" +
 	"\x1cCalculateDeliveryCostRequest\x12\x16\n" +
 	"\x06weight\x18\x01 \x01(\x01R\x06weight\x12\x12\n" +
 	"\x04from\x18\x02 \x01(\tR\x04from\x12\x0e\n" +
 	"\x02to\x18\x03 \x01(\tR\x02to\x12\x18\n" +
-	"\aaddress\x18\x04 \x01(\tR\aaddress\"x\n" +
+	"\aaddress\x18\x04 \x01(\tR\aaddress\x12\x16\n" +
+	"\x06length\x18\x05 \x01(\x05R\x06length\x12\x14\n" +
+	"\x05width\x18\x06 \x01(\x05R\x05width\x12\x16\n" +
+	"\x06height\x18\a \x01(\x05R\x06height\"x\n" +
 	"\x1dCalculateDeliveryCostResponse\x12\x12\n" +
 	"\x04cost\x18\x01 \x01(\x01R\x04cost\x12'\n" +
 	"\x0festimated_hours\x18\x02 \x01(\x05R\x0eestimatedHours\x12\x1a\n" +

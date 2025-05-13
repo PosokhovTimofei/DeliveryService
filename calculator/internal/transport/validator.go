@@ -9,9 +9,14 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func ValidateAddress(pkg models.Package) error {
+func Validate(pkg models.Package) error {
 	if pkg.From == "" || pkg.To == "" || pkg.Address == "" {
 		err := status.Error(codes.InvalidArgument, "Missing required address fields")
+		return err
+	}
+
+	if pkg.Length <= 0 || pkg.Width <= 0 || pkg.Height <= 0 {
+		err := status.Error(codes.InvalidArgument, "Invalid parameters")
 		return err
 	}
 

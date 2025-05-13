@@ -13,6 +13,9 @@ message CalculateDeliveryCostRequest {
   string from = 2;
   string to = 3;
   string address = 4;
+  int32 length = 5;
+  int32 width = 6;
+  int32 height = 7;
 }
 
 message CalculateDeliveryCostResponse {

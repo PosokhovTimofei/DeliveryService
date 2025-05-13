@@ -54,6 +54,10 @@ func (h *PackageHandler) Create(w http.ResponseWriter, r *http.Request) {
 		RespondError(w, http.StatusBadRequest, "Invalid location fields")
 		return
 	}
+	if pkg.Length <= 0 || pkg.Height <= 0 || pkg.Width <= 0 {
+		RespondError(w, http.StatusBadRequest, "Invalid parameters fields")
+		return
+	}
 
 	// send to kafka
 	createdPkg, err := h.service.CreatePackage(context.Background(), pkg, userID)

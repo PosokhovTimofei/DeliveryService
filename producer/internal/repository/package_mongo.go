@@ -69,6 +69,9 @@ func (r *PackageRepository) PackageExists(ctx context.Context, pkg pkg.Package) 
 		"cost":            pkg.Cost,
 		"estimated_hours": pkg.EstimatedHours,
 		"currency":        pkg.Currency,
+		"length":          pkg.Length,
+		"width":           pkg.Width,
+		"height":          pkg.Height,
 	}
 
 	count, err := r.collection.CountDocuments(ctx, filter)
