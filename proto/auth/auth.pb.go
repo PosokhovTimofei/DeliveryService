@@ -165,6 +165,7 @@ type AuthResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	Token         string                 `protobuf:"bytes,2,opt,name=token,proto3" json:"token,omitempty"`
+	Role          string                 `protobuf:"bytes,3,opt,name=role,proto3" json:"role,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -209,6 +210,13 @@ func (x *AuthResponse) GetUserId() string {
 func (x *AuthResponse) GetToken() string {
 	if x != nil {
 		return x.Token
+	}
+	return ""
+}
+
+func (x *AuthResponse) GetRole() string {
+	if x != nil {
+		return x.Role
 	}
 	return ""
 }
@@ -276,15 +284,17 @@ const file_auth_auth_proto_rawDesc = "" +
 	"\fLoginRequest\x12\x14\n" +
 	"\x05email\x18\x01 \x01(\tR\x05email\x12\x1a\n" +
 	"\bpassword\x18\x02 \x01(\tR\bpassword\"\x11\n" +
-	"\x0fValidateRequest\"=\n" +
+	"\x0fValidateRequest\"Q\n" +
 	"\fAuthResponse\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x14\n" +
-	"\x05token\x18\x02 \x01(\tR\x05token\"A\n" +
+	"\x05token\x18\x02 \x01(\tR\x05token\x12\x12\n" +
+	"\x04role\x18\x03 \x01(\tR\x04role\"A\n" +
 	"\x10ValidateResponse\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x14\n" +
-	"\x05valid\x18\x02 \x01(\tR\x05valid2\xb0\x01\n" +
+	"\x05valid\x18\x02 \x01(\tR\x05valid2\xf0\x01\n" +
 	"\vAuthService\x125\n" +
-	"\bRegister\x12\x15.auth.RegisterRequest\x1a\x12.auth.AuthResponse\x12/\n" +
+	"\bRegister\x12\x15.auth.RegisterRequest\x1a\x12.auth.AuthResponse\x12>\n" +
+	"\x11RegisterModerator\x12\x15.auth.RegisterRequest\x1a\x12.auth.AuthResponse\x12/\n" +
 	"\x05Login\x12\x12.auth.LoginRequest\x1a\x12.auth.AuthResponse\x129\n" +
 	"\bValidate\x12\x15.auth.ValidateRequest\x1a\x16.auth.ValidateResponseB7Z5github.com/maksroxx/DeliveryService/proto/auth;authpbb\x06proto3"
 
@@ -310,13 +320,15 @@ var file_auth_auth_proto_goTypes = []any{
 }
 var file_auth_auth_proto_depIdxs = []int32{
 	0, // 0: auth.AuthService.Register:input_type -> auth.RegisterRequest
-	1, // 1: auth.AuthService.Login:input_type -> auth.LoginRequest
-	2, // 2: auth.AuthService.Validate:input_type -> auth.ValidateRequest
-	3, // 3: auth.AuthService.Register:output_type -> auth.AuthResponse
-	3, // 4: auth.AuthService.Login:output_type -> auth.AuthResponse
-	4, // 5: auth.AuthService.Validate:output_type -> auth.ValidateResponse
-	3, // [3:6] is the sub-list for method output_type
-	0, // [0:3] is the sub-list for method input_type
+	0, // 1: auth.AuthService.RegisterModerator:input_type -> auth.RegisterRequest
+	1, // 2: auth.AuthService.Login:input_type -> auth.LoginRequest
+	2, // 3: auth.AuthService.Validate:input_type -> auth.ValidateRequest
+	3, // 4: auth.AuthService.Register:output_type -> auth.AuthResponse
+	3, // 5: auth.AuthService.RegisterModerator:output_type -> auth.AuthResponse
+	3, // 6: auth.AuthService.Login:output_type -> auth.AuthResponse
+	4, // 7: auth.AuthService.Validate:output_type -> auth.ValidateResponse
+	4, // [4:8] is the sub-list for method output_type
+	0, // [0:4] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name

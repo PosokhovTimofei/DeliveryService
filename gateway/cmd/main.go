@@ -157,6 +157,10 @@ func main() {
 		enableCORS(http.HandlerFunc(authHandlers.Register)),
 		logger,
 	))
+	http.Handle("/api/register-moderator", middleware.NewLogMiddleware(
+		enableCORS(http.HandlerFunc(authHandlers.RegisterModerator)),
+		logger,
+	))
 
 	http.Handle("/api/login", middleware.NewLogMiddleware(
 		enableCORS(http.HandlerFunc(authHandlers.Login)),

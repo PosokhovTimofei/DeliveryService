@@ -6,6 +6,7 @@ option go_package = "github.com/maksroxx/DeliveryService/proto/auth;authpb";
 
 service AuthService {
   rpc Register (RegisterRequest) returns (AuthResponse);
+  rpc RegisterModerator (RegisterRequest) returns (AuthResponse);
   rpc Login (LoginRequest) returns (AuthResponse);
   rpc Validate (ValidateRequest) returns (ValidateResponse);
 }
@@ -25,6 +26,7 @@ message ValidateRequest {}
 message AuthResponse {
   string user_id = 1;
   string token = 2;
+  string role = 3;
 }
 
 message ValidateResponse {

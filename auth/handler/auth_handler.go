@@ -68,6 +68,53 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func (h *AuthHandler) RegisterModerator(w http.ResponseWriter, r *http.Request) {
+	defer func(start time.Time) {
+		duration := time.Since(start).Seconds()
+		metrics.HTTPResponseTime.WithLabelValues(
+			r.Method,
+			r.URL.Path,
+			strconv.Itoa(w.(*middleware.LoggingResponseWriter).Status),
+		).Observe(duration)
+	}(time.Now())
+
+	var req struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		RespondError(w, http.StatusBadRequest, "invalid request")
+		return
+	}
+
+	if req.Email == "" || req.Password == "" {
+		RespondError(w, http.StatusBadRequest, "email and password are required")
+		return
+	}
+
+	if !validateEmail(req.Email) {
+		RespondError(w, http.StatusBadRequest, "invalid email format")
+		return
+	}
+
+	if len(req.Password) < 3 {
+		RespondError(w, http.StatusBadRequest, "password must be at least 3 characters")
+		return
+	}
+
+	user, token, err := h.service.RegisterModerator(r.Context(), req.Email, req.Password)
+	if err != nil {
+		RespondError(w, getStatusCode(err), err.Error())
+		return
+	}
+
+	RespondJSON(w, http.StatusCreated, map[string]any{
+		"user":  user,
+		"token": token,
+	})
+}
+
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	defer func(start time.Time) {
 		duration := time.Since(start).Seconds()
@@ -98,13 +145,13 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, token, err := h.service.Login(r.Context(), req.Email, req.Password)
+	user, token, err := h.service.Login(r.Context(), req.Email, req.Password)
 	if err != nil {
 		RespondError(w, getStatusCode(err), err.Error())
 		return
 	}
 
-	RespondJSON(w, http.StatusOK, map[string]string{"token": token})
+	RespondJSON(w, http.StatusOK, map[string]string{"token": token, "role": user.Role})
 }
 
 func validateEmail(email string) bool {

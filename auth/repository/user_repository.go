@@ -33,7 +33,6 @@ func NewMongoRepository(db *mongo.Database, collectionName string) *MongoReposit
 }
 
 func (r *MongoRepository) CreateUser(ctx context.Context, user *models.User) error {
-	user.Role = "user"
 	_, err := r.collection.InsertOne(ctx, user)
 	if err != nil {
 		if mongo.IsDuplicateKeyError(err) {

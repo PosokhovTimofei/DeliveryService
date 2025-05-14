@@ -84,6 +84,7 @@ func main() {
 func createMainServer(h *handler.AuthHandler, logger *logrus.Logger) *http.Server {
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /register", h.Register)
+	mux.HandleFunc("POST /register/moderator", h.RegisterModerator)
 	mux.HandleFunc("POST /login", h.Login)
 	loggedMux := middleware.NewLogMiddleware(mux, logger)
 

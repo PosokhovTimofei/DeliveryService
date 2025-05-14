@@ -28,6 +28,19 @@ func (s *AuthGRPCServer) Register(ctx context.Context, req *authpb.RegisterReque
 	return &authpb.AuthResponse{
 		UserId: user.ID,
 		Token:  token,
+		Role:   user.Role,
+	}, nil
+}
+
+func (s *AuthGRPCServer) RegisterModerator(ctx context.Context, req *authpb.RegisterRequest) (*authpb.AuthResponse, error) {
+	user, token, err := s.service.RegisterModerator(ctx, req.Email, req.Password)
+	if err != nil {
+		return nil, grpcError(err)
+	}
+	return &authpb.AuthResponse{
+		UserId: user.ID,
+		Token:  token,
+		Role:   user.Role,
 	}, nil
 }
 
@@ -39,6 +52,7 @@ func (s *AuthGRPCServer) Login(ctx context.Context, req *authpb.LoginRequest) (*
 	return &authpb.AuthResponse{
 		UserId: user.ID,
 		Token:  token,
+		Role:   user.Role,
 	}, nil
 }
 

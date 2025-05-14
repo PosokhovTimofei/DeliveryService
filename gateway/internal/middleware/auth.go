@@ -45,7 +45,7 @@ func (m *AuthMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if strings.HasPrefix(r.URL.Path, "/api/register") || strings.HasPrefix(r.URL.Path, "/api/login") {
+	if strings.HasPrefix(r.URL.Path, "/api/register") || strings.HasPrefix(r.URL.Path, "/api/login") || strings.HasPrefix(r.URL.Path, "/api/register-moderator") {
 		m.next.ServeHTTP(lrw, r)
 		m.observeMetrics(r, lrw.StatusCode, start)
 		return

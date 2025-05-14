@@ -9,7 +9,7 @@ type User struct {
 	ID                string `bson:"user_id" json:"user_id"`
 	Email             string `bson:"email" json:"email"`
 	EncryptedPassword string `bson:"encrypted_password" json:"-"`
-	Role              string `bson:"role" json:"-"`
+	Role              string `bson:"role" json:"role"`
 }
 
 type JWTClaims struct {
