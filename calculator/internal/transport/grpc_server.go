@@ -17,11 +17,11 @@ import (
 
 type GRPCServer struct {
 	calculatorpb.UnimplementedCalculatorServiceServer
-	service service.Calculator
+	service service.ExtendedCalculator
 	logger  *logrus.Logger
 }
 
-func NewGRPCServer(calc service.Calculator, logger *logrus.Logger) *GRPCServer {
+func NewGRPCServer(calc service.ExtendedCalculator, logger *logrus.Logger) *GRPCServer {
 	return &GRPCServer{
 		service: calc,
 		logger:  logger,
@@ -62,7 +62,48 @@ func (s *GRPCServer) CalculateDeliveryCost(ctx context.Context, req *calculatorp
 	}, nil
 }
 
-func StartGRPCServer(port string, rep repository.CountryRepository, calc service.Calculator, logger *logrus.Logger) error {
+func (s *GRPCServer) CalculateByTariffCode(ctx context.Context, req *calculatorpb.CalculateByTariffRequest) (*calculatorpb.CalculateDeliveryCostResponse, error) {
+	pkg := models.Package{
+		Weight: req.Weight,
+		From:   req.From,
+		To:     req.To,
+		Length: int(req.Length),
+		Width:  int(req.Width),
+		Height: int(req.Height),
+	}
+	res, err := s.service.CalculateByTariffCode(ctx, pkg, req.TariffCode)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "calculation error: %v", err)
+	}
+	return &calculatorpb.CalculateDeliveryCostResponse{
+		Cost:           res.Cost,
+		EstimatedHours: int32(res.EstimatedHours),
+		Currency:       res.Currency,
+	}, nil
+}
+
+func (s *GRPCServer) GetTariffList(ctx context.Context, _ *calculatorpb.TariffListRequest) (*calculatorpb.TariffListResponse, error) {
+	tariffs, err := s.service.GetTariffs(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to get tariffs: %v", err)
+	}
+	var result []*calculatorpb.Tariff
+	for _, t := range tariffs {
+		result = append(result, &calculatorpb.Tariff{
+			Code:              t.Code,
+			Name:              t.Name,
+			BaseRate:          t.BaseRate,
+			PricePerKm:        t.PricePerKm,
+			PricePerKg:        t.PricePerKg,
+			Currency:          t.Currency,
+			VolumetricDivider: t.VolumetricDivider,
+			SpeedKmph:         int32(t.SpeedKmph),
+		})
+	}
+	return &calculatorpb.TariffListResponse{Tariffs: result}, nil
+}
+
+func StartGRPCServer(port string, rep repository.CountryRepository, calc service.ExtendedCalculator, logger *logrus.Logger) error {
 	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		return err

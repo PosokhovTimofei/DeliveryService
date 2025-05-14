@@ -40,7 +40,7 @@ func main() {
 
 	svc := service.NewExtendedCalculator(repo, tariffRepo)
 	go func() {
-		if err := transport.StartGRPCServer(cfg.GRPCPort, repo, svc, log); err != nil {
+		if err := transport.StartGRPCServer(cfg.GRPCPort, repo, *svc, log); err != nil {
 			log.Fatalf("gRPC server failed: %v", err)
 		}
 	}()

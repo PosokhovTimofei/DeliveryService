@@ -131,6 +131,26 @@ func main() {
 	)
 	paymentChain := middleware.NewLogMiddleware(paymentWithAuth, logger)
 
+	calculateByTariffHandler := handlers.NewCalculateByTariffHandler(calculatorClient, logger)
+	calculateByTariffWithAuth := middleware.NewAuthMiddleware(
+		enableCORS(calculateByTariffHandler),
+		logger,
+		authClient,
+	)
+	calculateByTariffChain := middleware.NewLogMiddleware(
+		calculateByTariffWithAuth,
+		logger,
+	)
+	tariffListHandler := handlers.NewTariffListHandler(calculatorClient, logger)
+	tariffListWithAuth := middleware.NewAuthMiddleware(
+		enableCORS(tariffListHandler),
+		logger,
+		authClient,
+	)
+	tariffListChain := middleware.NewLogMiddleware(
+		tariffListWithAuth,
+		logger,
+	)
 	http.Handle("/api/payment/confirm", paymentChain)
 	http.Handle("/metrics", promhttp.Handler())
 	http.Handle("/api/register", middleware.NewLogMiddleware(
@@ -145,6 +165,8 @@ func main() {
 	// http.Handle("/api/register", publicChain)
 	// http.Handle("/api/login", publicChain)
 	http.Handle("/api/calculate", calculateChain)
+	http.Handle("/api/calculate_by_tariff", calculateByTariffChain)
+	http.Handle("/api/tariffs", tariffListChain)
 	http.Handle("/api/", fullProtectedChain)
 
 	logger.Info("Starting API Gateway on :8228")

@@ -60,7 +60,11 @@ func (c *DefaultCalculator) Calculate(ctx context.Context, pkg models.Package) (
 	if speed <= 0 {
 		speed = 50
 	}
-	estimatedHours := int(math.Ceil(distance / speed))
+
+	estimatedHours := int(math.Ceil(distance / speed * timeDelayMultiplier(distance)))
+	if estimatedHours < 6 {
+		estimatedHours = 6
+	}
 
 	return models.CalculationResult{
 		Cost:           math.Round(cost*100) / 100,
@@ -109,7 +113,11 @@ func (c *ExtendedCalculator) CalculateByTariffCode(ctx context.Context, pkg mode
 	if speed <= 0 {
 		speed = 50
 	}
-	estimatedHours := int(math.Ceil(distance / speed))
+
+	estimatedHours := int(math.Ceil(distance / speed * timeDelayMultiplier(distance)))
+	if estimatedHours < 6 {
+		estimatedHours = 6
+	}
 
 	return models.CalculationResult{
 		Cost:           math.Round(cost*100) / 100,
@@ -171,5 +179,18 @@ func zoneMultiplier(distance float64) float64 {
 		return 1.3
 	default:
 		return 1.5
+	}
+}
+
+func timeDelayMultiplier(distance float64) float64 {
+	switch {
+	case distance < 100:
+		return 1.2
+	case distance < 500:
+		return 1.5
+	case distance < 1500:
+		return 1.75
+	default:
+		return 2.0
 	}
 }

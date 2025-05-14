@@ -20,6 +20,8 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	CalculatorService_CalculateDeliveryCost_FullMethodName = "/calculator.CalculatorService/CalculateDeliveryCost"
+	CalculatorService_CalculateByTariffCode_FullMethodName = "/calculator.CalculatorService/CalculateByTariffCode"
+	CalculatorService_GetTariffList_FullMethodName         = "/calculator.CalculatorService/GetTariffList"
 )
 
 // CalculatorServiceClient is the client API for CalculatorService service.
@@ -27,6 +29,8 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CalculatorServiceClient interface {
 	CalculateDeliveryCost(ctx context.Context, in *CalculateDeliveryCostRequest, opts ...grpc.CallOption) (*CalculateDeliveryCostResponse, error)
+	CalculateByTariffCode(ctx context.Context, in *CalculateByTariffRequest, opts ...grpc.CallOption) (*CalculateDeliveryCostResponse, error)
+	GetTariffList(ctx context.Context, in *TariffListRequest, opts ...grpc.CallOption) (*TariffListResponse, error)
 }
 
 type calculatorServiceClient struct {
@@ -47,11 +51,33 @@ func (c *calculatorServiceClient) CalculateDeliveryCost(ctx context.Context, in 
 	return out, nil
 }
 
+func (c *calculatorServiceClient) CalculateByTariffCode(ctx context.Context, in *CalculateByTariffRequest, opts ...grpc.CallOption) (*CalculateDeliveryCostResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CalculateDeliveryCostResponse)
+	err := c.cc.Invoke(ctx, CalculatorService_CalculateByTariffCode_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *calculatorServiceClient) GetTariffList(ctx context.Context, in *TariffListRequest, opts ...grpc.CallOption) (*TariffListResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(TariffListResponse)
+	err := c.cc.Invoke(ctx, CalculatorService_GetTariffList_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // CalculatorServiceServer is the server API for CalculatorService service.
 // All implementations must embed UnimplementedCalculatorServiceServer
 // for forward compatibility.
 type CalculatorServiceServer interface {
 	CalculateDeliveryCost(context.Context, *CalculateDeliveryCostRequest) (*CalculateDeliveryCostResponse, error)
+	CalculateByTariffCode(context.Context, *CalculateByTariffRequest) (*CalculateDeliveryCostResponse, error)
+	GetTariffList(context.Context, *TariffListRequest) (*TariffListResponse, error)
 	mustEmbedUnimplementedCalculatorServiceServer()
 }
 
@@ -64,6 +90,12 @@ type UnimplementedCalculatorServiceServer struct{}
 
 func (UnimplementedCalculatorServiceServer) CalculateDeliveryCost(context.Context, *CalculateDeliveryCostRequest) (*CalculateDeliveryCostResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CalculateDeliveryCost not implemented")
+}
+func (UnimplementedCalculatorServiceServer) CalculateByTariffCode(context.Context, *CalculateByTariffRequest) (*CalculateDeliveryCostResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CalculateByTariffCode not implemented")
+}
+func (UnimplementedCalculatorServiceServer) GetTariffList(context.Context, *TariffListRequest) (*TariffListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTariffList not implemented")
 }
 func (UnimplementedCalculatorServiceServer) mustEmbedUnimplementedCalculatorServiceServer() {}
 func (UnimplementedCalculatorServiceServer) testEmbeddedByValue()                           {}
@@ -104,6 +136,42 @@ func _CalculatorService_CalculateDeliveryCost_Handler(srv interface{}, ctx conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CalculatorService_CalculateByTariffCode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CalculateByTariffRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CalculatorServiceServer).CalculateByTariffCode(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CalculatorService_CalculateByTariffCode_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CalculatorServiceServer).CalculateByTariffCode(ctx, req.(*CalculateByTariffRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CalculatorService_GetTariffList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TariffListRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CalculatorServiceServer).GetTariffList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CalculatorService_GetTariffList_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CalculatorServiceServer).GetTariffList(ctx, req.(*TariffListRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // CalculatorService_ServiceDesc is the grpc.ServiceDesc for CalculatorService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -114,6 +182,14 @@ var CalculatorService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CalculateDeliveryCost",
 			Handler:    _CalculatorService_CalculateDeliveryCost_Handler,
+		},
+		{
+			MethodName: "CalculateByTariffCode",
+			Handler:    _CalculatorService_CalculateByTariffCode_Handler,
+		},
+		{
+			MethodName: "GetTariffList",
+			Handler:    _CalculatorService_GetTariffList_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

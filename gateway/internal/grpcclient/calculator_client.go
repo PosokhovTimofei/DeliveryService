@@ -52,3 +52,30 @@ func (c *CalculatorGRPCClient) Calculate(weight float64, userID, from, to, addre
 		Height:  int32(height),
 	})
 }
+
+func (c *CalculatorGRPCClient) CalculateByTariffCode(weight float64, userID, from, to, address, tariffCode string, length, width, height int) (*calculatorpb.CalculateDeliveryCostResponse, error) {
+	md := metadata.New(map[string]string{"authorization": userID})
+	ctx := metadata.NewOutgoingContext(context.Background(), md)
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	return c.client.CalculateByTariffCode(ctx, &calculatorpb.CalculateByTariffRequest{
+		Weight:     weight,
+		From:       from,
+		To:         to,
+		Address:    address,
+		Length:     int32(length),
+		Width:      int32(width),
+		Height:     int32(height),
+		TariffCode: tariffCode,
+	})
+}
+
+func (c *CalculatorGRPCClient) GetTariffList(userID string) (*calculatorpb.TariffListResponse, error) {
+	md := metadata.New(map[string]string{"authorization": userID})
+	ctx := metadata.NewOutgoingContext(context.Background(), md)
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	return c.client.GetTariffList(ctx, &calculatorpb.TariffListRequest{})
+}
