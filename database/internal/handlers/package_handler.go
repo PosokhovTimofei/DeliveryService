@@ -56,7 +56,7 @@ func (h *PackageHandler) GetUserPackages(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	filter := models.RouteFilter{
+	filter := models.PackageFilter{
 		UserID: userID,
 		Status: r.URL.Query().Get("status"),
 	}
@@ -83,7 +83,7 @@ func (h *PackageHandler) GetUserPackages(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *PackageHandler) GetAllPackages(w http.ResponseWriter, r *http.Request) {
-	filter := models.RouteFilter{
+	filter := models.PackageFilter{
 		Status: r.URL.Query().Get("status"),
 	}
 
@@ -173,7 +173,7 @@ func (h *PackageHandler) UpdatePackage(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusBadRequest, "Package id not found")
 	}
 
-	var update models.RouteUpdate
+	var update models.PackageUpdate
 	if err := json.NewDecoder(r.Body).Decode(&update); err != nil {
 		respondWithError(w, http.StatusBadRequest, "Invalid request body")
 		return
@@ -224,7 +224,7 @@ func (h *PackageHandler) CancelPackage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	update := models.RouteUpdate{
+	update := models.PackageUpdate{
 		Status: "Сanceled",
 	}
 

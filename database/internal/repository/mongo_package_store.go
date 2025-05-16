@@ -106,7 +106,7 @@ func (r *MongoRepository) Create(ctx context.Context, route *models.Package) (*m
 	return route, nil
 }
 
-func (r *MongoRepository) GetAllRoutes(ctx context.Context, filter models.RouteFilter) ([]*models.Package, error) {
+func (r *MongoRepository) GetAllRoutes(ctx context.Context, filter models.PackageFilter) ([]*models.Package, error) {
 	bsonFilter := bson.M{}
 
 	if filter.UserID != "" {
@@ -144,7 +144,7 @@ func (r *MongoRepository) GetAllRoutes(ctx context.Context, filter models.RouteF
 	return routes, nil
 }
 
-func (r *MongoRepository) UpdateRoute(ctx context.Context, packageID string, update models.RouteUpdate) (*models.Package, error) {
+func (r *MongoRepository) UpdateRoute(ctx context.Context, packageID string, update models.PackageUpdate) (*models.Package, error) {
 	filter := bson.M{"package_id": packageID}
 
 	setFields := bson.M{}

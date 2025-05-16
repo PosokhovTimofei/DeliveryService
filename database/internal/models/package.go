@@ -32,7 +32,7 @@ type Payment struct {
 	Status    string  `bson:"status" json:"status"`
 }
 
-type RouteFilter struct {
+type PackageFilter struct {
 	UserID       string    `form:"user_id"`
 	Status       string    `form:"status"`
 	CreatedAfter time.Time `form:"created_after"`
@@ -40,7 +40,7 @@ type RouteFilter struct {
 	Offset       int64     `form:"offset,default=0"`
 }
 
-type RouteUpdate struct {
+type PackageUpdate struct {
 	Status        string `json:"status" validate:"oneof=created processing delivered canceled"`
 	PaymentStatus string `json:"payment_status"`
 }

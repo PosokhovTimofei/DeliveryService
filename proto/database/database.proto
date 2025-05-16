@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+package delivery;
+
+option go_package = "github.com/maksroxx/DeliveryService/proto/database/database;databasepb";
+
+import "google/protobuf/timestamp.proto";
+
+message Package {
+  string package_id = 1;
+  string user_id = 2;
+  double weight = 3;
+  int32 length = 4;
+  int32 width = 5;
+  int32 height = 6;
+  string from = 7;
+  string to = 8;
+  string address = 9;
+  string payment_status = 10;
+  string status = 11;
+  double cost = 12;
+  int32 estimated_hours = 13;
+  int32 remaining_hours = 14;
+  string currency = 15;
+  google.protobuf.Timestamp created_at = 16;
+}
+
+message PackageFilter {
+  string user_id = 1;
+  string status = 2;
+  google.protobuf.Timestamp created_after = 3;
+  int64 limit = 4;
+  int64 offset = 5;
+}
+
+message PackageUpdate {
+  string status = 1;
+  string payment_status = 2;
+}
+
+message PackageID {
+  string package_id = 1;
+}
+
+message PackageStatus {
+  string status = 1;
+}
+
+message Empty {}
+
+message PackageList {
+  repeated Package packages = 1;
+}
+
+service PackageService {
+  rpc GetPackage(PackageID) returns (Package);
+  rpc GetAllPackages(PackageFilter) returns (PackageList);
+  rpc GetUserPackages(PackageFilter) returns (PackageList);
+  rpc CreatePackage(Package) returns (Package);
+  rpc UpdatePackage(Package) returns (Package);
+  rpc DeletePackage(PackageID) returns (Empty);
+  rpc CancelPackage(PackageID) returns (Package);
+  rpc GetPackageStatus(PackageID) returns (PackageStatus);
+}

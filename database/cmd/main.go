@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -13,10 +14,12 @@ import (
 	"github.com/maksroxx/DeliveryService/database/internal/middleware"
 	"github.com/maksroxx/DeliveryService/database/internal/processor"
 	"github.com/maksroxx/DeliveryService/database/internal/repository"
+	pb "github.com/maksroxx/DeliveryService/proto/database"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"google.golang.org/grpc"
 )
 
 func main() {
@@ -40,6 +43,21 @@ func main() {
 	db := mongoClient.Database(mongoCfg.Database)
 
 	repo := repository.NewMongoRepository(db, "packages")
+	grpcServer := grpc.NewServer(
+		grpc.UnaryInterceptor(middleware.GRPCAuthInterceptor()),
+	)
+	pb.RegisterPackageServiceServer(grpcServer, handlers.NewGrpcPackageHandler(repo))
+
+	go func() {
+		listener, err := net.Listen("tcp", ":50054")
+		if err != nil {
+			logger.Fatalf("Failed to start gRPC server: %v", err)
+		}
+		logger.Infof("gRPC server listening on :50054")
+		if err := grpcServer.Serve(listener); err != nil {
+			logger.Fatalf("gRPC server failed: %v", err)
+		}
+	}()
 	packageHandler := handlers.NewPackageHandler(repo)
 
 	mux := http.NewServeMux()
@@ -82,10 +100,10 @@ func main() {
 		if err := server.Shutdown(shutdownCtx); err != nil {
 			logger.Errorf("HTTP server shutdown error: %v", err)
 		}
-
 		if err := consumer.Close(); err != nil {
 			logger.Errorf("Error closing Kafka consumer: %v", err)
 		}
+		grpcServer.GracefulStop()
 	}()
 
 	logger.Infof("Server starting on %s", cfg.Server.Address)

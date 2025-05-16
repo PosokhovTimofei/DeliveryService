@@ -95,7 +95,7 @@ func (p *PackageProcessor) handlePayEvent(session sarama.ConsumerGroupSession, m
 		return
 	}
 
-	update := models.RouteUpdate{
+	update := models.PackageUpdate{
 		PaymentStatus: "PAID",
 	}
 
