@@ -11,6 +11,7 @@ import (
 type Config struct {
 	Server   ServerConfig   `yaml:"server"`
 	Database DatabaseConfig `yaml:"database"`
+	Kafka    KafkaConfig    `yaml:"kafka"`
 }
 
 type ServerConfig struct {
@@ -28,8 +29,14 @@ type MongoDBConfig struct {
 	Database string `yaml:"database"`
 }
 
+type KafkaConfig struct {
+	Brokers []string `yaml:"brokers"`
+	Topic   []string `yaml:"topics"`
+	GroupID string   `yaml:"groupID"`
+}
+
 func Load() *Config {
-	data, err := os.ReadFile("./database/internal/configs/config.yaml")
+	data, err := os.ReadFile("./database/configs/config.yaml")
 	if err != nil {
 		panic(fmt.Sprintf("Error reading config file: %v", err))
 	}

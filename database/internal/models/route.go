@@ -24,6 +24,14 @@ type Package struct {
 	CreatedAt      time.Time `bson:"created_at" json:"created_at"`
 }
 
+type Payment struct {
+	UserID    string  `bson:"user_id" json:"user_id"`
+	PackageID string  `bson:"package_id" json:"package_id"`
+	Cost      float64 `bson:"cost" json:"cost"`
+	Currency  string  `bson:"currency" json:"currency"`
+	Status    string  `bson:"status" json:"status"`
+}
+
 type RouteFilter struct {
 	UserID       string    `form:"user_id"`
 	Status       string    `form:"status"`

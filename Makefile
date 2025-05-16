@@ -1,7 +1,7 @@
 BIN_DIR      := bin
 GO           := go
 
-.PHONY: client gateway producer calculate consumer payment db insert testReq auth test up down restart logs proto
+.PHONY: client gateway producer calculate payment db insert testReq auth test up down restart logs proto
 
 gateway:
 	@echo "🚀 Запуск gateway..."
@@ -17,11 +17,6 @@ producer:
 	@echo "🚀 Запуск producer..."
 	@$(GO) build -o $(BIN_DIR)/producer ./producer/cmd/
 	@$(BIN_DIR)/producer
-
-consumer:
-	@echo "🚀 Запуск consumer..."
-	@$(GO) build -o $(BIN_DIR)/consumer ./consumer/cmd/
-	@$(BIN_DIR)/consumer
 
 payment:
 	@echo "🚀 Запуск payment..."
