@@ -35,7 +35,6 @@ func (h *GrpcPackageHandler) GetPackage(ctx context.Context, req *pb.PackageID) 
 
 func (h *GrpcPackageHandler) GetAllPackages(ctx context.Context, req *pb.PackageFilter) (*pb.PackageList, error) {
 	filter := models.PackageFilter{
-		UserID: req.UserId,
 		Status: req.Status,
 		Limit:  req.Limit,
 		Offset: req.Offset,
@@ -86,7 +85,6 @@ func (h *GrpcPackageHandler) CreatePackage(ctx context.Context, req *pb.Package)
 		To:             req.To,
 		Address:        req.Address,
 		PaymentStatus:  req.PaymentStatus,
-		Status:         req.Status,
 		Cost:           req.Cost,
 		EstimatedHours: int(req.EstimatedHours),
 		Currency:       req.Currency,

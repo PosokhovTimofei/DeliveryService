@@ -78,7 +78,7 @@ func (r *MongoRepository) Create(ctx context.Context, route *models.Package) (*m
 		"to":              route.To,
 		"address":         route.Address,
 		"payment_status":  "PENDING",
-		"status":          route.Status,
+		"status":          "Delivering",
 		"cost":            route.Cost,
 		"estimated_hours": route.EstimatedHours,
 		"currency":        route.Currency,
