@@ -45,7 +45,7 @@ func (rt *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 			if err := utils.ProxyRequest(w, r, targetURL); err != nil {
 				rt.logger.Errorf("Proxy error: %v", err)
-				utils.RespondError(w, http.StatusInternalServerError, "Internal server error")
+				utils.RespondError(w, r, http.StatusInternalServerError, "Internal server error")
 			}
 			return
 		}

@@ -27,30 +27,30 @@ func NewPackageHandler(client *grpcclient.PackageGRPCClient, logger *logrus.Logg
 func (h *PackageHandler) GetPackage(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.UserIDFromContext(r.Context())
 	if !ok || userID == "" {
-		utils.RespondError(w, http.StatusUnauthorized, "Missing user ID")
+		utils.RespondError(w, r, http.StatusUnauthorized, "Missing user ID")
 		return
 	}
 
 	packageID := r.URL.Query().Get("id")
 	if packageID == "" {
-		utils.RespondError(w, http.StatusBadRequest, "Missing package ID")
+		utils.RespondError(w, r, http.StatusBadRequest, "Missing package ID")
 		return
 	}
 
 	pkg, err := h.client.GetPackage(userID, packageID)
 	if err != nil {
 		h.logger.Errorf("Failed to get package: %v", err)
-		utils.RespondError(w, http.StatusInternalServerError, "Failed to fetch package")
+		utils.RespondError(w, r, http.StatusInternalServerError, "Failed to fetch package")
 		return
 	}
 
-	utils.RespondJSON(w, http.StatusOK, pkg)
+	utils.RespondJSON(w, r, http.StatusOK, pkg)
 }
 
 func (h *PackageHandler) GetAllPackages(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.UserIDFromContext(r.Context())
 	if !ok || userID == "" {
-		utils.RespondError(w, http.StatusUnauthorized, "Missing user ID")
+		utils.RespondError(w, r, http.StatusUnauthorized, "Missing user ID")
 		return
 	}
 
@@ -61,17 +61,17 @@ func (h *PackageHandler) GetAllPackages(w http.ResponseWriter, r *http.Request) 
 	list, err := h.client.GetAllPackages(userID, status, limit, offset)
 	if err != nil {
 		h.logger.Errorf("Failed to get all packages: %v", err)
-		utils.RespondError(w, http.StatusInternalServerError, "Failed to fetch packages")
+		utils.RespondError(w, r, http.StatusInternalServerError, "Failed to fetch packages")
 		return
 	}
 
-	utils.RespondJSON(w, http.StatusOK, list)
+	utils.RespondJSON(w, r, http.StatusOK, list)
 }
 
 func (h *PackageHandler) GetAllUserPackages(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.UserIDFromContext(r.Context())
 	if !ok || userID == "" {
-		utils.RespondError(w, http.StatusUnauthorized, "Missing user ID")
+		utils.RespondError(w, r, http.StatusUnauthorized, "Missing user ID")
 		return
 	}
 	status := r.URL.Query().Get("status")
@@ -81,24 +81,24 @@ func (h *PackageHandler) GetAllUserPackages(w http.ResponseWriter, r *http.Reque
 	list, err := h.client.GetUserPackages(userID, status, limit, offset)
 	if err != nil {
 		h.logger.Errorf("Failed to get all packages: %v", err)
-		utils.RespondError(w, http.StatusInternalServerError, "Failed to fetch packages")
+		utils.RespondError(w, r, http.StatusInternalServerError, "Failed to fetch packages")
 		return
 	}
 
-	utils.RespondJSON(w, http.StatusOK, list)
+	utils.RespondJSON(w, r, http.StatusOK, list)
 }
 
 func (h *PackageHandler) CreatePackage(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.UserIDFromContext(r.Context())
 	if !ok || userID == "" {
-		utils.RespondError(w, http.StatusUnauthorized, "Missing user ID")
+		utils.RespondError(w, r, http.StatusUnauthorized, "Missing user ID")
 		return
 	}
 
 	var pkg databasepb.Package
 	if err := json.NewDecoder(r.Body).Decode(&pkg); err != nil {
 		h.logger.Errorf("Failed to decode package: %v", err)
-		utils.RespondError(w, http.StatusBadRequest, "Invalid package data")
+		utils.RespondError(w, r, http.StatusBadRequest, "Invalid package data")
 		return
 	}
 
@@ -107,104 +107,104 @@ func (h *PackageHandler) CreatePackage(w http.ResponseWriter, r *http.Request) {
 	created, err := h.client.CreatePackage(userID, &pkg)
 	if err != nil {
 		h.logger.Errorf("Failed to create package: %v", err)
-		utils.RespondError(w, http.StatusInternalServerError, "Failed to create package")
+		utils.RespondError(w, r, http.StatusInternalServerError, "Failed to create package")
 		return
 	}
 
-	utils.RespondJSON(w, http.StatusCreated, created)
+	utils.RespondJSON(w, r, http.StatusCreated, created)
 }
 
 func (h *PackageHandler) UpdatePackage(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.UserIDFromContext(r.Context())
 	if !ok || userID == "" {
-		utils.RespondError(w, http.StatusUnauthorized, "Missing user ID")
+		utils.RespondError(w, r, http.StatusUnauthorized, "Missing user ID")
 		return
 	}
 
 	var pkg databasepb.Package
 	if err := json.NewDecoder(r.Body).Decode(&pkg); err != nil {
 		h.logger.Errorf("Failed to decode update data: %v", err)
-		utils.RespondError(w, http.StatusBadRequest, "Invalid update data")
+		utils.RespondError(w, r, http.StatusBadRequest, "Invalid update data")
 		return
 	}
 
 	updated, err := h.client.UpdatePackage(userID, &pkg)
 	if err != nil {
 		h.logger.Errorf("Failed to update package: %v", err)
-		utils.RespondError(w, http.StatusInternalServerError, "Failed to update package")
+		utils.RespondError(w, r, http.StatusInternalServerError, "Failed to update package")
 		return
 	}
 
-	utils.RespondJSON(w, http.StatusOK, updated)
+	utils.RespondJSON(w, r, http.StatusOK, updated)
 }
 
 func (h *PackageHandler) DeletePackage(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.UserIDFromContext(r.Context())
 	if !ok || userID == "" {
-		utils.RespondError(w, http.StatusUnauthorized, "Missing user ID")
+		utils.RespondError(w, r, http.StatusUnauthorized, "Missing user ID")
 		return
 	}
 
 	packageID := r.URL.Query().Get("id")
 	if packageID == "" {
-		utils.RespondError(w, http.StatusBadRequest, "Missing package ID")
+		utils.RespondError(w, r, http.StatusBadRequest, "Missing package ID")
 		return
 	}
 
 	_, err := h.client.DeletePackage(userID, packageID)
 	if err != nil {
 		h.logger.Errorf("Failed to delete package: %v", err)
-		utils.RespondError(w, http.StatusInternalServerError, "Failed to delete package")
+		utils.RespondError(w, r, http.StatusInternalServerError, "Failed to delete package")
 		return
 	}
 
-	utils.RespondJSON(w, http.StatusOK, map[string]string{"message": "Package deleted"})
+	utils.RespondJSON(w, r, http.StatusOK, map[string]string{"message": "Package deleted"})
 }
 
 func (h *PackageHandler) CancelPackage(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.UserIDFromContext(r.Context())
 	if !ok || userID == "" {
-		utils.RespondError(w, http.StatusUnauthorized, "Missing user ID")
+		utils.RespondError(w, r, http.StatusUnauthorized, "Missing user ID")
 		return
 	}
 
 	packageID := r.URL.Query().Get("id")
 	if packageID == "" {
-		utils.RespondError(w, http.StatusBadRequest, "Missing package ID")
+		utils.RespondError(w, r, http.StatusBadRequest, "Missing package ID")
 		return
 	}
 
 	cancelled, err := h.client.CancelPackage(userID, packageID)
 	if err != nil {
 		h.logger.Errorf("Failed to cancel package: %v", err)
-		utils.RespondError(w, http.StatusInternalServerError, "Failed to cancel package")
+		utils.RespondError(w, r, http.StatusInternalServerError, "Failed to cancel package")
 		return
 	}
 
-	utils.RespondJSON(w, http.StatusOK, cancelled)
+	utils.RespondJSON(w, r, http.StatusOK, cancelled)
 }
 
 func (h *PackageHandler) GetPackageStatus(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.UserIDFromContext(r.Context())
 	if !ok || userID == "" {
-		utils.RespondError(w, http.StatusUnauthorized, "Missing user ID")
+		utils.RespondError(w, r, http.StatusUnauthorized, "Missing user ID")
 		return
 	}
 
 	packageID := r.URL.Query().Get("id")
 	if packageID == "" {
-		utils.RespondError(w, http.StatusBadRequest, "Missing package ID")
+		utils.RespondError(w, r, http.StatusBadRequest, "Missing package ID")
 		return
 	}
 
 	status, err := h.client.GetPackageStatus(userID, packageID)
 	if err != nil {
 		h.logger.Errorf("Failed to get package status: %v", err)
-		utils.RespondError(w, http.StatusInternalServerError, "Failed to get status")
+		utils.RespondError(w, r, http.StatusInternalServerError, "Failed to get status")
 		return
 	}
 
-	utils.RespondJSON(w, http.StatusOK, status)
+	utils.RespondJSON(w, r, http.StatusOK, status)
 }
 
 func NewPackageHTTPHandler(handler *PackageHandler) http.Handler {

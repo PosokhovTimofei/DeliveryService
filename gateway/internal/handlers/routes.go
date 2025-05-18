@@ -16,6 +16,10 @@ func RegisterRoutes(
 	paymentClient *grpcclient.PaymentGRPCClient,
 	packageClient *grpcclient.PackageGRPCClient,
 ) {
+	// Default
+	defaultHandler := NewDefaultHandler()
+	mux.Handle("/api", logAndCORS(defaultHandler, logger))
+
 	// Auth
 	authHandlers := NewAuthHandlers(authClient, logger)
 	mux.Handle("/api/register", logAndCORS(http.HandlerFunc(authHandlers.Register), logger))

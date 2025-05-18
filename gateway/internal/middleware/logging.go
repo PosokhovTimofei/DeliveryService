@@ -38,6 +38,12 @@ func (m *LogMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		duration := time.Since(start).Seconds()
 		statusCode := strconv.Itoa(lrw.StatusCode)
 
+		scheme := "http://"
+		if r.TLS != nil {
+			scheme = "https://"
+		}
+		fullURL := scheme + r.Host + r.URL.RequestURI()
+
 		m.requestsTotal.WithLabelValues(
 			r.Method,
 			r.URL.Path,
@@ -55,7 +61,8 @@ func (m *LogMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			"path":   r.URL.Path,
 			"time":   time.Since(start).String(),
 			"status": lrw.StatusCode,
-		}).Info("--- Request processed")
+			"link":   fullURL,
+		}).Info(fullURL)
 	}()
 
 	m.next.ServeHTTP(lrw, r)

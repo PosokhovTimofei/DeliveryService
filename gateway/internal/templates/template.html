@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>DeliveryService</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root {
+      --bg: linear-gradient(135deg, #0f0f0f, #1a1a1a);
+      --primary: #00ffd5;
+      --highlight: #222;
+      --font: 'Courier New', Courier, monospace;
+    }
+    body {
+      margin: 0;
+      padding: 2rem;
+      background: var(--bg);
+      color: var(--primary);
+      font-family: var(--font);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    header {
+      font-size: 2rem;
+      text-align: center;
+      margin-bottom: 2rem;
+      color: #00fff2;
+      text-shadow: 0 0 10px #00ffd5aa;
+    }
+    .content {
+      background-color: var(--highlight);
+      border-radius: 1rem;
+      box-shadow: 0 0 20px #00ffd5aa;
+      padding: 2rem;
+      overflow-wrap: break-word;
+      word-break: break-word;
+      white-space: pre-wrap;
+    }
+    footer {
+      margin-top: auto;
+      text-align: center;
+      color: #666;
+      font-size: 0.9rem;
+      padding-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <header>🚀 DeliveryService</header>
+  <div class="content">{{.}}</div>
+  <footer>© 2025 DeliveryService Gateway · Built with Go</footer>
+</body>
+</html>

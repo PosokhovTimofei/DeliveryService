@@ -21,16 +21,16 @@ func NewTariffListHandler(client *grpcclient.CalculatorGRPCClient, logger *logru
 func (h *TariffListHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.UserIDFromContext(r.Context())
 	if !ok || userID == "" {
-		utils.RespondError(w, http.StatusUnauthorized, "Missing user ID")
+		utils.RespondError(w, r, http.StatusUnauthorized, "Missing user ID")
 		return
 	}
 
 	resp, err := h.client.GetTariffList(userID)
 	if err != nil {
 		h.logger.Errorf("Failed to fetch tariffs: %v", err)
-		utils.RespondError(w, http.StatusInternalServerError, "Failed to fetch tariffs")
+		utils.RespondError(w, r, http.StatusInternalServerError, "Failed to fetch tariffs")
 		return
 	}
 
-	utils.RespondJSON(w, http.StatusOK, resp.Tariffs)
+	utils.RespondJSON(w, r, http.StatusOK, resp.Tariffs)
 }

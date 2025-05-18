@@ -33,25 +33,25 @@ type CalculateByTariffRequest struct {
 func (h *CalculateByTariffHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.UserIDFromContext(r.Context())
 	if !ok || userID == "" {
-		utils.RespondError(w, http.StatusUnauthorized, "Missing user ID")
+		utils.RespondError(w, r, http.StatusUnauthorized, "Missing user ID")
 		return
 	}
 
 	var req CalculateByTariffRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		h.logger.Errorf("Failed to decode request: %v", err)
-		utils.RespondError(w, http.StatusBadRequest, "Invalid request body")
+		utils.RespondError(w, r, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
 	resp, err := h.client.CalculateByTariffCode(req.Weight, userID, req.From, req.To, req.Address, req.TariffCode, req.Length, req.Width, req.Height)
 	if err != nil {
 		h.logger.Errorf("Failed to calculate by tariff code: %v", err)
-		utils.RespondError(w, http.StatusInternalServerError, "Calculation failed")
+		utils.RespondError(w, r, http.StatusInternalServerError, "Calculation failed")
 		return
 	}
 
-	utils.RespondJSON(w, http.StatusOK, map[string]any{
+	utils.RespondJSON(w, r, http.StatusOK, map[string]any{
 		"cost":            resp.GetCost(),
 		"estimated_hours": resp.GetEstimatedHours(),
 		"currency":        resp.GetCurrency(),
