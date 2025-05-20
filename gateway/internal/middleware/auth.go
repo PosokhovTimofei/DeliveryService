@@ -54,7 +54,7 @@ func (m *AuthMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	token := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
 	if token == "" {
 		m.logger.Warn("Missing authorization token")
-		http.Error(lrw, `{"error": "Authorization header required"}`, http.StatusUnauthorized)
+		utils.RespondError(lrw, r, http.StatusUnauthorized, "Invalid token")
 		m.observeMetrics(r, http.StatusUnauthorized, start)
 		return
 	}
@@ -62,7 +62,7 @@ func (m *AuthMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	userID, valid := m.validateToken(token)
 	if !valid {
 		m.logger.Warn("Invalid token")
-		http.Error(lrw, `{"error": "Invalid token"}`, http.StatusUnauthorized)
+		utils.RespondError(lrw, r, http.StatusUnauthorized, "Invalid token")
 		m.observeMetrics(r, http.StatusUnauthorized, start)
 		return
 	}

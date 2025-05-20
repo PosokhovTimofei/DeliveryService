@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Terminal API Client - DeliveryService</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root {
+      --terminal-bg: #181d22;
+      --terminal-header: #23272e;
+      --terminal-glow: #00ffd520;
+      --terminal-green: #39ff14;
+      --terminal-cursor: #00ffd5;
+      --terminal-font: 'Fira Mono', 'Courier New', monospace;
+      --terminal-error: #ff5555;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--terminal-bg);
+      color: var(--terminal-green);
+      font-family: var(--terminal-font);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    .terminal-window {
+      background: var(--terminal-header);
+      border-radius: 8px;
+      box-shadow: 0 0 24px var(--terminal-glow);
+      width: 95vw;
+      max-width: 820px;
+      margin: 3rem 0;
+      border: 1.5px solid #333;
+      display: flex;
+      flex-direction: column;
+      min-height: 520px;
+    }
+    .terminal-bar {
+      background: #16191d;
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
+      padding: 0.6rem 1.2rem;
+      display: flex;
+      align-items: center;
+    }
+    .terminal-buttons {
+      display: flex;
+      gap: 0.5em;
+    }
+    .terminal-btn {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 6px;
+      display: inline-block;
+    }
+    .terminal-btn.red { background: #ff5f56; border: 1px solid #e0443e; }
+    .terminal-btn.yellow { background: #ffbd2e; border: 1px solid #dea123; }
+    .terminal-btn.green { background: #27c93f; border: 1px solid #13a10e; }
+    .terminal-title {
+      flex: 1;
+      color: #9fc7ba;
+      font-size: 1.1rem;
+      text-align: center;
+      letter-spacing: 0.5px;
+    }
+    .terminal-content {
+      flex: 1;
+      padding: 2.2rem 1.7rem 1.7rem 1.7rem;
+      background: transparent;
+      color: var(--terminal-green);
+      font-size: 1.04rem;
+      font-family: inherit;
+      min-height: 250px;
+      position: relative;
+    }
+    .prompt {
+      color: var(--terminal-cursor);
+      font-weight: bold;
+      display: inline;
+    }
+    pre {
+      display: block;
+      margin: 1em 0 0 0;
+      padding: 0;
+      background: none;
+      color: inherit;
+      font-family: inherit;
+      font-size: inherit;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .error-output {
+      color: var(--terminal-error);
+      font-weight: bold;
+    }
+    .blinking-cursor {
+      display: inline-block;
+      width: 10px;
+      animation: blink 1s steps(2, start) infinite;
+      color: var(--terminal-cursor);
+    }
+    @keyframes blink {
+      to {
+        visibility: hidden;
+      }
+    }
+    .api-form {
+      background: transparent;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5em;
+      margin-bottom: 1.2em;
+    }
+    .api-form input, .api-form select, .api-form textarea {
+      background: #23272e;
+      color: var(--terminal-green);
+      border: 1px solid #333;
+      border-radius: 4px;
+      padding: 0.35em 0.7em;
+      font-family: inherit;
+      font-size: 1em;
+      outline: none;
+    }
+    .api-form label {
+      font-size: 0.97em;
+      color: #6decb9;
+      margin-bottom: 0.2em;
+    }
+    .api-form button {
+      background: #23272e;
+      color: var(--terminal-green);
+      border: 1.5px solid var(--terminal-cursor);
+      border-radius: 4px;
+      padding: 0.5em 1.4em;
+      font-family: inherit;
+      font-size: 1.05em;
+      cursor: pointer;
+      margin-top: 0.2em;
+      transition: border 0.2s, background 0.2s;
+    }
+    .api-form button:hover {
+      border-color: var(--terminal-green);
+      background: #181d22;
+    }
+    footer {
+      text-align: center;
+      color: #666;
+      font-size: 0.92rem;
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+      letter-spacing: 0.02em;
+    }
+    @media (max-width: 600px) {
+      .terminal-window {
+        padding: 0;
+      }
+      .terminal-content {
+        padding: 1.2rem 0.5rem 1rem 0.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="terminal-window">
+    <div class="terminal-bar">
+      <span class="terminal-buttons">
+        <span class="terminal-btn red"></span>
+        <span class="terminal-btn yellow"></span>
+        <span class="terminal-btn green"></span>
+      </span>
+      <div class="terminal-title">api@deliveryservice: ~</div>
+    </div>
+    <div class="terminal-content">
+      <form class="api-form" id="apiForm" onsubmit="return sendRequest(event)">
+        <div style="display:flex;gap:1em;">
+          <div>
+            <label for="method">Method</label>
+            <select id="method" name="method">
+              <option>GET</option>
+              <option>POST</option>
+              <option>PUT</option>
+              <option>DELETE</option>
+            </select>
+          </div>
+          <div style="flex:1;">
+            <label for="path">Endpoint path</label>
+            <input id="path" name="path" required placeholder="/api/..." style="width:98%;">
+          </div>
+        </div>
+        <label for="auth">Authorization (Bearer ...)</label>
+        <input id="auth" name="auth" placeholder="Bearer ..." style="width:100%;">
+        <label for="body">Body (JSON, optional)</label>
+        <textarea id="body" name="body" rows="4" style="width:100%;"></textarea>
+        <button type="submit">Send</button>
+      </form>
+      <div>
+        <span class="prompt">api@deliveryservice:~$</span>
+        <span id="cmd"></span>
+        <span class="blinking-cursor">█</span>
+        <pre id="response"></pre>
+      </div>
+    </div>
+  </div>
+  <footer>© 2025 DeliveryService Gateway · Terminal API Client UI</footer>
+  <script>
+    function sendRequest(event) {
+      event.preventDefault();
+      const method = document.getElementById('method').value;
+      const path = document.getElementById('path').value.trim();
+      const auth = document.getElementById('auth').value.trim();
+      const body = document.getElementById('body').value.trim();
+      const cmd = `${method} ${path}`;
+      document.getElementById('cmd').textContent = cmd;
+      document.getElementById('response').textContent = '...';
+      document.getElementById('response').classList.remove('error-output');
+
+      let url = path.startsWith('http') ? path : `http://localhost:8228${path}`;
+      let headers = {};
+      if (auth) headers['Authorization'] = auth;
+      headers['Accept'] = 'application/json';
+      let opts = { method, headers };
+      if (body && (method === 'POST' || method === 'PUT')) {
+        opts.body = body;
+        headers['Content-Type'] = 'application/json';
+      }
+      fetch(url, opts)
+        .then(async res => {
+          let text = await res.text();
+          let pretty = text;
+          try { pretty = JSON.stringify(JSON.parse(text), null, 2); } catch {}
+          document.getElementById('response').textContent = pretty;
+          if (!res.ok) document.getElementById('response').classList.add('error-output');
+        })
+        .catch(err => {
+          document.getElementById('response').textContent = String(err);
+          document.getElementById('response').classList.add('error-output');
+        });
+      return false;
+    }
+  </script>
+</body>
+</html>

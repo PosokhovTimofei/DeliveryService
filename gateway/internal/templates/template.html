@@ -6,49 +6,136 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     :root {
-      --bg: linear-gradient(135deg, #0f0f0f, #1a1a1a);
-      --primary: #00ffd5;
-      --highlight: #222;
-      --font: 'Courier New', Courier, monospace;
+      --terminal-bg: #181d22;
+      --terminal-header: #23272e;
+      --terminal-glow: #00ffd520;
+      --terminal-green: #39ff14;
+      --terminal-cursor: #00ffd5;
+      --terminal-font: 'Fira Mono', 'Courier New', monospace;
     }
     body {
       margin: 0;
-      padding: 2rem;
-      background: var(--bg);
-      color: var(--primary);
-      font-family: var(--font);
+      padding: 0;
+      background: var(--terminal-bg);
+      color: var(--terminal-green);
+      font-family: var(--terminal-font);
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
-      min-height: 100vh;
+      justify-content: center;
+      align-items: center;
     }
-    header {
-      font-size: 2rem;
+    .terminal-window {
+      background: var(--terminal-header);
+      border-radius: 8px;
+      box-shadow: 0 0 24px var(--terminal-glow);
+      width: 90vw;
+      max-width: 780px;
+      margin: 3rem 0;
+      border: 1.5px solid #333;
+      display: flex;
+      flex-direction: column;
+      min-height: 400px;
+    }
+    .terminal-bar {
+      background: #16191d;
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
+      padding: 0.6rem 1.2rem;
+      display: flex;
+      align-items: center;
+    }
+    .terminal-buttons {
+      display: flex;
+      gap: 0.5em;
+    }
+    .terminal-btn {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 6px;
+      display: inline-block;
+    }
+    .terminal-btn.red { background: #ff5f56; border: 1px solid #e0443e; }
+    .terminal-btn.yellow { background: #ffbd2e; border: 1px solid #dea123; }
+    .terminal-btn.green { background: #27c93f; border: 1px solid #13a10e; }
+    .terminal-title {
+      flex: 1;
+      color: #9fc7ba;
+      font-size: 1.1rem;
       text-align: center;
-      margin-bottom: 2rem;
-      color: #00fff2;
-      text-shadow: 0 0 10px #00ffd5aa;
+      letter-spacing: 0.5px;
     }
-    .content {
-      background-color: var(--highlight);
-      border-radius: 1rem;
-      box-shadow: 0 0 20px #00ffd5aa;
-      padding: 2rem;
-      overflow-wrap: break-word;
-      word-break: break-word;
+    .terminal-content {
+      flex: 1;
+      padding: 2.2rem 1.7rem 1.7rem 1.7rem;
+      background: transparent;
+      color: var(--terminal-green);
+      font-size: 1.04rem;
+      font-family: inherit;
+      min-height: 250px;
+      position: relative;
+    }
+    .prompt {
+      color: var(--terminal-cursor);
+      font-weight: bold;
+      display: inline;
+    }
+    pre {
+      display: inline;
+      margin: 0;
+      padding: 0;
+      background: none;
+      color: inherit;
+      font-family: inherit;
+      font-size: inherit;
       white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .blinking-cursor {
+      display: inline-block;
+      width: 10px;
+      animation: blink 1s steps(2, start) infinite;
+      color: var(--terminal-cursor);
+    }
+    @keyframes blink {
+      to {
+        visibility: hidden;
+      }
     }
     footer {
-      margin-top: auto;
       text-align: center;
       color: #666;
-      font-size: 0.9rem;
-      padding-top: 2rem;
+      font-size: 0.92rem;
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+      letter-spacing: 0.02em;
+    }
+    @media (max-width: 600px) {
+      .terminal-window {
+        padding: 0;
+      }
+      .terminal-content {
+        padding: 1.2rem 0.5rem 1rem 0.5rem;
+      }
     }
   </style>
 </head>
 <body>
-  <header>🚀 DeliveryService</header>
-  <div class="content">{{.}}</div>
-  <footer>© 2025 DeliveryService Gateway · Built with Go</footer>
+  <div class="terminal-window">
+    <div class="terminal-bar">
+      <span class="terminal-buttons">
+        <span class="terminal-btn red"></span>
+        <span class="terminal-btn yellow"></span>
+        <span class="terminal-btn green"></span>
+      </span>
+      <div class="terminal-title">best@deliveryservice: ~</div>
+    </div>
+    <div class="terminal-content">
+      <span class="prompt">best@deliveryservice:~$</span>
+      <pre>{{.Content}}</pre><span class="blinking-cursor">█</span>
+    </div>
+  </div>
+  <footer>© 2025 DeliveryService · Built with Go</footer>
 </body>
 </html>

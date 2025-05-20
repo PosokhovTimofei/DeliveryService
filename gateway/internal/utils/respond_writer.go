@@ -17,19 +17,35 @@ func init() {
 	}
 }
 
+type templateData struct {
+	Content interface{}
+}
+
 func RespondJSON(w http.ResponseWriter, r *http.Request, code int, payload interface{}) {
+	respond(w, r, code, payload)
+}
+
+func RespondError(w http.ResponseWriter, r *http.Request, code int, message string) {
+	payload := map[string]string{"error": message}
+	respond(w, r, code, payload)
+}
+
+func respond(w http.ResponseWriter, r *http.Request, code int, payload interface{}) {
 	w.WriteHeader(code)
 
 	accept := r.Header.Get("Accept")
 	if strings.Contains(accept, "text/html") {
-		jsonData, _ := json.MarshalIndent(payload, "", "  ")
-		tmpl.Execute(w, string(jsonData))
+		var content string
+		switch v := payload.(type) {
+		case string:
+			content = v
+		default:
+			jsonData, _ := json.MarshalIndent(payload, "", "  ")
+			content = string(jsonData)
+		}
+		tmpl.Execute(w, templateData{Content: content})
 	} else {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(payload)
 	}
-}
-
-func RespondError(w http.ResponseWriter, r *http.Request, code int, message string) {
-	RespondJSON(w, r, code, map[string]string{"error": message})
 }
