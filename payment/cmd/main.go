@@ -38,7 +38,6 @@ var (
 )
 
 func main() {
-	initializeLogger()
 	loadConfig()
 
 	switch strings.ToLower(cfg.Database.Driver) {
@@ -55,10 +54,6 @@ func main() {
 	setupHTTPServer()
 	setupGRPCServer()
 	gracefulShutdown()
-}
-
-func initializeLogger() {
-	logger.SetFormatter(&logrus.TextFormatter{FullTimestamp: true})
 }
 
 func loadConfig() {

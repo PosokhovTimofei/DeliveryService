@@ -1,4 +1,4 @@
-package calculator
+package handlers
 
 import (
 	"context"
@@ -56,4 +56,25 @@ func (c *CalculatorGRPCClient) Calculate(weight float64, userID, from, to, addre
 	}
 
 	return c.client.CalculateDeliveryCost(ctx, req)
+}
+
+func (c *CalculatorGRPCClient) CalculateByTariff(weight float64, userID, from, to, address, tariff_code string, length, width, height int) (*calculatorpb.CalculateDeliveryCostResponse, error) {
+	md := metadata.New(map[string]string{
+		"authorization": userID,
+	})
+	ctx := metadata.NewOutgoingContext(context.Background(), md)
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	req := &calculatorpb.CalculateByTariffRequest{
+		Weight:     weight,
+		From:       from,
+		To:         to,
+		Address:    address,
+		Width:      int32(width),
+		Length:     int32(length),
+		Height:     int32(height),
+		TariffCode: tariff_code,
+	}
+	return c.client.CalculateByTariffCode(ctx, req)
 }

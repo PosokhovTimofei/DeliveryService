@@ -9,9 +9,10 @@ import (
 )
 
 type Config struct {
-	Server   ServerConfig   `yaml:"server"`
-	Database DatabaseConfig `yaml:"database"`
-	Kafka    KafkaConfig    `yaml:"kafka"`
+	Server     ServerConfig     `yaml:"server"`
+	Database   DatabaseConfig   `yaml:"database"`
+	Kafka      KafkaConfig      `yaml:"kafka"`
+	Calculator CalculatorConfig `yaml:"calculator"`
 }
 
 type ServerConfig struct {
@@ -33,6 +34,10 @@ type KafkaConfig struct {
 	Brokers []string `yaml:"brokers"`
 	Topic   []string `yaml:"topics"`
 	GroupID string   `yaml:"groupID"`
+}
+
+type CalculatorConfig struct {
+	GRPCAddress string `yaml:"grpc_address"`
 }
 
 func Load() *Config {

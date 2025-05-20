@@ -6,17 +6,27 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/google/uuid"
+	"github.com/maksroxx/DeliveryService/database/internal/kafka"
 	"github.com/maksroxx/DeliveryService/database/internal/models"
 	"github.com/maksroxx/DeliveryService/database/internal/repository"
+	calculatorpb "github.com/maksroxx/DeliveryService/proto/calculator"
+	"github.com/sirupsen/logrus"
 )
 
 type PackageHandler struct {
-	rep repository.RouteRepository
+	rep      repository.RouteRepository
+	calc     *CalculatorGRPCClient
+	producer *kafka.Producer
+	log      *logrus.Logger
 }
 
-func NewPackageHandler(rep repository.RouteRepository) *PackageHandler {
+func NewPackageHandler(rep repository.RouteRepository, calc *CalculatorGRPCClient, producer *kafka.Producer, logger *logrus.Logger) *PackageHandler {
 	return &PackageHandler{
-		rep: rep,
+		rep:      rep,
+		calc:     calc,
+		producer: producer,
+		log:      logger,
 	}
 }
 
@@ -32,6 +42,8 @@ func (h *PackageHandler) RegisterDefaultRoutes(mux *http.ServeMux) {
 func (h *PackageHandler) RegisterUserRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /packages", h.CreatePackage)
 	mux.HandleFunc("GET /my/packages", h.GetUserPackages)
+	// новый вместо producer
+	mux.HandleFunc("/create", h.Create)
 }
 
 func (h *PackageHandler) GetPackage(w http.ResponseWriter, r *http.Request) {
@@ -200,6 +212,65 @@ func (h *PackageHandler) DeletePackage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+}
+
+func (h *PackageHandler) Create(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value("user_id").(string)
+	if !ok || userID == "" {
+		respondWithError(w, http.StatusUnauthorized, "User authentication required")
+		return
+	}
+
+	var pack models.Package
+	if err := json.NewDecoder(r.Body).Decode(&pack); err != nil {
+		http.Error(w, "invalid request: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+	var (
+		result *calculatorpb.CalculateDeliveryCostResponse
+		err    error
+	)
+	if pack.TariffCode == "" {
+		result, err = h.calc.Calculate(pack.Weight, userID, pack.From, pack.To, pack.Address, pack.Length, pack.Width, pack.Height)
+		pack.TariffCode = "Default"
+	} else {
+		result, err = h.calc.CalculateByTariff(pack.Weight, userID, pack.From, pack.To, pack.Address, pack.TariffCode, pack.Length, pack.Width, pack.Height)
+	}
+	if err != nil {
+		h.log.WithError(err).Error("Failed to call calculator")
+		http.Error(w, "calculation failed", http.StatusInternalServerError)
+		return
+	}
+
+	pack.PackageID = "PKG-" + uuid.New().String()
+	pack.UserID = userID
+	pack.Cost = result.Cost
+	pack.Status = "Created"
+	pack.PaymentStatus = "PENDING"
+	pack.EstimatedHours = int(result.EstimatedHours)
+	pack.Currency = result.Currency
+	pack.CreatedAt = time.Now()
+
+	if _, err := h.rep.Create(r.Context(), &pack); err != nil {
+		h.log.WithError(err).Error("DB insert failed")
+		http.Error(w, "failed to store package", http.StatusInternalServerError)
+		return
+	}
+
+	payment := models.Payment{
+		UserID:    userID,
+		PackageID: pack.PackageID,
+		Cost:      pack.Cost,
+		Currency:  pack.Currency,
+	}
+
+	if err := h.producer.SendPaymentEvent(payment); err != nil {
+		h.log.WithError(err).Error("Kafka payment event failed")
+		http.Error(w, "failed to send payment event", http.StatusInternalServerError)
+		return
+	}
+
+	respondWithJSON(w, http.StatusCreated, pack)
 }
 
 func (h *PackageHandler) CancelPackage(w http.ResponseWriter, r *http.Request) {

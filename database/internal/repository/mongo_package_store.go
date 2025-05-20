@@ -58,15 +58,16 @@ func (r *MongoRepository) Create(ctx context.Context, route *models.Package) (*m
 	if route.PackageID == "" {
 		return nil, errors.New("packageID is required")
 	}
-
-	existing, _ := r.GetByID(ctx, route.PackageID)
-	if existing != nil {
+	alreadyCreated, err := r.alreadyCreatedToday(ctx, route)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check duplicate: %w", err)
+	}
+	if alreadyCreated {
 		metrics.FailedPackageCreations.Inc()
-		return nil, errors.New("package has already exists")
+		return nil, errors.New("limit: only 3 identical packages allowed per day")
 	}
 
 	now := time.Now()
-
 	doc := bson.M{
 		"user_id":         route.UserID,
 		"package_id":      route.PackageID,
@@ -78,7 +79,7 @@ func (r *MongoRepository) Create(ctx context.Context, route *models.Package) (*m
 		"to":              route.To,
 		"address":         route.Address,
 		"payment_status":  "PENDING",
-		"status":          "Delivering",
+		"status":          "Created",
 		"cost":            route.Cost,
 		"estimated_hours": route.EstimatedHours,
 		"currency":        route.Currency,
@@ -231,4 +232,31 @@ func (r *MongoRepository) calculateRemainingHours(ctx context.Context, route *mo
 	}
 
 	return remaining
+}
+
+func (r *MongoRepository) alreadyCreatedToday(ctx context.Context, route *models.Package) (bool, error) {
+	startOfDay := time.Now().Truncate(24 * time.Hour)
+	endOfDay := startOfDay.Add(24 * time.Hour)
+
+	filter := bson.M{
+		"user_id": route.UserID,
+		"from":    route.From,
+		"to":      route.To,
+		"address": route.Address,
+		"weight":  route.Weight,
+		"length":  route.Length,
+		"width":   route.Width,
+		"height":  route.Height,
+		"created_at": bson.M{
+			"$gte": startOfDay,
+			"$lt":  endOfDay,
+		},
+	}
+
+	count, err := r.collection.CountDocuments(ctx, filter)
+	if err != nil {
+		return false, err
+	}
+
+	return count >= 3, nil
 }

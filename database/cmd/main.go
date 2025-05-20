@@ -42,6 +42,16 @@ func main() {
 	}()
 	db := mongoClient.Database(mongoCfg.Database)
 
+	calcClient, err := handlers.NewCalculatorClient(cfg.Calculator.GRPCAddress)
+	if err != nil {
+		logger.Fatal("Failed to connect to calculator:", err)
+	}
+	defer calcClient.Close()
+	producer, err := kafka.NewProducer(cfg.Kafka.Brokers, cfg.Kafka.Topic[1])
+	if err != nil {
+		logger.Fatal("Failed to init Kafka producer:", err)
+	}
+	defer producer.Close()
 	repo := repository.NewMongoRepository(db, "packages")
 	grpcServer := grpc.NewServer(
 		grpc.UnaryInterceptor(middleware.GRPCAuthInterceptor()),
@@ -58,7 +68,7 @@ func main() {
 			logger.Fatalf("gRPC server failed: %v", err)
 		}
 	}()
-	packageHandler := handlers.NewPackageHandler(repo)
+	packageHandler := handlers.NewPackageHandler(repo, calcClient, producer, logger)
 
 	mux := http.NewServeMux()
 	protected := http.NewServeMux()

@@ -53,8 +53,8 @@ func RegisterRoutes(
 	protectedRoutes := []RouteConfig{
 		{
 			Prefix:      "/api/create",
-			TargetURL:   "http://localhost:1234",
-			PathRewrite: "/producer",
+			TargetURL:   "http://localhost:8333",
+			PathRewrite: "/create",
 		},
 		{
 			Prefix:      "/api/profile",

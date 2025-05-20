@@ -22,6 +22,7 @@ type Package struct {
 	RemainingHours int       `bson:"-" json:"remaining_hours"`
 	Currency       string    `bson:"currency" json:"currency"`
 	CreatedAt      time.Time `bson:"created_at" json:"created_at"`
+	TariffCode     string    `bson:"tariff_code" json:"tariff_code"`
 }
 
 type Payment struct {

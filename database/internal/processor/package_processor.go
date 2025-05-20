@@ -34,43 +34,11 @@ func (p *PackageProcessor) Cleanup(sarama.ConsumerGroupSession) error {
 func (p *PackageProcessor) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 	for message := range claim.Messages() {
 		switch string(message.Topic) {
-		case "package-events":
-			p.handlePackageEvent(session, message)
 		case "pay-events":
 			p.handlePayEvent(session, message)
-		default:
-			p.log.Warnf("Unknown topic: %s", message.Topic)
 		}
 	}
 	return nil
-}
-
-func (p *PackageProcessor) handlePackageEvent(session sarama.ConsumerGroupSession, msg *sarama.ConsumerMessage) {
-	userID := extractUserID(msg.Headers)
-	if userID == "" {
-		p.log.Warn("Missing User-ID header in package message")
-		return
-	}
-
-	var pack models.Package
-	if err := json.Unmarshal(msg.Value, &pack); err != nil {
-		p.log.WithError(err).Error("Failed to decode package event")
-		return
-	}
-
-	pack.UserID = userID
-	pack.Status = "PROCESSED"
-
-	if _, err := p.repo.Create(session.Context(), &pack); err != nil {
-		p.log.WithError(err).Error("Failed to create package in DB")
-		return
-	}
-
-	session.MarkMessage(msg, "")
-	p.log.WithFields(logrus.Fields{
-		"package_id": pack.PackageID,
-		"user_id":    userID,
-	}).Info("Package created successfully (DB)")
 }
 
 func (p *PackageProcessor) handlePayEvent(session sarama.ConsumerGroupSession, msg *sarama.ConsumerMessage) {

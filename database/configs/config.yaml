@@ -11,8 +11,11 @@ database:
 kafka:
   brokers:
     - "localhost:9092"
-  topics:
-    - "package-events"
+  topics: 
     - "pay-events"
+    - "payment-events"
   groupID: "package-consumers"
   version: "7.3.0"
+
+calculator:
+  grpc_address: "localhost:50051"
