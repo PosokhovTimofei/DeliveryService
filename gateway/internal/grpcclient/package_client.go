@@ -74,6 +74,12 @@ func (p *PackageGRPCClient) CreatePackage(userID string, pkg *databasepb.Package
 	return p.client.CreatePackage(ctx, pkg)
 }
 
+func (p *PackageGRPCClient) CreatePackageWithCalc(userID string, pkg *databasepb.Package) (*databasepb.Package, error) {
+	ctx, cancel := p.withContext(userID)
+	defer cancel()
+	return p.client.CreatePackageWithCalc(ctx, pkg)
+}
+
 func (p *PackageGRPCClient) UpdatePackage(userID string, pkg *databasepb.Package) (*databasepb.Package, error) {
 	ctx, cancel := p.withContext(userID)
 	defer cancel()

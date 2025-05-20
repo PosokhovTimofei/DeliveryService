@@ -27,7 +27,6 @@ DeliveryService/
 ├── database/           # Работа с базой данных
 ├── gateway/            # API Gateway
 ├── payment/            # Платежный сервис
-├── producer/           # Kafka producer
 ├── interface/          # Сайт для рабоыт с сервисом
 ├── proto/              # Протобуф-схемы
 ├── grafana/            # Dashboards + Provisioning
@@ -71,7 +70,6 @@ make up  # Поднимает все сервисы, БД и мониторин�
 ```bash
 make gateway    # API Gateway
 make auth       # Сервис авторизации
-make producer   # Kafka producer
 make calculate  # Сервис расчета доставки
 make payment    # Платежный сервис
 make db         # Инициализация базы данных
@@ -120,15 +118,15 @@ paymentClient := grpcclient.NewPaymentGRPCClient("localhost:50053")
 | POST    | `/api/calculate-by-tariff`     | ✅      | Расчет по тарифу                 | — (в теле JSON)                            |
 | GET     | `/api/tariffs`                 | ✅      | Получение всех тарифов           | —                                         |
 | POST    | `/api/payment/{packageID}/confirm`         | ✅      | Подтверждение оплаты             | —                            |
-| POST    | `/api/create`                  | ✅      | Создание заказа (Kafka producer) | — (в теле JSON)                            |
 | GET     | `/api/profile`                 | ✅      | Просмотр профиля пользователя    | —                                         |
 | GET     | `/api/packages`                | ✅      | Получение всех посылок           | `status`, `limit`, `offset`                |
 | GET     | `/api/packages/my`             | ✅      | Получение своих посылок          | `status`, `limit`, `offset`                |
 | POST    | `/api/packages`                | ✅      | Создание посылки                 | — (в теле JSON)                            |
+| POST    | `/api/packages/create`         | ✅      | Создание поссылки (Kafka producer) | — (в теле JSON)                          |
 | PUT     | `/api/packages`                | ✅      | Обновление посылки               | — (в теле JSON)                            |
 | DELETE  | `/api/packages`                | ✅      | Удаление посылки                 | `id`                                      |
 | GET     | `/api/packages/status`         | ✅      | Получение статуса посылки        | `id`                                      |
-| POST    | `/api/packages/cancel`         | ✅      | Отмена посылки                   | `id`                                      |                    |
+| POST    | `/api/packages/cancel`         | ✅      | Отмена посылки                   | `id`                                      |
 ---
 ## 📜 Генерация Protobuf
 

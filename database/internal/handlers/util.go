@@ -39,6 +39,7 @@ func toProto(p *models.Package) *pb.Package {
 		RemainingHours: int32(p.RemainingHours),
 		Currency:       p.Currency,
 		CreatedAt:      timestamppb.New(p.CreatedAt),
+		TariffCode:     p.TariffCode,
 	}
 }
 

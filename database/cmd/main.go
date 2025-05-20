@@ -56,7 +56,7 @@ func main() {
 	grpcServer := grpc.NewServer(
 		grpc.UnaryInterceptor(middleware.GRPCAuthInterceptor()),
 	)
-	pb.RegisterPackageServiceServer(grpcServer, handlers.NewGrpcPackageHandler(repo))
+	pb.RegisterPackageServiceServer(grpcServer, handlers.NewGrpcPackageHandler(repo, calcClient, producer))
 
 	go func() {
 		listener, err := net.Listen("tcp", ":50054")
@@ -86,7 +86,7 @@ func main() {
 
 	kafkaCfg := kafka.Config{
 		Brokers: cfg.Kafka.Brokers,
-		Topic:   cfg.Kafka.Topic,
+		Topic:   cfg.Kafka.Topic[1:],
 		GroupID: cfg.Kafka.GroupID,
 	}
 	processor := processor.NewPackageProcessor(logger, repo)

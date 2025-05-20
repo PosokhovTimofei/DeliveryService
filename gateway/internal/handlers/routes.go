@@ -51,11 +51,11 @@ func RegisterRoutes(
 	mux.Handle("/metrics", promhttp.Handler())
 
 	protectedRoutes := []RouteConfig{
-		{
-			Prefix:      "/api/create",
-			TargetURL:   "http://localhost:8333",
-			PathRewrite: "/create",
-		},
+		// {
+		// 	Prefix:      "/api/create",
+		// 	TargetURL:   "http://localhost:8333",
+		// 	PathRewrite: "/create",
+		// },
 		{
 			Prefix:      "/api/profile",
 			TargetURL:   "http://localhost:1704",

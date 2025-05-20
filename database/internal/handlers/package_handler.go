@@ -232,7 +232,7 @@ func (h *PackageHandler) Create(w http.ResponseWriter, r *http.Request) {
 	)
 	if pack.TariffCode == "" {
 		result, err = h.calc.Calculate(pack.Weight, userID, pack.From, pack.To, pack.Address, pack.Length, pack.Width, pack.Height)
-		pack.TariffCode = "Default"
+		pack.TariffCode = "DEFAULT"
 	} else {
 		result, err = h.calc.CalculateByTariff(pack.Weight, userID, pack.From, pack.To, pack.Address, pack.TariffCode, pack.Length, pack.Width, pack.Height)
 	}

@@ -8,6 +8,10 @@ import (
 	"github.com/maksroxx/DeliveryService/database/internal/models"
 )
 
+type PaymentProducer interface {
+	SendPaymentEvent(payment models.Payment) error
+}
+
 type Producer struct {
 	syncProducer sarama.SyncProducer
 	topic        string

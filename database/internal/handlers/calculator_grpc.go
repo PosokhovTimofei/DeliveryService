@@ -10,6 +10,11 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
+type Calculator interface {
+	Calculate(weight float64, userID, from, to, address string, length, width, height int) (*calculatorpb.CalculateDeliveryCostResponse, error)
+	CalculateByTariff(weight float64, userID, from, to, address, tariffCode string, length, width, height int) (*calculatorpb.CalculateDeliveryCostResponse, error)
+}
+
 type CalculatorGRPCClient struct {
 	conn   *grpc.ClientConn
 	client calculatorpb.CalculatorServiceClient

@@ -114,6 +114,41 @@ func (h *PackageHandler) CreatePackage(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, r, http.StatusCreated, created)
 }
 
+type PackageWithFormattedTime struct {
+	*databasepb.Package
+	CreatedAtStr string `json:"created_at_str"`
+}
+
+func (h *PackageHandler) CreatePackageWithCalc(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || userID == "" {
+		utils.RespondError(w, r, http.StatusUnauthorized, "Missing user ID")
+		return
+	}
+
+	var pkg databasepb.Package
+	if err := json.NewDecoder(r.Body).Decode(&pkg); err != nil {
+		h.logger.Errorf("Failed to decode package: %v", err)
+		utils.RespondError(w, r, http.StatusBadRequest, "Invalid package data")
+		return
+	}
+
+	pkg.UserId = userID
+
+	created, err := h.client.CreatePackageWithCalc(userID, &pkg)
+	if err != nil {
+		h.logger.Errorf("Failed to create package: %v", err)
+		utils.RespondError(w, r, http.StatusInternalServerError, "Failed to create package")
+		return
+	}
+	out := PackageWithFormattedTime{
+		Package:      created,
+		CreatedAtStr: utils.FormatProtoTimestamp(created.CreatedAt),
+	}
+
+	utils.RespondJSON(w, r, http.StatusCreated, out)
+}
+
 func (h *PackageHandler) UpdatePackage(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.UserIDFromContext(r.Context())
 	if !ok || userID == "" {
@@ -232,6 +267,7 @@ func NewPackageHTTPHandler(handler *PackageHandler) http.Handler {
 	mux.HandleFunc("/api/packages/my", handler.GetAllUserPackages)
 	mux.HandleFunc("/api/packages/cancel", handler.CancelPackage)
 	mux.HandleFunc("/api/packages/status", handler.GetPackageStatus)
+	mux.HandleFunc("/api/packages/create", handler.CreatePackageWithCalc)
 
 	return mux
 }

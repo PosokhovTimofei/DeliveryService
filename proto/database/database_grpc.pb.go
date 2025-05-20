@@ -19,14 +19,15 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	PackageService_GetPackage_FullMethodName       = "/delivery.PackageService/GetPackage"
-	PackageService_GetAllPackages_FullMethodName   = "/delivery.PackageService/GetAllPackages"
-	PackageService_GetUserPackages_FullMethodName  = "/delivery.PackageService/GetUserPackages"
-	PackageService_CreatePackage_FullMethodName    = "/delivery.PackageService/CreatePackage"
-	PackageService_UpdatePackage_FullMethodName    = "/delivery.PackageService/UpdatePackage"
-	PackageService_DeletePackage_FullMethodName    = "/delivery.PackageService/DeletePackage"
-	PackageService_CancelPackage_FullMethodName    = "/delivery.PackageService/CancelPackage"
-	PackageService_GetPackageStatus_FullMethodName = "/delivery.PackageService/GetPackageStatus"
+	PackageService_GetPackage_FullMethodName            = "/delivery.PackageService/GetPackage"
+	PackageService_GetAllPackages_FullMethodName        = "/delivery.PackageService/GetAllPackages"
+	PackageService_GetUserPackages_FullMethodName       = "/delivery.PackageService/GetUserPackages"
+	PackageService_CreatePackage_FullMethodName         = "/delivery.PackageService/CreatePackage"
+	PackageService_CreatePackageWithCalc_FullMethodName = "/delivery.PackageService/CreatePackageWithCalc"
+	PackageService_UpdatePackage_FullMethodName         = "/delivery.PackageService/UpdatePackage"
+	PackageService_DeletePackage_FullMethodName         = "/delivery.PackageService/DeletePackage"
+	PackageService_CancelPackage_FullMethodName         = "/delivery.PackageService/CancelPackage"
+	PackageService_GetPackageStatus_FullMethodName      = "/delivery.PackageService/GetPackageStatus"
 )
 
 // PackageServiceClient is the client API for PackageService service.
@@ -37,6 +38,7 @@ type PackageServiceClient interface {
 	GetAllPackages(ctx context.Context, in *PackageFilter, opts ...grpc.CallOption) (*PackageList, error)
 	GetUserPackages(ctx context.Context, in *PackageFilter, opts ...grpc.CallOption) (*PackageList, error)
 	CreatePackage(ctx context.Context, in *Package, opts ...grpc.CallOption) (*Package, error)
+	CreatePackageWithCalc(ctx context.Context, in *Package, opts ...grpc.CallOption) (*Package, error)
 	UpdatePackage(ctx context.Context, in *Package, opts ...grpc.CallOption) (*Package, error)
 	DeletePackage(ctx context.Context, in *PackageID, opts ...grpc.CallOption) (*Empty, error)
 	CancelPackage(ctx context.Context, in *PackageID, opts ...grpc.CallOption) (*Package, error)
@@ -91,6 +93,16 @@ func (c *packageServiceClient) CreatePackage(ctx context.Context, in *Package, o
 	return out, nil
 }
 
+func (c *packageServiceClient) CreatePackageWithCalc(ctx context.Context, in *Package, opts ...grpc.CallOption) (*Package, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Package)
+	err := c.cc.Invoke(ctx, PackageService_CreatePackageWithCalc_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *packageServiceClient) UpdatePackage(ctx context.Context, in *Package, opts ...grpc.CallOption) (*Package, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Package)
@@ -139,6 +151,7 @@ type PackageServiceServer interface {
 	GetAllPackages(context.Context, *PackageFilter) (*PackageList, error)
 	GetUserPackages(context.Context, *PackageFilter) (*PackageList, error)
 	CreatePackage(context.Context, *Package) (*Package, error)
+	CreatePackageWithCalc(context.Context, *Package) (*Package, error)
 	UpdatePackage(context.Context, *Package) (*Package, error)
 	DeletePackage(context.Context, *PackageID) (*Empty, error)
 	CancelPackage(context.Context, *PackageID) (*Package, error)
@@ -164,6 +177,9 @@ func (UnimplementedPackageServiceServer) GetUserPackages(context.Context, *Packa
 }
 func (UnimplementedPackageServiceServer) CreatePackage(context.Context, *Package) (*Package, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreatePackage not implemented")
+}
+func (UnimplementedPackageServiceServer) CreatePackageWithCalc(context.Context, *Package) (*Package, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreatePackageWithCalc not implemented")
 }
 func (UnimplementedPackageServiceServer) UpdatePackage(context.Context, *Package) (*Package, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdatePackage not implemented")
@@ -270,6 +286,24 @@ func _PackageService_CreatePackage_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PackageService_CreatePackageWithCalc_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Package)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PackageServiceServer).CreatePackageWithCalc(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PackageService_CreatePackageWithCalc_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PackageServiceServer).CreatePackageWithCalc(ctx, req.(*Package))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _PackageService_UpdatePackage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Package)
 	if err := dec(in); err != nil {
@@ -364,6 +398,10 @@ var PackageService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreatePackage",
 			Handler:    _PackageService_CreatePackage_Handler,
+		},
+		{
+			MethodName: "CreatePackageWithCalc",
+			Handler:    _PackageService_CreatePackageWithCalc_Handler,
 		},
 		{
 			MethodName: "UpdatePackage",

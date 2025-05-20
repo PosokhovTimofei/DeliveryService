@@ -23,6 +23,7 @@ message Package {
   int32 remaining_hours = 14;
   string currency = 15;
   google.protobuf.Timestamp created_at = 16;
+  string tariff_code = 17;
 }
 
 message PackageFilter {
@@ -57,6 +58,7 @@ service PackageService {
   rpc GetAllPackages(PackageFilter) returns (PackageList);
   rpc GetUserPackages(PackageFilter) returns (PackageList);
   rpc CreatePackage(Package) returns (Package);
+  rpc CreatePackageWithCalc(Package) returns (Package);
   rpc UpdatePackage(Package) returns (Package);
   rpc DeletePackage(PackageID) returns (Empty);
   rpc CancelPackage(PackageID) returns (Package);
