@@ -6,16 +6,18 @@ import (
 	"net/http"
 
 	"github.com/maksroxx/DeliveryService/calculator/internal/metrics"
+	"github.com/maksroxx/DeliveryService/calculator/internal/repository"
 	"github.com/maksroxx/DeliveryService/calculator/internal/service"
 	"github.com/maksroxx/DeliveryService/calculator/models"
 )
 
 type HTTPHandler struct {
 	service service.Calculator
+	rep     repository.TariffRepository
 }
 
-func NewHTTPHandler(s service.Calculator) *HTTPHandler {
-	return &HTTPHandler{service: s}
+func NewHTTPHandler(s service.Calculator, rep repository.TariffRepository) *HTTPHandler {
+	return &HTTPHandler{service: s, rep: rep}
 }
 
 func (h *HTTPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -89,6 +91,40 @@ func (h *HTTPHandler) HandleTariffList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	RespondJSON(w, http.StatusOK, tariffs)
+}
+
+func (h *HTTPHandler) CreateTariff(w http.ResponseWriter, r *http.Request) {
+	var tariff models.Tariff
+	if err := json.NewDecoder(r.Body).Decode(&tariff); err != nil {
+		RespondError(w, http.StatusBadRequest, "Invalid JSON: "+err.Error())
+		return
+	}
+	if err := tariff.Validate(); err != nil {
+		RespondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	result, err := h.rep.CreateTariff(context.Background(), &tariff)
+	if err != nil {
+		RespondError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	RespondJSON(w, http.StatusOK, result)
+}
+
+func (h *HTTPHandler) DeleteTariff(w http.ResponseWriter, r *http.Request) {
+	var request struct {
+		Code string `json:"code"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		RespondError(w, http.StatusBadRequest, "Invalid JSON: "+err.Error())
+		return
+	}
+	err := h.rep.DeleteTariff(context.Background(), request.Code)
+	if err != nil {
+		RespondError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	RespondJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 }
 
 func RespondJSON(w http.ResponseWriter, code int, payload interface{}) {

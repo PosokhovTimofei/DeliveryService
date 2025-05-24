@@ -46,11 +46,11 @@ func main() {
 	}()
 
 	http.Handle("/metrics", promhttp.Handler())
-	startHTTPServer(cfg.HTTPPort, svc, chain, log)
+	startHTTPServer(cfg.HTTPPort, svc, chain, log, tariffRepo)
 }
 
-func startHTTPServer(port string, calc service.Calculator, chain *middleware.Chain, log *logrus.Logger) {
-	handler := transport.NewHTTPHandler(calc)
+func startHTTPServer(port string, calc service.Calculator, chain *middleware.Chain, log *logrus.Logger, rep repository.TariffRepository) {
+	handler := transport.NewHTTPHandler(calc, rep)
 	wrappedHandler := chain.Then(handler)
 
 	http.Handle("/calculate", wrappedHandler)
@@ -59,6 +59,14 @@ func startHTTPServer(port string, calc service.Calculator, chain *middleware.Cha
 	})
 	http.HandleFunc("/tariffs", func(w http.ResponseWriter, r *http.Request) {
 		chain.Then(http.HandlerFunc(handler.HandleTariffList)).ServeHTTP(w, r)
+	})
+	http.HandleFunc("/tariff", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPost:
+			chain.Then(http.HandlerFunc(handler.CreateTariff)).ServeHTTP(w, r)
+		case http.MethodDelete:
+			chain.Then(http.HandlerFunc(handler.DeleteTariff)).ServeHTTP(w, r)
+		}
 	})
 	log.Infof("HTTP server listening on :%s", port)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {

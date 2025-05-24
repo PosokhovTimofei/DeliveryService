@@ -32,7 +32,7 @@ func NewMongoRepository(db *mongo.Database, collectionName string) *MongoReposit
 	}
 
 	return &MongoRepository{
-		collection: db.Collection(collectionName),
+		collection: collection,
 	}
 }
 

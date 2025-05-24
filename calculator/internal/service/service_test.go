@@ -28,6 +28,14 @@ func (m *mockTariffRepo) GetByCode(ctx context.Context, code string) (*models.Ta
 	return args.Get(0).(*models.Tariff), args.Error(1)
 }
 
+func (m *mockTariffRepo) CreateTariff(ctx context.Context, tariff *models.Tariff) (*models.Tariff, error) {
+	return nil, nil
+}
+
+func (m *mockTariffRepo) DeleteTariff(ctx context.Context, code string) error {
+	return nil
+}
+
 func (m *mockTariffRepo) GetAll(ctx context.Context) ([]models.Tariff, error) {
 	args := m.Called(ctx)
 	return args.Get(0).([]models.Tariff), args.Error(1)
