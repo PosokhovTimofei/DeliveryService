@@ -22,6 +22,8 @@ const (
 	CalculatorService_CalculateDeliveryCost_FullMethodName = "/calculator.CalculatorService/CalculateDeliveryCost"
 	CalculatorService_CalculateByTariffCode_FullMethodName = "/calculator.CalculatorService/CalculateByTariffCode"
 	CalculatorService_GetTariffList_FullMethodName         = "/calculator.CalculatorService/GetTariffList"
+	CalculatorService_CreateTariff_FullMethodName          = "/calculator.CalculatorService/CreateTariff"
+	CalculatorService_DeleteTariff_FullMethodName          = "/calculator.CalculatorService/DeleteTariff"
 )
 
 // CalculatorServiceClient is the client API for CalculatorService service.
@@ -31,6 +33,8 @@ type CalculatorServiceClient interface {
 	CalculateDeliveryCost(ctx context.Context, in *CalculateDeliveryCostRequest, opts ...grpc.CallOption) (*CalculateDeliveryCostResponse, error)
 	CalculateByTariffCode(ctx context.Context, in *CalculateByTariffRequest, opts ...grpc.CallOption) (*CalculateDeliveryCostResponse, error)
 	GetTariffList(ctx context.Context, in *TariffListRequest, opts ...grpc.CallOption) (*TariffListResponse, error)
+	CreateTariff(ctx context.Context, in *Tariff, opts ...grpc.CallOption) (*Tariff, error)
+	DeleteTariff(ctx context.Context, in *TariffCodeRequest, opts ...grpc.CallOption) (*Empty, error)
 }
 
 type calculatorServiceClient struct {
@@ -71,6 +75,26 @@ func (c *calculatorServiceClient) GetTariffList(ctx context.Context, in *TariffL
 	return out, nil
 }
 
+func (c *calculatorServiceClient) CreateTariff(ctx context.Context, in *Tariff, opts ...grpc.CallOption) (*Tariff, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Tariff)
+	err := c.cc.Invoke(ctx, CalculatorService_CreateTariff_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *calculatorServiceClient) DeleteTariff(ctx context.Context, in *TariffCodeRequest, opts ...grpc.CallOption) (*Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, CalculatorService_DeleteTariff_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // CalculatorServiceServer is the server API for CalculatorService service.
 // All implementations must embed UnimplementedCalculatorServiceServer
 // for forward compatibility.
@@ -78,6 +102,8 @@ type CalculatorServiceServer interface {
 	CalculateDeliveryCost(context.Context, *CalculateDeliveryCostRequest) (*CalculateDeliveryCostResponse, error)
 	CalculateByTariffCode(context.Context, *CalculateByTariffRequest) (*CalculateDeliveryCostResponse, error)
 	GetTariffList(context.Context, *TariffListRequest) (*TariffListResponse, error)
+	CreateTariff(context.Context, *Tariff) (*Tariff, error)
+	DeleteTariff(context.Context, *TariffCodeRequest) (*Empty, error)
 	mustEmbedUnimplementedCalculatorServiceServer()
 }
 
@@ -96,6 +122,12 @@ func (UnimplementedCalculatorServiceServer) CalculateByTariffCode(context.Contex
 }
 func (UnimplementedCalculatorServiceServer) GetTariffList(context.Context, *TariffListRequest) (*TariffListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTariffList not implemented")
+}
+func (UnimplementedCalculatorServiceServer) CreateTariff(context.Context, *Tariff) (*Tariff, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateTariff not implemented")
+}
+func (UnimplementedCalculatorServiceServer) DeleteTariff(context.Context, *TariffCodeRequest) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteTariff not implemented")
 }
 func (UnimplementedCalculatorServiceServer) mustEmbedUnimplementedCalculatorServiceServer() {}
 func (UnimplementedCalculatorServiceServer) testEmbeddedByValue()                           {}
@@ -172,6 +204,42 @@ func _CalculatorService_GetTariffList_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CalculatorService_CreateTariff_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Tariff)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CalculatorServiceServer).CreateTariff(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CalculatorService_CreateTariff_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CalculatorServiceServer).CreateTariff(ctx, req.(*Tariff))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CalculatorService_DeleteTariff_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TariffCodeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CalculatorServiceServer).DeleteTariff(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CalculatorService_DeleteTariff_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CalculatorServiceServer).DeleteTariff(ctx, req.(*TariffCodeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // CalculatorService_ServiceDesc is the grpc.ServiceDesc for CalculatorService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -190,6 +258,14 @@ var CalculatorService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetTariffList",
 			Handler:    _CalculatorService_GetTariffList_Handler,
+		},
+		{
+			MethodName: "CreateTariff",
+			Handler:    _CalculatorService_CreateTariff_Handler,
+		},
+		{
+			MethodName: "DeleteTariff",
+			Handler:    _CalculatorService_DeleteTariff_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

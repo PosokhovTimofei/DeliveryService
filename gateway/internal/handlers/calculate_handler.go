@@ -22,7 +22,7 @@ func NewCalculateHandler(client *grpcclient.CalculatorGRPCClient, logger *logrus
 	}
 }
 
-type CalculateRequest struct {
+type calculateRequest struct {
 	Weight  float64 `json:"weight"`
 	From    string  `json:"from"`
 	To      string  `json:"to"`
@@ -39,7 +39,7 @@ func (h *CalculateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req CalculateRequest
+	var req calculateRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		h.logger.Errorf("Failed to decode request: %v", err)
 		utils.RespondError(w, r, http.StatusBadRequest, "Invalid request body")
@@ -58,4 +58,61 @@ func (h *CalculateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		"estimated_hours": grpcResp.GetEstimatedHours(),
 		"currency":        grpcResp.GetCurrency(),
 	})
+}
+
+type tariff struct {
+	Code              string  `json:"code"`
+	Name              string  `json:"name"`
+	BaseRate          float64 `json:"base_rate"`
+	PricePerKm        float64 `json:"price_per_km"`
+	PricePerKg        float64 `json:"price_per_kg"`
+	Currency          string  `json:"currency"`
+	VolumetricDivider float64 `json:"volumetric_divider"`
+	SpeedKmph         float64 `json:"speed_kmph"`
+}
+
+func (h *CalculateHandler) CreateTariff(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || userID == "" {
+		utils.RespondError(w, r, http.StatusUnauthorized, "Missing user ID")
+		return
+	}
+	var req tariff
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		h.logger.Errorf("Failed to decode request: %v", err)
+		utils.RespondError(w, r, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+	gprcResp, err := h.client.CreateTariff(userID, req.Code, req.Name, req.Currency, req.BaseRate, req.PricePerKm, req.PricePerKg, req.VolumetricDivider, req.SpeedKmph)
+	if err != nil {
+		h.logger.Errorf("Failed to call gRPC: %v", err)
+		utils.RespondError(w, r, http.StatusInternalServerError, "Failed to create tariff")
+		return
+	}
+	utils.RespondJSON(w, r, http.StatusOK, gprcResp)
+}
+
+type deleteTariff struct {
+	Code string `json:"code"`
+}
+
+func (h *CalculateHandler) DeleteTariff(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || userID == "" {
+		utils.RespondError(w, r, http.StatusUnauthorized, "Missing user ID")
+		return
+	}
+	var req deleteTariff
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		h.logger.Errorf("Failed to decode request: %v", err)
+		utils.RespondError(w, r, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+	_, err := h.client.DeleteTariff(userID, req.Code)
+	if err != nil {
+		h.logger.Errorf("Failed to call gRPC: %v", err)
+		utils.RespondError(w, r, http.StatusInternalServerError, "Failed to delete tariff")
+		return
+	}
+	utils.RespondJSON(w, r, http.StatusOK, map[string]string{"status": "ok"})
 }

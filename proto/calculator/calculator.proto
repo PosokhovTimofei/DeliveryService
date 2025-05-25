@@ -8,6 +8,8 @@ service CalculatorService {
   rpc CalculateDeliveryCost (CalculateDeliveryCostRequest) returns (CalculateDeliveryCostResponse);
   rpc CalculateByTariffCode (CalculateByTariffRequest) returns (CalculateDeliveryCostResponse);
   rpc GetTariffList (TariffListRequest) returns (TariffListResponse);
+  rpc CreateTariff (Tariff) returns (Tariff);
+  rpc DeleteTariff (TariffCodeRequest) returns (Empty);
 }
 
 message CalculateDeliveryCostRequest {
@@ -49,6 +51,12 @@ message Tariff {
   double volumetric_divider = 7;
   int32 speed_kmph = 8;
 }
+
+message TariffCodeRequest {
+  string code = 1;
+}
+
+message Empty {}
 
 message TariffListResponse {
   repeated Tariff tariffs = 1;

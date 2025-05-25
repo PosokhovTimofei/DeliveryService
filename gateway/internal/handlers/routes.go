@@ -27,9 +27,20 @@ func RegisterRoutes(
 	mux.Handle("/api/login", logAndCORS(http.HandlerFunc(authHandlers.Login), logger))
 
 	// Calculate
-	mux.Handle("/api/calculate", protectAndLog(NewCalculateHandler(calculatorClient, logger), authClient, logger))
+	calcHandler := NewCalculateHandler(calculatorClient, logger)
+	mux.Handle("/api/calculate", protectAndLog(calcHandler, authClient, logger))
 	mux.Handle("/api/calculate-by-tariff", protectAndLog(NewCalculateByTariffHandler(calculatorClient, logger), authClient, logger))
 	mux.Handle("/api/tariffs", protectAndLog(NewTariffListHandler(calculatorClient, logger), authClient, logger))
+	mux.Handle("/api/tariff", protectAndLog(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPost:
+			calcHandler.CreateTariff(w, r)
+		case http.MethodDelete:
+			calcHandler.DeleteTariff(w, r)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	}), authClient, logger))
 
 	// Payment
 	mux.Handle("/api/payment/confirm", protectAndLog(NewPaymentHandler(paymentClient, logger), authClient, logger))

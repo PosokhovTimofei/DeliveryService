@@ -20,7 +20,7 @@ func NewHTTPHandler(s service.Calculator, rep repository.TariffRepository) *HTTP
 	return &HTTPHandler{service: s, rep: rep}
 }
 
-func (h *HTTPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *HTTPHandler) HandleCalculate(w http.ResponseWriter, r *http.Request) {
 	var pkg models.Package
 	if err := json.NewDecoder(r.Body).Decode(&pkg); err != nil {
 		RespondError(w, http.StatusBadRequest, "Invalid JSON: "+err.Error())

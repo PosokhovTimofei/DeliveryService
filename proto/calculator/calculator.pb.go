@@ -409,6 +409,86 @@ func (x *Tariff) GetSpeedKmph() int32 {
 	return 0
 }
 
+type TariffCodeRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Code          string                 `protobuf:"bytes,1,opt,name=code,proto3" json:"code,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TariffCodeRequest) Reset() {
+	*x = TariffCodeRequest{}
+	mi := &file_calculator_calculator_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TariffCodeRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TariffCodeRequest) ProtoMessage() {}
+
+func (x *TariffCodeRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_calculator_calculator_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TariffCodeRequest.ProtoReflect.Descriptor instead.
+func (*TariffCodeRequest) Descriptor() ([]byte, []int) {
+	return file_calculator_calculator_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *TariffCodeRequest) GetCode() string {
+	if x != nil {
+		return x.Code
+	}
+	return ""
+}
+
+type Empty struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Empty) Reset() {
+	*x = Empty{}
+	mi := &file_calculator_calculator_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Empty) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Empty) ProtoMessage() {}
+
+func (x *Empty) ProtoReflect() protoreflect.Message {
+	mi := &file_calculator_calculator_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Empty.ProtoReflect.Descriptor instead.
+func (*Empty) Descriptor() ([]byte, []int) {
+	return file_calculator_calculator_proto_rawDescGZIP(), []int{6}
+}
+
 type TariffListResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Tariffs       []*Tariff              `protobuf:"bytes,1,rep,name=tariffs,proto3" json:"tariffs,omitempty"`
@@ -418,7 +498,7 @@ type TariffListResponse struct {
 
 func (x *TariffListResponse) Reset() {
 	*x = TariffListResponse{}
-	mi := &file_calculator_calculator_proto_msgTypes[5]
+	mi := &file_calculator_calculator_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -430,7 +510,7 @@ func (x *TariffListResponse) String() string {
 func (*TariffListResponse) ProtoMessage() {}
 
 func (x *TariffListResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_calculator_calculator_proto_msgTypes[5]
+	mi := &file_calculator_calculator_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -443,7 +523,7 @@ func (x *TariffListResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TariffListResponse.ProtoReflect.Descriptor instead.
 func (*TariffListResponse) Descriptor() ([]byte, []int) {
-	return file_calculator_calculator_proto_rawDescGZIP(), []int{5}
+	return file_calculator_calculator_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *TariffListResponse) GetTariffs() []*Tariff {
@@ -493,13 +573,18 @@ const file_calculator_calculator_proto_rawDesc = "" +
 	"\bcurrency\x18\x06 \x01(\tR\bcurrency\x12-\n" +
 	"\x12volumetric_divider\x18\a \x01(\x01R\x11volumetricDivider\x12\x1d\n" +
 	"\n" +
-	"speed_kmph\x18\b \x01(\x05R\tspeedKmph\"B\n" +
+	"speed_kmph\x18\b \x01(\x05R\tspeedKmph\"'\n" +
+	"\x11TariffCodeRequest\x12\x12\n" +
+	"\x04code\x18\x01 \x01(\tR\x04code\"\a\n" +
+	"\x05Empty\"B\n" +
 	"\x12TariffListResponse\x12,\n" +
-	"\atariffs\x18\x01 \x03(\v2\x12.calculator.TariffR\atariffs2\xbb\x02\n" +
+	"\atariffs\x18\x01 \x03(\v2\x12.calculator.TariffR\atariffs2\xb5\x03\n" +
 	"\x11CalculatorService\x12l\n" +
 	"\x15CalculateDeliveryCost\x12(.calculator.CalculateDeliveryCostRequest\x1a).calculator.CalculateDeliveryCostResponse\x12h\n" +
 	"\x15CalculateByTariffCode\x12$.calculator.CalculateByTariffRequest\x1a).calculator.CalculateDeliveryCostResponse\x12N\n" +
-	"\rGetTariffList\x12\x1d.calculator.TariffListRequest\x1a\x1e.calculator.TariffListResponseBCZAgithub.com/maksroxx/DeliveryService/proto/calculator;calculatorpbb\x06proto3"
+	"\rGetTariffList\x12\x1d.calculator.TariffListRequest\x1a\x1e.calculator.TariffListResponse\x126\n" +
+	"\fCreateTariff\x12\x12.calculator.Tariff\x1a\x12.calculator.Tariff\x12@\n" +
+	"\fDeleteTariff\x12\x1d.calculator.TariffCodeRequest\x1a\x11.calculator.EmptyBCZAgithub.com/maksroxx/DeliveryService/proto/calculator;calculatorpbb\x06proto3"
 
 var (
 	file_calculator_calculator_proto_rawDescOnce sync.Once
@@ -513,25 +598,31 @@ func file_calculator_calculator_proto_rawDescGZIP() []byte {
 	return file_calculator_calculator_proto_rawDescData
 }
 
-var file_calculator_calculator_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_calculator_calculator_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_calculator_calculator_proto_goTypes = []any{
 	(*CalculateDeliveryCostRequest)(nil),  // 0: calculator.CalculateDeliveryCostRequest
 	(*CalculateDeliveryCostResponse)(nil), // 1: calculator.CalculateDeliveryCostResponse
 	(*CalculateByTariffRequest)(nil),      // 2: calculator.CalculateByTariffRequest
 	(*TariffListRequest)(nil),             // 3: calculator.TariffListRequest
 	(*Tariff)(nil),                        // 4: calculator.Tariff
-	(*TariffListResponse)(nil),            // 5: calculator.TariffListResponse
+	(*TariffCodeRequest)(nil),             // 5: calculator.TariffCodeRequest
+	(*Empty)(nil),                         // 6: calculator.Empty
+	(*TariffListResponse)(nil),            // 7: calculator.TariffListResponse
 }
 var file_calculator_calculator_proto_depIdxs = []int32{
 	4, // 0: calculator.TariffListResponse.tariffs:type_name -> calculator.Tariff
 	0, // 1: calculator.CalculatorService.CalculateDeliveryCost:input_type -> calculator.CalculateDeliveryCostRequest
 	2, // 2: calculator.CalculatorService.CalculateByTariffCode:input_type -> calculator.CalculateByTariffRequest
 	3, // 3: calculator.CalculatorService.GetTariffList:input_type -> calculator.TariffListRequest
-	1, // 4: calculator.CalculatorService.CalculateDeliveryCost:output_type -> calculator.CalculateDeliveryCostResponse
-	1, // 5: calculator.CalculatorService.CalculateByTariffCode:output_type -> calculator.CalculateDeliveryCostResponse
-	5, // 6: calculator.CalculatorService.GetTariffList:output_type -> calculator.TariffListResponse
-	4, // [4:7] is the sub-list for method output_type
-	1, // [1:4] is the sub-list for method input_type
+	4, // 4: calculator.CalculatorService.CreateTariff:input_type -> calculator.Tariff
+	5, // 5: calculator.CalculatorService.DeleteTariff:input_type -> calculator.TariffCodeRequest
+	1, // 6: calculator.CalculatorService.CalculateDeliveryCost:output_type -> calculator.CalculateDeliveryCostResponse
+	1, // 7: calculator.CalculatorService.CalculateByTariffCode:output_type -> calculator.CalculateDeliveryCostResponse
+	7, // 8: calculator.CalculatorService.GetTariffList:output_type -> calculator.TariffListResponse
+	4, // 9: calculator.CalculatorService.CreateTariff:output_type -> calculator.Tariff
+	6, // 10: calculator.CalculatorService.DeleteTariff:output_type -> calculator.Empty
+	6, // [6:11] is the sub-list for method output_type
+	1, // [1:6] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
 	1, // [1:1] is the sub-list for extension extendee
 	0, // [0:1] is the sub-list for field type_name
@@ -548,7 +639,7 @@ func file_calculator_calculator_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_calculator_calculator_proto_rawDesc), len(file_calculator_calculator_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   6,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

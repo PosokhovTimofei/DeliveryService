@@ -79,3 +79,32 @@ func (c *CalculatorGRPCClient) GetTariffList(userID string) (*calculatorpb.Tarif
 
 	return c.client.GetTariffList(ctx, &calculatorpb.TariffListRequest{})
 }
+
+func (c *CalculatorGRPCClient) CreateTariff(userID, code, name, currency string, baseRate, PricePerKm, PricePerKg, VolumetricDivider, SpeedKmph float64) (*calculatorpb.Tariff, error) {
+	md := metadata.New(map[string]string{"authorization": userID})
+	ctx := metadata.NewOutgoingContext(context.Background(), md)
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	return c.client.CreateTariff(ctx, &calculatorpb.Tariff{
+		Code:              code,
+		Name:              name,
+		Currency:          currency,
+		BaseRate:          baseRate,
+		PricePerKm:        PricePerKm,
+		PricePerKg:        PricePerKg,
+		VolumetricDivider: VolumetricDivider,
+		SpeedKmph:         int32(SpeedKmph),
+	})
+}
+
+func (c *CalculatorGRPCClient) DeleteTariff(userID, code string) (*calculatorpb.Empty, error) {
+	md := metadata.New(map[string]string{"authorization": userID})
+	ctx := metadata.NewOutgoingContext(context.Background(), md)
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	return c.client.DeleteTariff(ctx, &calculatorpb.TariffCodeRequest{
+		Code: code,
+	})
+}

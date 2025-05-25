@@ -40,7 +40,7 @@ func main() {
 
 	svc := service.NewExtendedCalculator(repo, tariffRepo)
 	go func() {
-		if err := transport.StartGRPCServer(cfg.GRPCPort, repo, *svc, log); err != nil {
+		if err := transport.StartGRPCServer(cfg.GRPCPort, tariffRepo, *svc, log); err != nil {
 			log.Fatalf("gRPC server failed: %v", err)
 		}
 	}()
@@ -51,9 +51,10 @@ func main() {
 
 func startHTTPServer(port string, calc service.Calculator, chain *middleware.Chain, log *logrus.Logger, rep repository.TariffRepository) {
 	handler := transport.NewHTTPHandler(calc, rep)
-	wrappedHandler := chain.Then(handler)
 
-	http.Handle("/calculate", wrappedHandler)
+	http.HandleFunc("/calculate", func(w http.ResponseWriter, r *http.Request) {
+		chain.Then(http.HandlerFunc(handler.HandleCalculate)).ServeHTTP(w, r)
+	})
 	http.HandleFunc("/calculate-by-tariff", func(w http.ResponseWriter, r *http.Request) {
 		chain.Then(http.HandlerFunc(handler.HandleCalculateByTariff)).ServeHTTP(w, r)
 	})

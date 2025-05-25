@@ -17,14 +17,16 @@ import (
 
 type GRPCServer struct {
 	calculatorpb.UnimplementedCalculatorServiceServer
-	service service.ExtendedCalculator
-	logger  *logrus.Logger
+	service    service.ExtendedCalculator
+	repository repository.TariffRepository
+	logger     *logrus.Logger
 }
 
-func NewGRPCServer(calc service.ExtendedCalculator, logger *logrus.Logger) *GRPCServer {
+func NewGRPCServer(calc service.ExtendedCalculator, logger *logrus.Logger, rep repository.TariffRepository) *GRPCServer {
 	return &GRPCServer{
-		service: calc,
-		logger:  logger,
+		service:    calc,
+		logger:     logger,
+		repository: rep,
 	}
 }
 
@@ -103,7 +105,36 @@ func (s *GRPCServer) GetTariffList(ctx context.Context, _ *calculatorpb.TariffLi
 	return &calculatorpb.TariffListResponse{Tariffs: result}, nil
 }
 
-func StartGRPCServer(port string, rep repository.CountryRepository, calc service.ExtendedCalculator, logger *logrus.Logger) error {
+func (s *GRPCServer) CreateTariff(ctx context.Context, req *calculatorpb.Tariff) (*calculatorpb.Tariff, error) {
+	tariff := models.Tariff{
+		Code:              req.GetCode(),
+		Name:              req.GetName(),
+		BaseRate:          req.GetBaseRate(),
+		PricePerKm:        req.GetPricePerKm(),
+		PricePerKg:        req.GetPricePerKg(),
+		Currency:          req.GetCurrency(),
+		VolumetricDivider: req.GetVolumetricDivider(),
+		SpeedKmph:         float64(req.GetSpeedKmph()),
+	}
+	if err := tariff.Validate(); err != nil {
+		return nil, status.Error(codes.InvalidArgument, "Invalid argument")
+	}
+	_, err := s.repository.CreateTariff(ctx, &tariff)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "insert failed tariffs: %v", err)
+	}
+	return req, nil
+}
+
+func (s *GRPCServer) DeleteTariff(ctx context.Context, req *calculatorpb.TariffCodeRequest) (*calculatorpb.Empty, error) {
+	err := s.repository.DeleteTariff(ctx, req.GetCode())
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "delete failed: %v", err)
+	}
+	return &calculatorpb.Empty{}, nil
+}
+
+func StartGRPCServer(port string, rep repository.TariffRepository, calc service.ExtendedCalculator, logger *logrus.Logger) error {
 	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		return err
@@ -115,7 +146,7 @@ func StartGRPCServer(port string, rep repository.CountryRepository, calc service
 			middleware.NewLoggingInterceptor(logger),
 		),
 	)
-	calculatorpb.RegisterCalculatorServiceServer(grpcServer, NewGRPCServer(calc, logger))
+	calculatorpb.RegisterCalculatorServiceServer(grpcServer, NewGRPCServer(calc, logger, rep))
 
 	logger.Infof("gRPC server listening on :%s", port)
 	return grpcServer.Serve(lis)
