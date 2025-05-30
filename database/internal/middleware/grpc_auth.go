@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
@@ -11,6 +12,10 @@ import (
 type contextKey string
 
 const userIDKey contextKey = "user_id"
+
+var excludedMethods = map[string]bool{
+	"/delivery.PackageService/TransferExpiredPackages": true,
+}
 
 func GRPCUserIDKey() contextKey {
 	return userIDKey
@@ -23,6 +28,11 @@ func GRPCAuthInterceptor() grpc.UnaryServerInterceptor {
 		info *grpc.UnaryServerInfo,
 		handler grpc.UnaryHandler,
 	) (interface{}, error) {
+		logrus.Printf("Called RPC method: %s", info.FullMethod)
+		if excludedMethods[info.FullMethod] {
+			return handler(ctx, req)
+		}
+
 		md, ok := metadata.FromIncomingContext(ctx)
 		if !ok {
 			return nil, errors.New("missing metadata")
