@@ -14,6 +14,7 @@ kafka:
   topics: 
     - "pay-events"
     - "payment-events"
+    - "expired-packages"
   groupID: "package-consumers"
   version: "7.3.0"
 

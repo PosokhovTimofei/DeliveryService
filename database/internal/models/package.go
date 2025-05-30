@@ -22,6 +22,7 @@ type Package struct {
 	RemainingHours int       `bson:"-" json:"remaining_hours"`
 	Currency       string    `bson:"currency" json:"currency"`
 	CreatedAt      time.Time `bson:"created_at" json:"created_at"`
+	UpdatedAt      time.Time `bosn:"updated_at" json:"updated_at"`
 	TariffCode     string    `bson:"tariff_code" json:"tariff_code"`
 }
 
@@ -44,4 +45,24 @@ type PackageFilter struct {
 type PackageUpdate struct {
 	Status        string `json:"status" validate:"oneof=created processing delivered canceled"`
 	PaymentStatus string `json:"payment_status"`
+}
+
+// статусы
+// Created
+// Delivered
+// Сanceled
+// In pick-up point
+
+type ExpiredPackageEvent struct {
+	PackageID  string    `json:"package_id"`
+	UserID     string    `json:"user_id"`
+	Status     string    `json:"status"`
+	Address    string    `json:"address"`
+	From       string    `json:"from"`
+	To         string    `json:"to"`
+	Cost       float64   `json:"cost"`
+	Currency   string    `json:"currency"`
+	TariffCode string    `json:"tariff_code"`
+	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
 }

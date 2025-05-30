@@ -56,6 +56,7 @@ message PackageList {
 service PackageService {
   rpc GetPackage(PackageID) returns (Package);
   rpc GetAllPackages(PackageFilter) returns (PackageList);
+  rpc GetExpiredPackages(Empty) returns (PackageList);
   rpc GetUserPackages(PackageFilter) returns (PackageList);
   rpc CreatePackage(Package) returns (Package);
   rpc CreatePackageWithCalc(Package) returns (Package);
@@ -63,4 +64,5 @@ service PackageService {
   rpc DeletePackage(PackageID) returns (Empty);
   rpc CancelPackage(PackageID) returns (Package);
   rpc GetPackageStatus(PackageID) returns (PackageStatus);
+  rpc TransferExpiredPackages(Empty) returns (Empty);
 }

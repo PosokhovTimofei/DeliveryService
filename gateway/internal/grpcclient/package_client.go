@@ -103,3 +103,15 @@ func (p *PackageGRPCClient) GetPackageStatus(userID, packageID string) (*databas
 	defer cancel()
 	return p.client.GetPackageStatus(ctx, &databasepb.PackageID{PackageId: packageID})
 }
+
+func (p *PackageGRPCClient) GetExpiredPackages(userID string) (*databasepb.PackageList, error) {
+	ctx, cancel := p.withContext(userID)
+	defer cancel()
+	return p.client.GetExpiredPackages(ctx, &databasepb.Empty{})
+}
+
+func (p *PackageGRPCClient) TransferExpiredPackages(userID string) (*databasepb.Empty, error) {
+	ctx, cancel := p.withContext(userID)
+	defer cancel()
+	return p.client.TransferExpiredPackages(ctx, &databasepb.Empty{})
+}

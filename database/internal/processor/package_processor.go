@@ -67,7 +67,7 @@ func (p *PackageProcessor) handlePayEvent(session sarama.ConsumerGroupSession, m
 		PaymentStatus: "PAID",
 	}
 
-	if _, err := p.repo.UpdateRoute(session.Context(), payment.PackageID, update); err != nil {
+	if _, err := p.repo.UpdatePackage(session.Context(), payment.PackageID, update); err != nil {
 		p.log.WithError(err).Error("Failed to update package in DB")
 		return
 	}

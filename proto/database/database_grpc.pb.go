@@ -19,15 +19,17 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	PackageService_GetPackage_FullMethodName            = "/delivery.PackageService/GetPackage"
-	PackageService_GetAllPackages_FullMethodName        = "/delivery.PackageService/GetAllPackages"
-	PackageService_GetUserPackages_FullMethodName       = "/delivery.PackageService/GetUserPackages"
-	PackageService_CreatePackage_FullMethodName         = "/delivery.PackageService/CreatePackage"
-	PackageService_CreatePackageWithCalc_FullMethodName = "/delivery.PackageService/CreatePackageWithCalc"
-	PackageService_UpdatePackage_FullMethodName         = "/delivery.PackageService/UpdatePackage"
-	PackageService_DeletePackage_FullMethodName         = "/delivery.PackageService/DeletePackage"
-	PackageService_CancelPackage_FullMethodName         = "/delivery.PackageService/CancelPackage"
-	PackageService_GetPackageStatus_FullMethodName      = "/delivery.PackageService/GetPackageStatus"
+	PackageService_GetPackage_FullMethodName              = "/delivery.PackageService/GetPackage"
+	PackageService_GetAllPackages_FullMethodName          = "/delivery.PackageService/GetAllPackages"
+	PackageService_GetExpiredPackages_FullMethodName      = "/delivery.PackageService/GetExpiredPackages"
+	PackageService_GetUserPackages_FullMethodName         = "/delivery.PackageService/GetUserPackages"
+	PackageService_CreatePackage_FullMethodName           = "/delivery.PackageService/CreatePackage"
+	PackageService_CreatePackageWithCalc_FullMethodName   = "/delivery.PackageService/CreatePackageWithCalc"
+	PackageService_UpdatePackage_FullMethodName           = "/delivery.PackageService/UpdatePackage"
+	PackageService_DeletePackage_FullMethodName           = "/delivery.PackageService/DeletePackage"
+	PackageService_CancelPackage_FullMethodName           = "/delivery.PackageService/CancelPackage"
+	PackageService_GetPackageStatus_FullMethodName        = "/delivery.PackageService/GetPackageStatus"
+	PackageService_TransferExpiredPackages_FullMethodName = "/delivery.PackageService/TransferExpiredPackages"
 )
 
 // PackageServiceClient is the client API for PackageService service.
@@ -36,6 +38,7 @@ const (
 type PackageServiceClient interface {
 	GetPackage(ctx context.Context, in *PackageID, opts ...grpc.CallOption) (*Package, error)
 	GetAllPackages(ctx context.Context, in *PackageFilter, opts ...grpc.CallOption) (*PackageList, error)
+	GetExpiredPackages(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*PackageList, error)
 	GetUserPackages(ctx context.Context, in *PackageFilter, opts ...grpc.CallOption) (*PackageList, error)
 	CreatePackage(ctx context.Context, in *Package, opts ...grpc.CallOption) (*Package, error)
 	CreatePackageWithCalc(ctx context.Context, in *Package, opts ...grpc.CallOption) (*Package, error)
@@ -43,6 +46,7 @@ type PackageServiceClient interface {
 	DeletePackage(ctx context.Context, in *PackageID, opts ...grpc.CallOption) (*Empty, error)
 	CancelPackage(ctx context.Context, in *PackageID, opts ...grpc.CallOption) (*Package, error)
 	GetPackageStatus(ctx context.Context, in *PackageID, opts ...grpc.CallOption) (*PackageStatus, error)
+	TransferExpiredPackages(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error)
 }
 
 type packageServiceClient struct {
@@ -67,6 +71,16 @@ func (c *packageServiceClient) GetAllPackages(ctx context.Context, in *PackageFi
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(PackageList)
 	err := c.cc.Invoke(ctx, PackageService_GetAllPackages_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *packageServiceClient) GetExpiredPackages(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*PackageList, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PackageList)
+	err := c.cc.Invoke(ctx, PackageService_GetExpiredPackages_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -143,12 +157,23 @@ func (c *packageServiceClient) GetPackageStatus(ctx context.Context, in *Package
 	return out, nil
 }
 
+func (c *packageServiceClient) TransferExpiredPackages(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, PackageService_TransferExpiredPackages_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PackageServiceServer is the server API for PackageService service.
 // All implementations must embed UnimplementedPackageServiceServer
 // for forward compatibility.
 type PackageServiceServer interface {
 	GetPackage(context.Context, *PackageID) (*Package, error)
 	GetAllPackages(context.Context, *PackageFilter) (*PackageList, error)
+	GetExpiredPackages(context.Context, *Empty) (*PackageList, error)
 	GetUserPackages(context.Context, *PackageFilter) (*PackageList, error)
 	CreatePackage(context.Context, *Package) (*Package, error)
 	CreatePackageWithCalc(context.Context, *Package) (*Package, error)
@@ -156,6 +181,7 @@ type PackageServiceServer interface {
 	DeletePackage(context.Context, *PackageID) (*Empty, error)
 	CancelPackage(context.Context, *PackageID) (*Package, error)
 	GetPackageStatus(context.Context, *PackageID) (*PackageStatus, error)
+	TransferExpiredPackages(context.Context, *Empty) (*Empty, error)
 	mustEmbedUnimplementedPackageServiceServer()
 }
 
@@ -171,6 +197,9 @@ func (UnimplementedPackageServiceServer) GetPackage(context.Context, *PackageID)
 }
 func (UnimplementedPackageServiceServer) GetAllPackages(context.Context, *PackageFilter) (*PackageList, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAllPackages not implemented")
+}
+func (UnimplementedPackageServiceServer) GetExpiredPackages(context.Context, *Empty) (*PackageList, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetExpiredPackages not implemented")
 }
 func (UnimplementedPackageServiceServer) GetUserPackages(context.Context, *PackageFilter) (*PackageList, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserPackages not implemented")
@@ -192,6 +221,9 @@ func (UnimplementedPackageServiceServer) CancelPackage(context.Context, *Package
 }
 func (UnimplementedPackageServiceServer) GetPackageStatus(context.Context, *PackageID) (*PackageStatus, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetPackageStatus not implemented")
+}
+func (UnimplementedPackageServiceServer) TransferExpiredPackages(context.Context, *Empty) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TransferExpiredPackages not implemented")
 }
 func (UnimplementedPackageServiceServer) mustEmbedUnimplementedPackageServiceServer() {}
 func (UnimplementedPackageServiceServer) testEmbeddedByValue()                        {}
@@ -246,6 +278,24 @@ func _PackageService_GetAllPackages_Handler(srv interface{}, ctx context.Context
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(PackageServiceServer).GetAllPackages(ctx, req.(*PackageFilter))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PackageService_GetExpiredPackages_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PackageServiceServer).GetExpiredPackages(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PackageService_GetExpiredPackages_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PackageServiceServer).GetExpiredPackages(ctx, req.(*Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -376,6 +426,24 @@ func _PackageService_GetPackageStatus_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PackageService_TransferExpiredPackages_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PackageServiceServer).TransferExpiredPackages(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PackageService_TransferExpiredPackages_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PackageServiceServer).TransferExpiredPackages(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // PackageService_ServiceDesc is the grpc.ServiceDesc for PackageService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -390,6 +458,10 @@ var PackageService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetAllPackages",
 			Handler:    _PackageService_GetAllPackages_Handler,
+		},
+		{
+			MethodName: "GetExpiredPackages",
+			Handler:    _PackageService_GetExpiredPackages_Handler,
 		},
 		{
 			MethodName: "GetUserPackages",
@@ -418,6 +490,10 @@ var PackageService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetPackageStatus",
 			Handler:    _PackageService_GetPackageStatus_Handler,
+		},
+		{
+			MethodName: "TransferExpiredPackages",
+			Handler:    _PackageService_TransferExpiredPackages_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

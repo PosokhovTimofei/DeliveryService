@@ -107,7 +107,7 @@ func (r *MongoRepository) Create(ctx context.Context, route *models.Package) (*m
 	return route, nil
 }
 
-func (r *MongoRepository) GetAllRoutes(ctx context.Context, filter models.PackageFilter) ([]*models.Package, error) {
+func (r *MongoRepository) GetAllPackages(ctx context.Context, filter models.PackageFilter) ([]*models.Package, error) {
 	bsonFilter := bson.M{}
 
 	if filter.UserID != "" {
@@ -145,7 +145,7 @@ func (r *MongoRepository) GetAllRoutes(ctx context.Context, filter models.Packag
 	return routes, nil
 }
 
-func (r *MongoRepository) UpdateRoute(ctx context.Context, packageID string, update models.PackageUpdate) (*models.Package, error) {
+func (r *MongoRepository) UpdatePackage(ctx context.Context, packageID string, update models.PackageUpdate) (*models.Package, error) {
 	filter := bson.M{"package_id": packageID}
 
 	setFields := bson.M{}
@@ -183,7 +183,7 @@ func (r *MongoRepository) UpdateRoute(ctx context.Context, packageID string, upd
 	return &updatedRoute, nil
 }
 
-func (r *MongoRepository) DeleteRoute(ctx context.Context, packageID string) error {
+func (r *MongoRepository) DeletePackage(ctx context.Context, packageID string) error {
 	filter := bson.M{"package_id": packageID}
 
 	result, err := r.collection.DeleteOne(ctx, filter)
@@ -196,6 +196,32 @@ func (r *MongoRepository) DeleteRoute(ctx context.Context, packageID string) err
 	}
 
 	return nil
+}
+
+func (r *MongoRepository) GetExpiredPackages(ctx context.Context) ([]*models.Package, error) {
+	cutoff := time.Now().AddDate(0, 0, -60)
+
+	filter := bson.M{
+		"status":     "In pick-up point",
+		"updated_at": bson.M{"$lte": cutoff},
+	}
+
+	cursor, err := r.collection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var packages []*models.Package
+	for cursor.Next(ctx) {
+		var pkg models.Package
+		if err := cursor.Decode(&pkg); err != nil {
+			return nil, err
+		}
+		packages = append(packages, &pkg)
+	}
+
+	return packages, nil
 }
 
 func (r *MongoRepository) Ping(ctx context.Context) error {

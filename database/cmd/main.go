@@ -47,7 +47,7 @@ func main() {
 		logger.Fatal("Failed to connect to calculator:", err)
 	}
 	defer calcClient.Close()
-	producer, err := kafka.NewProducer(cfg.Kafka.Brokers, cfg.Kafka.Topic[1])
+	producer, err := kafka.NewProducer(cfg.Kafka.Brokers, cfg.Kafka.Topic[1:])
 	if err != nil {
 		logger.Fatal("Failed to init Kafka producer:", err)
 	}
@@ -56,7 +56,7 @@ func main() {
 	grpcServer := grpc.NewServer(
 		grpc.UnaryInterceptor(middleware.GRPCAuthInterceptor()),
 	)
-	pb.RegisterPackageServiceServer(grpcServer, handlers.NewGrpcPackageHandler(repo, calcClient, producer))
+	pb.RegisterPackageServiceServer(grpcServer, handlers.NewGrpcPackageHandler(repo, calcClient, producer, logger))
 
 	go func() {
 		listener, err := net.Listen("tcp", ":50054")

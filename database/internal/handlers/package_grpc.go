@@ -11,6 +11,7 @@ import (
 	"github.com/maksroxx/DeliveryService/database/internal/repository"
 	calculatorpb "github.com/maksroxx/DeliveryService/proto/calculator"
 	pb "github.com/maksroxx/DeliveryService/proto/database"
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -24,13 +25,15 @@ type GrpcPackageHandler struct {
 	rep        repository.RouteRepository
 	calculator Calculator
 	producer   kafka.PaymentProducer
+	logger     *logrus.Logger
 }
 
-func NewGrpcPackageHandler(rep repository.RouteRepository, calculator Calculator, producer kafka.PaymentProducer) *GrpcPackageHandler {
+func NewGrpcPackageHandler(rep repository.RouteRepository, calculator Calculator, producer kafka.PaymentProducer, log *logrus.Logger) *GrpcPackageHandler {
 	return &GrpcPackageHandler{
 		rep:        rep,
 		calculator: calculator,
 		producer:   producer,
+		logger:     log,
 	}
 }
 
@@ -52,7 +55,7 @@ func (h *GrpcPackageHandler) GetAllPackages(ctx context.Context, req *pb.Package
 		filter.CreatedAfter = req.CreatedAfter.AsTime()
 	}
 
-	pkgs, err := h.rep.GetAllRoutes(ctx, filter)
+	pkgs, err := h.rep.GetAllPackages(ctx, filter)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +74,7 @@ func (h *GrpcPackageHandler) GetUserPackages(ctx context.Context, req *pb.Packag
 		filter.CreatedAfter = req.CreatedAfter.AsTime()
 	}
 
-	pkgs, err := h.rep.GetAllRoutes(ctx, filter)
+	pkgs, err := h.rep.GetAllPackages(ctx, filter)
 	if err != nil {
 		return nil, err
 	}
@@ -171,7 +174,7 @@ func (h *GrpcPackageHandler) UpdatePackage(ctx context.Context, req *pb.Package)
 		Status:        req.Status,
 		PaymentStatus: req.PaymentStatus,
 	}
-	updated, err := h.rep.UpdateRoute(ctx, req.PackageId, update)
+	updated, err := h.rep.UpdatePackage(ctx, req.PackageId, update)
 	if err != nil {
 		return nil, err
 	}
@@ -179,7 +182,7 @@ func (h *GrpcPackageHandler) UpdatePackage(ctx context.Context, req *pb.Package)
 }
 
 func (h *GrpcPackageHandler) DeletePackage(ctx context.Context, req *pb.PackageID) (*pb.Empty, error) {
-	err := h.rep.DeleteRoute(ctx, req.PackageId)
+	err := h.rep.DeletePackage(ctx, req.PackageId)
 	if err != nil {
 		return nil, err
 	}
@@ -201,7 +204,7 @@ func (h *GrpcPackageHandler) CancelPackage(ctx context.Context, req *pb.PackageI
 	update := models.PackageUpdate{
 		Status: "Сanceled",
 	}
-	updated, err := h.rep.UpdateRoute(ctx, req.PackageId, update)
+	updated, err := h.rep.UpdatePackage(ctx, req.PackageId, update)
 	if err != nil {
 		return nil, err
 	}
@@ -214,4 +217,34 @@ func (h *GrpcPackageHandler) GetPackageStatus(ctx context.Context, req *pb.Packa
 		return nil, err
 	}
 	return &pb.PackageStatus{Status: pkg.Status}, nil
+}
+
+func (h *GrpcPackageHandler) GetExpiredPackages(ctx context.Context, req *pb.Empty) (*pb.PackageList, error) {
+	pkgs, err := h.rep.GetExpiredPackages(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return toProtoList(pkgs), nil
+}
+
+func (h *GrpcPackageHandler) TransferExpiredPackages(ctx context.Context, req *pb.Empty) (*pb.Empty, error) {
+	expiredPackages, err := h.rep.GetExpiredPackages(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch expired packages: %w", err)
+	}
+
+	for _, pkg := range expiredPackages {
+		if err := h.producer.SendExpiredPackageEvent(*pkg); err != nil {
+			h.logger.WithError(err).Errorf("failed to send expired event for package %s", pkg.PackageID)
+			continue
+		}
+
+		if err := h.rep.DeletePackage(ctx, pkg.PackageID); err != nil {
+			h.logger.WithError(err).Errorf("failed to delete package %s after transfer", pkg.PackageID)
+			continue
+		}
+	}
+
+	return &pb.Empty{}, nil
 }

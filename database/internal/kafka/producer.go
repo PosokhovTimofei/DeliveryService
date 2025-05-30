@@ -8,16 +8,21 @@ import (
 	"github.com/maksroxx/DeliveryService/database/internal/models"
 )
 
+const (
+	EventExpiredPackage = "expired_package"
+)
+
 type PaymentProducer interface {
 	SendPaymentEvent(payment models.Payment) error
+	SendExpiredPackageEvent(pkg models.Package) error
 }
 
 type Producer struct {
 	syncProducer sarama.SyncProducer
-	topic        string
+	topic        []string
 }
 
-func NewProducer(brokers []string, topic string) (*Producer, error) {
+func NewProducer(brokers []string, topic []string) (*Producer, error) {
 	cfg := sarama.NewConfig()
 	cfg.Producer.RequiredAcks = sarama.WaitForAll
 	cfg.Producer.Retry.Max = 5
@@ -41,13 +46,49 @@ func (p *Producer) SendPaymentEvent(payment models.Payment) error {
 	}
 
 	msg := &sarama.ProducerMessage{
-		Topic: p.topic,
+		Topic: p.topic[0],
 		Key:   sarama.StringEncoder(payment.PackageID),
 		Value: sarama.ByteEncoder(msgBytes),
 		Headers: []sarama.RecordHeader{
 			{
 				Key:   []byte("User-ID"),
 				Value: []byte(payment.UserID),
+			},
+		},
+	}
+
+	_, _, err = p.syncProducer.SendMessage(msg)
+	return err
+}
+
+func (p *Producer) SendExpiredPackageEvent(pkg models.Package) error {
+	event := models.ExpiredPackageEvent{
+		PackageID:  pkg.PackageID,
+		UserID:     pkg.UserID,
+		Status:     pkg.Status,
+		Address:    pkg.Address,
+		From:       pkg.From,
+		To:         pkg.To,
+		Cost:       pkg.Cost,
+		Currency:   pkg.Currency,
+		TariffCode: pkg.TariffCode,
+		CreatedAt:  pkg.CreatedAt,
+		UpdatedAt:  pkg.UpdatedAt,
+	}
+
+	msgBytes, err := json.Marshal(event)
+	if err != nil {
+		return err
+	}
+
+	msg := &sarama.ProducerMessage{
+		Topic: p.topic[1],
+		Key:   sarama.StringEncoder(pkg.PackageID),
+		Value: sarama.ByteEncoder(msgBytes),
+		Headers: []sarama.RecordHeader{
+			{
+				Key:   []byte("event-type"),
+				Value: []byte(string(EventExpiredPackage)),
 			},
 		},
 	}

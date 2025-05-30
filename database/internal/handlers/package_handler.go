@@ -85,7 +85,7 @@ func (h *PackageHandler) GetUserPackages(w http.ResponseWriter, r *http.Request)
 		}
 	}
 
-	packages, err := h.rep.GetAllRoutes(r.Context(), filter)
+	packages, err := h.rep.GetAllPackages(r.Context(), filter)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -117,7 +117,7 @@ func (h *PackageHandler) GetAllPackages(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 
-	packages, err := h.rep.GetAllRoutes(r.Context(), filter)
+	packages, err := h.rep.GetAllPackages(r.Context(), filter)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Internal server error")
 		return
@@ -191,7 +191,7 @@ func (h *PackageHandler) UpdatePackage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	updatedPkg, err := h.rep.UpdateRoute(r.Context(), packageID, update)
+	updatedPkg, err := h.rep.UpdatePackage(r.Context(), packageID, update)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Failed to update package")
 		return
@@ -206,7 +206,7 @@ func (h *PackageHandler) DeletePackage(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusBadRequest, "Package id not found")
 	}
 
-	if err := h.rep.DeleteRoute(r.Context(), packageID); err != nil {
+	if err := h.rep.DeletePackage(r.Context(), packageID); err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Failed to delete package")
 		return
 	}
@@ -299,11 +299,22 @@ func (h *PackageHandler) CancelPackage(w http.ResponseWriter, r *http.Request) {
 		Status: "Сanceled",
 	}
 
-	updatedPkg, err := h.rep.UpdateRoute(r.Context(), packageID, update)
+	updatedPkg, err := h.rep.UpdatePackage(r.Context(), packageID, update)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Failed to cancel package")
 		return
 	}
 
 	respondWithJSON(w, http.StatusOK, updatedPkg)
+}
+
+func (h *PackageHandler) GetExpiredPickupPackages(w http.ResponseWriter, r *http.Request) {
+	packages, err := h.rep.GetExpiredPackages(r.Context())
+	if err != nil {
+		h.log.WithError(err).Error("Failed to fetch expired pickup packages")
+		respondWithError(w, http.StatusInternalServerError, "Failed to fetch packages")
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, packages)
 }
