@@ -64,28 +64,28 @@ logs:
 	docker-compose logs -f
 
 protocalc:
-	export PATH="$PATH:$(go env GOPATH)/bin"
+	@export PATH="$PATH:$(go env GOPATH)/bin"
 	/opt/homebrew/bin/protoc --proto_path=proto \
 		--go_out=paths=source_relative:proto \
 		--go-grpc_out=paths=source_relative:proto \
 		proto/calculator/calculator.proto
 
 protoauth:
-	export PATH="$PATH:$(go env GOPATH)/bin"
+	@export PATH="$PATH:$(go env GOPATH)/bin"
 	/opt/homebrew/bin/protoc --proto_path=proto \
 		--go_out=paths=source_relative:proto \
 		--go-grpc_out=paths=source_relative:proto \
 		proto/auth/auth.proto
 
 protopay:
-	export PATH="$PATH:$(go env GOPATH)/bin"
+	@export PATH="$PATH:$(go env GOPATH)/bin"
 	/opt/homebrew/bin/protoc --proto_path=proto \
 		--go_out=paths=source_relative:proto \
 		--go-grpc_out=paths=source_relative:proto \
 		proto/payment/payment.proto
 
 protodb:
-	export PATH="$PATH:$(go env GOPATH)/bin"
+	@export PATH="$PATH:$(go env GOPATH)/bin"
 	/opt/homebrew/bin/protoc --proto_path=proto \
 		--go_out=paths=source_relative:proto \
 		--go-grpc_out=paths=source_relative:proto \
