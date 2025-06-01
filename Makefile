@@ -1,7 +1,7 @@
 BIN_DIR      := bin
 GO           := go
 
-.PHONY: client gateway calculate payment db insert testReq auth cron-transfer test up down restart logs proto protodb
+.PHONY: client gateway calculate payment db insert testReq auth auction cron-transfer test up down restart logs proto protodb
 
 gateway:
 	@echo "🚀 Запуск gateway..."
@@ -32,6 +32,11 @@ auth:
 	@echo "🚀 Запуск auth..."
 	@$(GO) build -o $(BIN_DIR)/auth ./auth/
 	@$(BIN_DIR)/auth
+
+auction:
+	@echo "🚀 Запуск auction..."
+	@$(GO) build -o $(BIN_DIR)/auction ./auction/cmd/
+	@$(BIN_DIR)/auction
 
 cron-transfer:
 	@echo "🚀 Запуск cron-transfer..."
