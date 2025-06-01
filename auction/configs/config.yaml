@@ -1,5 +1,6 @@
 server:
   address: ":8777"
+  grpc_address: ":50055"
   shutdown_timeout: 30s
 
 database:

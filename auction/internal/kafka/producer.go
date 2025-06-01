@@ -45,16 +45,13 @@ func (p *AuctionPublisher) Publish(ctx context.Context, result *models.AuctionRe
 		Value: sarama.ByteEncoder(value),
 	}
 
-	partition, offset, err := p.producer.SendMessage(msg)
+	_, _, err = p.producer.SendMessage(msg)
 	if err != nil {
 		p.log.WithError(err).Error("Failed to send auction result message")
 		return err
 	}
 
-	p.log.WithFields(logrus.Fields{
-		"partition": partition,
-		"offset":    offset,
-	}).Info("Auction result message sent successfully")
+	p.log.Info("Auction result message sent successfully")
 	return nil
 }
 

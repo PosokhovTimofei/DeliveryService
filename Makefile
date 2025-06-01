@@ -1,7 +1,7 @@
 BIN_DIR      := bin
 GO           := go
 
-.PHONY: client gateway calculate payment db insert testReq auth auction cron-transfer test up down restart logs proto protodb
+.PHONY: client gateway calculate payment db insert testReq auth auction cron-transfer test up down restart logs proto protodb protoauction
 
 gateway:
 	@echo "🚀 Запуск gateway..."
@@ -99,3 +99,10 @@ protodb:
 		--go_out=paths=source_relative:proto \
 		--go-grpc_out=paths=source_relative:proto \
 		proto/database/database.proto
+
+protoauction:
+	@export PATH="$PATH:$(go env GOPATH)/bin"
+	/opt/homebrew/bin/protoc --proto_path=proto \
+		--go_out=paths=source_relative:proto \
+		--go-grpc_out=paths=source_relative:proto \
+		proto/auction/auction.proto

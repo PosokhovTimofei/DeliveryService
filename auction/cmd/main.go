@@ -2,19 +2,24 @@ package main
 
 import (
 	"context"
+	"net"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
 	"github.com/maksroxx/DeliveryService/auction/configs"
+	"github.com/maksroxx/DeliveryService/auction/internal/handlers"
 	"github.com/maksroxx/DeliveryService/auction/internal/kafka"
+	"github.com/maksroxx/DeliveryService/auction/internal/middleware"
 	"github.com/maksroxx/DeliveryService/auction/internal/processor"
 	"github.com/maksroxx/DeliveryService/auction/internal/repository"
 	"github.com/maksroxx/DeliveryService/auction/internal/service"
+	auctionpb "github.com/maksroxx/DeliveryService/proto/auction"
 	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"google.golang.org/grpc"
 )
 
 func main() {
@@ -51,6 +56,29 @@ func main() {
 		log.WithError(err).Fatal("Failed to create Kafka consumer")
 	}
 	defer consumer.Close()
+
+	bidHandler := handlers.NewBidGRPCHandler(bidRepo, packageRepo, log)
+	go func() {
+		lis, err := net.Listen("tcp", cfg.Server.GRPCAddress)
+		if err != nil {
+			log.WithError(err).Fatal("Failed to listen for gRPC")
+		}
+
+		grpcServer := grpc.NewServer(
+			grpc.ChainUnaryInterceptor(
+				middleware.AuthInterceptor(),
+			),
+			grpc.ChainStreamInterceptor(
+				middleware.StreamAuthInterceptor(),
+			),
+		)
+		auctionpb.RegisterAuctionServiceServer(grpcServer, bidHandler)
+
+		log.Infof("gRPC server started on %s", cfg.Server.GRPCAddress)
+		if err := grpcServer.Serve(lis); err != nil {
+			log.WithError(err).Fatal("Failed to serve gRPC")
+		}
+	}()
 
 	log.Info("Starting Kafka consumer...")
 	consumer.Run(ctx)

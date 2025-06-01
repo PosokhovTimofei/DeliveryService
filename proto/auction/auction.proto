@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package auction;
+
+option go_package = "github.com/maksroxx/DeliveryService/proto/auction;auctionpb";
+
+service AuctionService {
+  rpc PlaceBid(BidRequest) returns (BidResponse);
+  rpc GetBidsByPackage(BidsRequest) returns (BidsResponse);
+  rpc StreamBids(BidsRequest) returns (stream Bid);
+}
+
+message BidRequest {
+  string package_id = 1;
+  string user_id = 2;
+  double amount = 3;
+}
+
+message BidResponse {
+  string status = 1;
+  string message = 2;
+}
+
+message BidsRequest {
+  string package_id = 1;
+}
+
+message BidsResponse {
+  repeated Bid bids = 1;
+}
+
+message Bid {
+  string bid_id = 1;
+  string package_id = 2;
+  string user_id = 3;
+  double amount = 4;
+  string timestamp = 5;
+}

@@ -18,7 +18,7 @@ func StartAuction(
 	repo repository.Packager,
 	log *logrus.Logger,
 ) {
-	timer := time.NewTimer(1 * time.Minute)
+	timer := time.NewTimer(5 * time.Minute)
 
 	go func() {
 		select {

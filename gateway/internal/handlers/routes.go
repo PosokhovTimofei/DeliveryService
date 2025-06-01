@@ -15,6 +15,7 @@ func RegisterRoutes(
 	calculatorClient *grpcclient.CalculatorGRPCClient,
 	paymentClient *grpcclient.PaymentGRPCClient,
 	packageClient *grpcclient.PackageGRPCClient,
+	auctionClient *grpcclient.AuctionGRPCClient,
 ) {
 	// Default
 	defaultHandler := NewDefaultHandler()
@@ -42,6 +43,13 @@ func RegisterRoutes(
 		}
 	}), authClient, logger))
 
+	// Auction
+	auctionHandler := NewAuctionHandler(auctionClient, logger)
+	mux.Handle("/api/auction/place", protectAndLog(http.HandlerFunc(auctionHandler.PlaceBid), authClient, logger))
+	// ws://localhost:8228/api/auction/ws
+	mux.Handle("/api/auction/ws", http.HandlerFunc(auctionHandler.WebSocketStream))
+	mux.Handle("/api/auction/bids", protectAndLog(http.HandlerFunc(auctionHandler.GetBidsByPackage), authClient, logger))
+
 	// Payment
 	mux.Handle("/api/payment/confirm", protectAndLog(NewPaymentHandler(paymentClient, logger), authClient, logger))
 
@@ -62,11 +70,6 @@ func RegisterRoutes(
 	mux.Handle("/metrics", promhttp.Handler())
 
 	protectedRoutes := []RouteConfig{
-		// {
-		// 	Prefix:      "/api/create",
-		// 	TargetURL:   "http://localhost:8333",
-		// 	PathRewrite: "/create",
-		// },
 		{
 			Prefix:      "/api/profile",
 			TargetURL:   "http://localhost:1704",

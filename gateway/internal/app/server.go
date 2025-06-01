@@ -26,8 +26,13 @@ func NewServer(logger *logrus.Logger) *http.Server {
 	if err != nil {
 		logger.Fatalf("Failed to connect to package gRPC: %v", err)
 	}
+
+	auctionClient, err := grpcclient.NewAuctionGRPCClient("localhost:50055")
+	if err != nil {
+		logger.Fatalf("Failed to connect to package gRPC: %v", err)
+	}
 	mux := http.NewServeMux()
-	handlers.RegisterRoutes(mux, logger, authClient, calculatorClient, paymentClient, packageClient)
+	handlers.RegisterRoutes(mux, logger, authClient, calculatorClient, paymentClient, packageClient, auctionClient)
 
 	return &http.Server{
 		Addr:              ":8228",

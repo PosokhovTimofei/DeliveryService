@@ -16,6 +16,7 @@ type Config struct {
 
 type ServerConfig struct {
 	Address         string        `yaml:"address"`
+	GRPCAddress     string        `yaml:"grpc_address"`
 	ShutdownTimeout time.Duration `yaml:"shutdown_timeout"`
 }
 
