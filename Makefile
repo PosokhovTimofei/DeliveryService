@@ -1,7 +1,7 @@
 BIN_DIR      := bin
 GO           := go
 
-.PHONY: client gateway calculate payment db insert testReq auth auction cron-transfer test up down restart logs proto protodb protoauction
+.PHONY: client gateway calculate payment db insert testReq auth auction cron-scheduler test up down restart logs proto protodb protoauction
 
 gateway:
 	@echo "🚀 Запуск gateway..."
