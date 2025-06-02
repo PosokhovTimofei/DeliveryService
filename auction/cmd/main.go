@@ -25,6 +25,9 @@ import (
 func main() {
 	log := logrus.New()
 	cfg := configs.Load()
+	if err := configs.LoadAuthConfig(); err != nil {
+		log.WithError(err).Fatal("Failed to load auth config")
+	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 

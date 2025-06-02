@@ -45,7 +45,7 @@ func addStartAuctionFridays(c *cron.Cron, deps cronDeps) {
 }
 
 func addRepeatAuctionSaturday(c *cron.Cron, deps cronDeps) {
-	c.AddFunc("0 0 19 * * 5", func() {
+	c.AddFunc("0 0 19 * * 6", func() {
 		log := deps.Log.WithField("job", "RepeatAuction")
 		log.Info("Started")
 

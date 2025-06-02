@@ -1,0 +1,3 @@
+excluded_methods:
+  - /auction.AuctionService/StartAuction
+  - /auction.AuctionService/RepeateAuction

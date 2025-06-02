@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 
+	"github.com/maksroxx/DeliveryService/auction/configs"
+	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -25,6 +27,12 @@ func AuthInterceptor() grpc.UnaryServerInterceptor {
 		info *grpc.UnaryServerInfo,
 		handler grpc.UnaryHandler,
 	) (interface{}, error) {
+		logrus.Infof("Intercepting unary: %s", info.FullMethod)
+
+		if configs.IsExcludedMethod(info.FullMethod) {
+			return handler(ctx, req)
+		}
+
 		userID, err := extractUserIDFromMetadata(ctx)
 		if err != nil {
 			return nil, status.Error(codes.Unauthenticated, err.Error())
