@@ -7,6 +7,10 @@ option go_package = "github.com/maksroxx/DeliveryService/proto/auction;auctionpb
 service AuctionService {
   rpc PlaceBid(BidRequest) returns (BidResponse);
   rpc GetBidsByPackage(BidsRequest) returns (BidsResponse);
+  rpc GetAuctioningPackages(Empty) returns (Packages);
+  rpc GetFailedPackages(Empty) returns (Packages);
+  rpc StartAuction(Empty) returns (Empty);
+  rpc RepeateAuction(Empty) returns (Empty);
   rpc StreamBids(BidsRequest) returns (stream Bid);
 }
 
@@ -36,3 +40,19 @@ message Bid {
   double amount = 4;
   string timestamp = 5;
 }
+
+message Packages {
+  repeated Package package = 1;
+}
+
+message Package {
+  string package_id = 1;
+  string status = 2;
+  string from = 3;
+  string to = 4;
+  double cost = 5;
+  string currency = 6;
+  string tariff_code = 7;
+}
+
+message Empty {}

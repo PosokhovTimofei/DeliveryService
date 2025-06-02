@@ -1,8 +1,8 @@
 package handlers
 
 import (
+	"encoding/json"
 	"net/http"
-	"strconv"
 
 	"github.com/gorilla/websocket"
 	"github.com/maksroxx/DeliveryService/gateway/internal/grpcclient"
@@ -27,6 +27,11 @@ func NewAuctionHandler(client *grpcclient.AuctionGRPCClient, log *logrus.Logger)
 	}
 }
 
+type placeBidRequest struct {
+	PackageID string  `json:"package_id"`
+	Amount    float64 `json:"amount"`
+}
+
 func (h *AuctionHandler) PlaceBid(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.UserIDFromContext(r.Context())
 	if !ok {
@@ -34,15 +39,18 @@ func (h *AuctionHandler) PlaceBid(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	packageID := r.URL.Query().Get("package_id")
-	amountStr := r.URL.Query().Get("amount")
-	amount, err := strconv.ParseFloat(amountStr, 64)
-	if err != nil || amount <= 0 {
-		utils.RespondError(w, r, http.StatusBadRequest, "Invalid amount")
+	var req placeBidRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.RespondError(w, r, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	resp, err := h.client.PlaceBid(userID, packageID, amount)
+	if req.PackageID == "" || req.Amount <= 0 {
+		utils.RespondError(w, r, http.StatusBadRequest, "Invalid package_id or amount")
+		return
+	}
+
+	resp, err := h.client.PlaceBid(userID, req.PackageID, req.Amount)
 	if err != nil {
 		h.logger.WithError(err).Error("PlaceBid failed")
 		utils.RespondError(w, r, http.StatusInternalServerError, "Bid failed")
@@ -52,20 +60,92 @@ func (h *AuctionHandler) PlaceBid(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, r, http.StatusOK, resp)
 }
 
+type getBidsRequest struct {
+	PackageID string `json:"package_id"`
+}
+
 func (h *AuctionHandler) GetBidsByPackage(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.UserIDFromContext(r.Context())
 	if !ok {
 		utils.RespondError(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
-	packageID := r.URL.Query().Get("package_id")
-	if packageID == "" {
-		utils.RespondError(w, r, http.StatusBadRequest, "Invalid package_id")
+
+	var req getBidsRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.RespondError(w, r, http.StatusBadRequest, "Invalid request body")
+		return
 	}
-	resp, err := h.client.GetBidsByPackage(userID, packageID)
+
+	if req.PackageID == "" {
+		utils.RespondError(w, r, http.StatusBadRequest, "Missing package_id")
+		return
+	}
+
+	resp, err := h.client.GetBidsByPackage(userID, req.PackageID)
 	if err != nil {
 		h.logger.WithError(err).Error("GetBidsByPackage failed")
 		utils.RespondError(w, r, http.StatusInternalServerError, "GetBidsByPackage failed")
+		return
+	}
+	utils.RespondJSON(w, r, http.StatusOK, resp)
+}
+
+func (h *AuctionHandler) GetAuctioningPackages(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok {
+		utils.RespondError(w, r, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	resp, err := h.client.GetAuctioningPackages(userID)
+	if err != nil {
+		h.logger.WithError(err).Error("GetAuctioningPackages failed")
+		utils.RespondError(w, r, http.StatusInternalServerError, "GetAuctioningPackages failed")
+		return
+	}
+	utils.RespondJSON(w, r, http.StatusOK, resp)
+}
+
+func (h *AuctionHandler) GetFailedPackages(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok {
+		utils.RespondError(w, r, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	resp, err := h.client.GetFailedPackages(userID)
+	if err != nil {
+		h.logger.WithError(err).Error("GetFailedPackages failed")
+		utils.RespondError(w, r, http.StatusInternalServerError, "GetFailedPackages failed")
+		return
+	}
+	utils.RespondJSON(w, r, http.StatusOK, resp)
+}
+
+func (h *AuctionHandler) StartAuction(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok {
+		utils.RespondError(w, r, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	resp, err := h.client.StartAuction(userID)
+	if err != nil {
+		h.logger.WithError(err).Error("StartAuction failed")
+		utils.RespondError(w, r, http.StatusInternalServerError, "StartAuction failed")
+		return
+	}
+	utils.RespondJSON(w, r, http.StatusOK, resp)
+}
+
+func (h *AuctionHandler) RepeateAuction(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok {
+		utils.RespondError(w, r, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	resp, err := h.client.RepeateAuction(userID)
+	if err != nil {
+		h.logger.WithError(err).Error("RepeateAuction failed")
+		utils.RespondError(w, r, http.StatusInternalServerError, "RepeateAuction failed")
 		return
 	}
 	utils.RespondJSON(w, r, http.StatusOK, resp)

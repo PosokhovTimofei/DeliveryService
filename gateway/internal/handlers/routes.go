@@ -49,6 +49,10 @@ func RegisterRoutes(
 	// ws://localhost:8228/api/auction/ws
 	mux.Handle("/api/auction/ws", http.HandlerFunc(auctionHandler.WebSocketStream))
 	mux.Handle("/api/auction/bids", protectAndLog(http.HandlerFunc(auctionHandler.GetBidsByPackage), authClient, logger))
+	mux.Handle("/api/auction/items", protectAndLog(http.HandlerFunc(auctionHandler.GetAuctioningPackages), authClient, logger))
+	mux.Handle("/api/auction/items/failed", protectAndLog(http.HandlerFunc(auctionHandler.GetFailedPackages), authClient, logger))
+	mux.Handle("/api/auction/start", protectAndLog(http.HandlerFunc(auctionHandler.StartAuction), authClient, logger))
+	mux.Handle("/api/auction/repeate", protectAndLog(http.HandlerFunc(auctionHandler.RepeateAuction), authClient, logger))
 
 	// Payment
 	mux.Handle("/api/payment/confirm", protectAndLog(NewPaymentHandler(paymentClient, logger), authClient, logger))

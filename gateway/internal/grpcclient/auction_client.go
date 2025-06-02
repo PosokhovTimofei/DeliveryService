@@ -60,6 +60,30 @@ func (a *AuctionGRPCClient) GetBidsByPackage(userID, packageID string) (*auction
 	})
 }
 
+func (a *AuctionGRPCClient) GetAuctioningPackages(userID string) (*auctionpb.Packages, error) {
+	ctx, cancel := a.withContext(userID)
+	defer cancel()
+	return a.client.GetAuctioningPackages(ctx, &auctionpb.Empty{})
+}
+
+func (a *AuctionGRPCClient) GetFailedPackages(userID string) (*auctionpb.Packages, error) {
+	ctx, cancel := a.withContext(userID)
+	defer cancel()
+	return a.client.GetFailedPackages(ctx, &auctionpb.Empty{})
+}
+
+func (a *AuctionGRPCClient) StartAuction(userID string) (*auctionpb.Empty, error) {
+	ctx, cancel := a.withContext(userID)
+	defer cancel()
+	return a.client.StartAuction(ctx, &auctionpb.Empty{})
+}
+
+func (a *AuctionGRPCClient) RepeateAuction(userID string) (*auctionpb.Empty, error) {
+	ctx, cancel := a.withContext(userID)
+	defer cancel()
+	return a.client.RepeateAuction(ctx, &auctionpb.Empty{})
+}
+
 func (a *AuctionGRPCClient) StreamBids(userID, packageID string) (auctionpb.AuctionService_StreamBidsClient, context.CancelFunc, error) {
 	md := metadata.New(map[string]string{
 		"authorization": userID,

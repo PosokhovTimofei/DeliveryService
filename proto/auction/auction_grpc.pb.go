@@ -19,9 +19,13 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AuctionService_PlaceBid_FullMethodName         = "/auction.AuctionService/PlaceBid"
-	AuctionService_GetBidsByPackage_FullMethodName = "/auction.AuctionService/GetBidsByPackage"
-	AuctionService_StreamBids_FullMethodName       = "/auction.AuctionService/StreamBids"
+	AuctionService_PlaceBid_FullMethodName              = "/auction.AuctionService/PlaceBid"
+	AuctionService_GetBidsByPackage_FullMethodName      = "/auction.AuctionService/GetBidsByPackage"
+	AuctionService_GetAuctioningPackages_FullMethodName = "/auction.AuctionService/GetAuctioningPackages"
+	AuctionService_GetFailedPackages_FullMethodName     = "/auction.AuctionService/GetFailedPackages"
+	AuctionService_StartAuction_FullMethodName          = "/auction.AuctionService/StartAuction"
+	AuctionService_RepeateAuction_FullMethodName        = "/auction.AuctionService/RepeateAuction"
+	AuctionService_StreamBids_FullMethodName            = "/auction.AuctionService/StreamBids"
 )
 
 // AuctionServiceClient is the client API for AuctionService service.
@@ -30,6 +34,10 @@ const (
 type AuctionServiceClient interface {
 	PlaceBid(ctx context.Context, in *BidRequest, opts ...grpc.CallOption) (*BidResponse, error)
 	GetBidsByPackage(ctx context.Context, in *BidsRequest, opts ...grpc.CallOption) (*BidsResponse, error)
+	GetAuctioningPackages(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Packages, error)
+	GetFailedPackages(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Packages, error)
+	StartAuction(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error)
+	RepeateAuction(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error)
 	StreamBids(ctx context.Context, in *BidsRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Bid], error)
 }
 
@@ -61,6 +69,46 @@ func (c *auctionServiceClient) GetBidsByPackage(ctx context.Context, in *BidsReq
 	return out, nil
 }
 
+func (c *auctionServiceClient) GetAuctioningPackages(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Packages, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Packages)
+	err := c.cc.Invoke(ctx, AuctionService_GetAuctioningPackages_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *auctionServiceClient) GetFailedPackages(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Packages, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Packages)
+	err := c.cc.Invoke(ctx, AuctionService_GetFailedPackages_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *auctionServiceClient) StartAuction(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, AuctionService_StartAuction_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *auctionServiceClient) RepeateAuction(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, AuctionService_RepeateAuction_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *auctionServiceClient) StreamBids(ctx context.Context, in *BidsRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Bid], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &AuctionService_ServiceDesc.Streams[0], AuctionService_StreamBids_FullMethodName, cOpts...)
@@ -86,6 +134,10 @@ type AuctionService_StreamBidsClient = grpc.ServerStreamingClient[Bid]
 type AuctionServiceServer interface {
 	PlaceBid(context.Context, *BidRequest) (*BidResponse, error)
 	GetBidsByPackage(context.Context, *BidsRequest) (*BidsResponse, error)
+	GetAuctioningPackages(context.Context, *Empty) (*Packages, error)
+	GetFailedPackages(context.Context, *Empty) (*Packages, error)
+	StartAuction(context.Context, *Empty) (*Empty, error)
+	RepeateAuction(context.Context, *Empty) (*Empty, error)
 	StreamBids(*BidsRequest, grpc.ServerStreamingServer[Bid]) error
 	mustEmbedUnimplementedAuctionServiceServer()
 }
@@ -102,6 +154,18 @@ func (UnimplementedAuctionServiceServer) PlaceBid(context.Context, *BidRequest) 
 }
 func (UnimplementedAuctionServiceServer) GetBidsByPackage(context.Context, *BidsRequest) (*BidsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetBidsByPackage not implemented")
+}
+func (UnimplementedAuctionServiceServer) GetAuctioningPackages(context.Context, *Empty) (*Packages, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAuctioningPackages not implemented")
+}
+func (UnimplementedAuctionServiceServer) GetFailedPackages(context.Context, *Empty) (*Packages, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetFailedPackages not implemented")
+}
+func (UnimplementedAuctionServiceServer) StartAuction(context.Context, *Empty) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method StartAuction not implemented")
+}
+func (UnimplementedAuctionServiceServer) RepeateAuction(context.Context, *Empty) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RepeateAuction not implemented")
 }
 func (UnimplementedAuctionServiceServer) StreamBids(*BidsRequest, grpc.ServerStreamingServer[Bid]) error {
 	return status.Errorf(codes.Unimplemented, "method StreamBids not implemented")
@@ -163,6 +227,78 @@ func _AuctionService_GetBidsByPackage_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AuctionService_GetAuctioningPackages_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuctionServiceServer).GetAuctioningPackages(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuctionService_GetAuctioningPackages_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuctionServiceServer).GetAuctioningPackages(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AuctionService_GetFailedPackages_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuctionServiceServer).GetFailedPackages(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuctionService_GetFailedPackages_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuctionServiceServer).GetFailedPackages(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AuctionService_StartAuction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuctionServiceServer).StartAuction(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuctionService_StartAuction_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuctionServiceServer).StartAuction(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AuctionService_RepeateAuction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuctionServiceServer).RepeateAuction(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuctionService_RepeateAuction_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuctionServiceServer).RepeateAuction(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _AuctionService_StreamBids_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(BidsRequest)
 	if err := stream.RecvMsg(m); err != nil {
@@ -188,6 +324,22 @@ var AuctionService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetBidsByPackage",
 			Handler:    _AuctionService_GetBidsByPackage_Handler,
+		},
+		{
+			MethodName: "GetAuctioningPackages",
+			Handler:    _AuctionService_GetAuctioningPackages_Handler,
+		},
+		{
+			MethodName: "GetFailedPackages",
+			Handler:    _AuctionService_GetFailedPackages_Handler,
+		},
+		{
+			MethodName: "StartAuction",
+			Handler:    _AuctionService_StartAuction_Handler,
+		},
+		{
+			MethodName: "RepeateAuction",
+			Handler:    _AuctionService_RepeateAuction_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

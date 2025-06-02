@@ -4,8 +4,10 @@ import (
 	"context"
 	"time"
 
+	"github.com/maksroxx/DeliveryService/auction/internal/kafka"
 	"github.com/maksroxx/DeliveryService/auction/internal/models"
 	"github.com/maksroxx/DeliveryService/auction/internal/repository"
+	"github.com/maksroxx/DeliveryService/auction/internal/service"
 	auctionpb "github.com/maksroxx/DeliveryService/proto/auction"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc/codes"
@@ -16,13 +18,17 @@ type BidGRPCHandler struct {
 	auctionpb.UnimplementedAuctionServiceServer
 	bidRepo     repository.Bidder
 	packageRepo repository.Packager
+	svc         *service.AuctionService
+	producer    *kafka.AuctionPublisher
 	logger      *logrus.Logger
 }
 
-func NewBidGRPCHandler(bidRepo repository.Bidder, packageRepo repository.Packager, log *logrus.Logger) *BidGRPCHandler {
+func NewBidGRPCHandler(bidRepo repository.Bidder, packageRepo repository.Packager, auctionSvc *service.AuctionService, producer *kafka.AuctionPublisher, log *logrus.Logger) *BidGRPCHandler {
 	return &BidGRPCHandler{
 		bidRepo:     bidRepo,
 		packageRepo: packageRepo,
+		svc:         auctionSvc,
+		producer:    producer,
 		logger:      log,
 	}
 }
@@ -136,4 +142,68 @@ func (s *BidGRPCHandler) StreamBids(req *auctionpb.BidsRequest, stream auctionpb
 			}
 		}
 	}
+}
+
+func (s *BidGRPCHandler) GetAuctioningPackages(ctx context.Context, req *auctionpb.Empty) (*auctionpb.Packages, error) {
+	pkgs, err := s.packageRepo.FindByAuctioningStatus(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to fetch packages: %v", err)
+	}
+
+	var packges auctionpb.Packages
+	for _, p := range pkgs {
+		packges.Package = append(packges.Package, &auctionpb.Package{
+			PackageId:  p.PackageID,
+			Status:     p.Status,
+			From:       p.From,
+			To:         p.To,
+			Cost:       p.Cost,
+			Currency:   p.Currency,
+			TariffCode: p.TariffCode,
+		})
+	}
+	return &packges, nil
+}
+
+func (s *BidGRPCHandler) GetFailedPackages(ctx context.Context, req *auctionpb.Empty) (*auctionpb.Packages, error) {
+	pkgs, err := s.packageRepo.FindByFailedStatus(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to fetch packages: %v", err)
+	}
+
+	var packges auctionpb.Packages
+	for _, p := range pkgs {
+		packges.Package = append(packges.Package, &auctionpb.Package{
+			PackageId:  p.PackageID,
+			Status:     p.Status,
+			From:       p.From,
+			To:         p.To,
+			Cost:       p.Cost,
+			Currency:   p.Currency,
+			TariffCode: p.TariffCode,
+		})
+	}
+	return &packges, nil
+}
+
+func (s *BidGRPCHandler) StartAuction(ctx context.Context, req *auctionpb.Empty) (*auctionpb.Empty, error) {
+	pkgs, err := s.packageRepo.FindByAuctioningStatus(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to fetch packages: %v", err)
+	}
+	for _, p := range pkgs {
+		service.StartAuction(ctx, p, s.svc, s.producer, s.packageRepo, s.logger)
+	}
+	return &auctionpb.Empty{}, nil
+}
+
+func (s *BidGRPCHandler) RepeateAuction(ctx context.Context, req *auctionpb.Empty) (*auctionpb.Empty, error) {
+	pkgs, err := s.packageRepo.FindByAuctioningStatus(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to fetch packages: %v", err)
+	}
+	for _, p := range pkgs {
+		service.StartAuction(ctx, p, s.svc, s.producer, s.packageRepo, s.logger)
+	}
+	return &auctionpb.Empty{}, nil
 }

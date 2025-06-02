@@ -45,7 +45,7 @@ func main() {
 	}
 	defer producer.Close()
 
-	processor := processor.NewPackageProcessor(log, packageRepo, auctionService, producer)
+	processor := processor.NewPackageProcessor(log, packageRepo)
 
 	consumer, err := kafka.NewConsumer(kafka.Config{
 		Brokers: cfg.Kafka.Brokers,
@@ -57,7 +57,7 @@ func main() {
 	}
 	defer consumer.Close()
 
-	bidHandler := handlers.NewBidGRPCHandler(bidRepo, packageRepo, log)
+	bidHandler := handlers.NewBidGRPCHandler(bidRepo, packageRepo, auctionService, producer, log)
 	go func() {
 		lis, err := net.Listen("tcp", cfg.Server.GRPCAddress)
 		if err != nil {

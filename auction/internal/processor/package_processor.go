@@ -1,31 +1,24 @@
 package processor
 
 import (
-	"context"
 	"encoding/json"
 	"time"
 
 	"github.com/IBM/sarama"
-	"github.com/maksroxx/DeliveryService/auction/internal/kafka"
 	"github.com/maksroxx/DeliveryService/auction/internal/models"
 	"github.com/maksroxx/DeliveryService/auction/internal/repository"
-	"github.com/maksroxx/DeliveryService/auction/internal/service"
 	"github.com/sirupsen/logrus"
 )
 
 type PackageProcessor struct {
-	log        *logrus.Logger
-	repo       repository.Packager
-	auctionSvc *service.AuctionService
-	publisher  *kafka.AuctionPublisher
+	log  *logrus.Logger
+	repo repository.Packager
 }
 
-func NewPackageProcessor(logger *logrus.Logger, repo repository.Packager, auctionSvc *service.AuctionService, publisher *kafka.AuctionPublisher) *PackageProcessor {
+func NewPackageProcessor(logger *logrus.Logger, repo repository.Packager) *PackageProcessor {
 	return &PackageProcessor{
-		log:        logger,
-		repo:       repo,
-		auctionSvc: auctionSvc,
-		publisher:  publisher,
+		log:  logger,
+		repo: repo,
 	}
 }
 
@@ -43,13 +36,14 @@ func (p *PackageProcessor) ConsumeClaim(session sarama.ConsumerGroupSession, cla
 	for message := range claim.Messages() {
 		switch string(message.Topic) {
 		case "expired-packages":
-			p.handleExpiredPackages(session.Context(), message)
+			p.handleExpiredPackages(session, message)
 		}
 	}
 	return nil
 }
 
-func (p *PackageProcessor) handleExpiredPackages(ctx context.Context, msg *sarama.ConsumerMessage) {
+func (p *PackageProcessor) handleExpiredPackages(session sarama.ConsumerGroupSession, msg *sarama.ConsumerMessage) {
+	ctx := session.Context()
 	var pkg models.Package
 	if err := json.Unmarshal(msg.Value, &pkg); err != nil {
 		p.log.WithError(err).Error("Failed to decode package event")
@@ -66,6 +60,5 @@ func (p *PackageProcessor) handleExpiredPackages(ctx context.Context, msg *saram
 	}
 
 	p.log.WithField("package_id", savedPkg.PackageID).Info("Package saved for auction")
-
-	service.StartAuction(ctx, savedPkg, p.auctionSvc, p.publisher, p.repo, p.log)
+	session.MarkMessage(msg, "")
 }

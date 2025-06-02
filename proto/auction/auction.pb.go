@@ -297,6 +297,178 @@ func (x *Bid) GetTimestamp() string {
 	return ""
 }
 
+type Packages struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Package       []*Package             `protobuf:"bytes,1,rep,name=package,proto3" json:"package,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Packages) Reset() {
+	*x = Packages{}
+	mi := &file_auction_auction_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Packages) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Packages) ProtoMessage() {}
+
+func (x *Packages) ProtoReflect() protoreflect.Message {
+	mi := &file_auction_auction_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Packages.ProtoReflect.Descriptor instead.
+func (*Packages) Descriptor() ([]byte, []int) {
+	return file_auction_auction_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *Packages) GetPackage() []*Package {
+	if x != nil {
+		return x.Package
+	}
+	return nil
+}
+
+type Package struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	PackageId     string                 `protobuf:"bytes,1,opt,name=package_id,json=packageId,proto3" json:"package_id,omitempty"`
+	Status        string                 `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
+	From          string                 `protobuf:"bytes,3,opt,name=from,proto3" json:"from,omitempty"`
+	To            string                 `protobuf:"bytes,4,opt,name=to,proto3" json:"to,omitempty"`
+	Cost          float64                `protobuf:"fixed64,5,opt,name=cost,proto3" json:"cost,omitempty"`
+	Currency      string                 `protobuf:"bytes,6,opt,name=currency,proto3" json:"currency,omitempty"`
+	TariffCode    string                 `protobuf:"bytes,7,opt,name=tariff_code,json=tariffCode,proto3" json:"tariff_code,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Package) Reset() {
+	*x = Package{}
+	mi := &file_auction_auction_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Package) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Package) ProtoMessage() {}
+
+func (x *Package) ProtoReflect() protoreflect.Message {
+	mi := &file_auction_auction_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Package.ProtoReflect.Descriptor instead.
+func (*Package) Descriptor() ([]byte, []int) {
+	return file_auction_auction_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *Package) GetPackageId() string {
+	if x != nil {
+		return x.PackageId
+	}
+	return ""
+}
+
+func (x *Package) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
+func (x *Package) GetFrom() string {
+	if x != nil {
+		return x.From
+	}
+	return ""
+}
+
+func (x *Package) GetTo() string {
+	if x != nil {
+		return x.To
+	}
+	return ""
+}
+
+func (x *Package) GetCost() float64 {
+	if x != nil {
+		return x.Cost
+	}
+	return 0
+}
+
+func (x *Package) GetCurrency() string {
+	if x != nil {
+		return x.Currency
+	}
+	return ""
+}
+
+func (x *Package) GetTariffCode() string {
+	if x != nil {
+		return x.TariffCode
+	}
+	return ""
+}
+
+type Empty struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Empty) Reset() {
+	*x = Empty{}
+	mi := &file_auction_auction_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Empty) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Empty) ProtoMessage() {}
+
+func (x *Empty) ProtoReflect() protoreflect.Message {
+	mi := &file_auction_auction_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Empty.ProtoReflect.Descriptor instead.
+func (*Empty) Descriptor() ([]byte, []int) {
+	return file_auction_auction_proto_rawDescGZIP(), []int{7}
+}
+
 var File_auction_auction_proto protoreflect.FileDescriptor
 
 const file_auction_auction_proto_rawDesc = "" +
@@ -322,10 +494,27 @@ const file_auction_auction_proto_rawDesc = "" +
 	"package_id\x18\x02 \x01(\tR\tpackageId\x12\x17\n" +
 	"\auser_id\x18\x03 \x01(\tR\x06userId\x12\x16\n" +
 	"\x06amount\x18\x04 \x01(\x01R\x06amount\x12\x1c\n" +
-	"\ttimestamp\x18\x05 \x01(\tR\ttimestamp2\xbc\x01\n" +
+	"\ttimestamp\x18\x05 \x01(\tR\ttimestamp\"6\n" +
+	"\bPackages\x12*\n" +
+	"\apackage\x18\x01 \x03(\v2\x10.auction.PackageR\apackage\"\xb5\x01\n" +
+	"\aPackage\x12\x1d\n" +
+	"\n" +
+	"package_id\x18\x01 \x01(\tR\tpackageId\x12\x16\n" +
+	"\x06status\x18\x02 \x01(\tR\x06status\x12\x12\n" +
+	"\x04from\x18\x03 \x01(\tR\x04from\x12\x0e\n" +
+	"\x02to\x18\x04 \x01(\tR\x02to\x12\x12\n" +
+	"\x04cost\x18\x05 \x01(\x01R\x04cost\x12\x1a\n" +
+	"\bcurrency\x18\x06 \x01(\tR\bcurrency\x12\x1f\n" +
+	"\vtariff_code\x18\a \x01(\tR\n" +
+	"tariffCode\"\a\n" +
+	"\x05Empty2\x92\x03\n" +
 	"\x0eAuctionService\x125\n" +
 	"\bPlaceBid\x12\x13.auction.BidRequest\x1a\x14.auction.BidResponse\x12?\n" +
-	"\x10GetBidsByPackage\x12\x14.auction.BidsRequest\x1a\x15.auction.BidsResponse\x122\n" +
+	"\x10GetBidsByPackage\x12\x14.auction.BidsRequest\x1a\x15.auction.BidsResponse\x12:\n" +
+	"\x15GetAuctioningPackages\x12\x0e.auction.Empty\x1a\x11.auction.Packages\x126\n" +
+	"\x11GetFailedPackages\x12\x0e.auction.Empty\x1a\x11.auction.Packages\x12.\n" +
+	"\fStartAuction\x12\x0e.auction.Empty\x1a\x0e.auction.Empty\x120\n" +
+	"\x0eRepeateAuction\x12\x0e.auction.Empty\x1a\x0e.auction.Empty\x122\n" +
 	"\n" +
 	"StreamBids\x12\x14.auction.BidsRequest\x1a\f.auction.Bid0\x01B=Z;github.com/maksroxx/DeliveryService/proto/auction;auctionpbb\x06proto3"
 
@@ -341,27 +530,39 @@ func file_auction_auction_proto_rawDescGZIP() []byte {
 	return file_auction_auction_proto_rawDescData
 }
 
-var file_auction_auction_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_auction_auction_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_auction_auction_proto_goTypes = []any{
 	(*BidRequest)(nil),   // 0: auction.BidRequest
 	(*BidResponse)(nil),  // 1: auction.BidResponse
 	(*BidsRequest)(nil),  // 2: auction.BidsRequest
 	(*BidsResponse)(nil), // 3: auction.BidsResponse
 	(*Bid)(nil),          // 4: auction.Bid
+	(*Packages)(nil),     // 5: auction.Packages
+	(*Package)(nil),      // 6: auction.Package
+	(*Empty)(nil),        // 7: auction.Empty
 }
 var file_auction_auction_proto_depIdxs = []int32{
 	4, // 0: auction.BidsResponse.bids:type_name -> auction.Bid
-	0, // 1: auction.AuctionService.PlaceBid:input_type -> auction.BidRequest
-	2, // 2: auction.AuctionService.GetBidsByPackage:input_type -> auction.BidsRequest
-	2, // 3: auction.AuctionService.StreamBids:input_type -> auction.BidsRequest
-	1, // 4: auction.AuctionService.PlaceBid:output_type -> auction.BidResponse
-	3, // 5: auction.AuctionService.GetBidsByPackage:output_type -> auction.BidsResponse
-	4, // 6: auction.AuctionService.StreamBids:output_type -> auction.Bid
-	4, // [4:7] is the sub-list for method output_type
-	1, // [1:4] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	6, // 1: auction.Packages.package:type_name -> auction.Package
+	0, // 2: auction.AuctionService.PlaceBid:input_type -> auction.BidRequest
+	2, // 3: auction.AuctionService.GetBidsByPackage:input_type -> auction.BidsRequest
+	7, // 4: auction.AuctionService.GetAuctioningPackages:input_type -> auction.Empty
+	7, // 5: auction.AuctionService.GetFailedPackages:input_type -> auction.Empty
+	7, // 6: auction.AuctionService.StartAuction:input_type -> auction.Empty
+	7, // 7: auction.AuctionService.RepeateAuction:input_type -> auction.Empty
+	2, // 8: auction.AuctionService.StreamBids:input_type -> auction.BidsRequest
+	1, // 9: auction.AuctionService.PlaceBid:output_type -> auction.BidResponse
+	3, // 10: auction.AuctionService.GetBidsByPackage:output_type -> auction.BidsResponse
+	5, // 11: auction.AuctionService.GetAuctioningPackages:output_type -> auction.Packages
+	5, // 12: auction.AuctionService.GetFailedPackages:output_type -> auction.Packages
+	7, // 13: auction.AuctionService.StartAuction:output_type -> auction.Empty
+	7, // 14: auction.AuctionService.RepeateAuction:output_type -> auction.Empty
+	4, // 15: auction.AuctionService.StreamBids:output_type -> auction.Bid
+	9, // [9:16] is the sub-list for method output_type
+	2, // [2:9] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_auction_auction_proto_init() }
@@ -375,7 +576,7 @@ func file_auction_auction_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_auction_auction_proto_rawDesc), len(file_auction_auction_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
