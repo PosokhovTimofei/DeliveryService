@@ -16,11 +16,12 @@ func formatPackageList(pkgs []*databasepb.Package) string {
 	sb.WriteString("📦 Ваши посылки:\n\n")
 
 	for _, pkg := range pkgs {
-		sb.WriteString(fmt.Sprintf("🔹 Заказ: #%s\n", pkg.PackageId))
+		sb.WriteString(fmt.Sprintf("🔹 Заказ: %s\n", pkg.PackageId))
 		sb.WriteString(fmt.Sprintf("📍 Откуда: %s → Куда: %s\n", pkg.From, pkg.To))
-		sb.WriteString(fmt.Sprintf("📦 Статус: %s | 💰 %s\n", pkg.Status, pkg.PaymentStatus))
+		sb.WriteString(fmt.Sprintf("📦 Статус: %s\n", pkg.Status))
+		sb.WriteString(fmt.Sprintf("💰 %s\n", pkg.PaymentStatus))
 		sb.WriteString(fmt.Sprintf("💵 Стоимость: %.2f %s\n", pkg.Cost, pkg.Currency))
-		sb.WriteString("───────────────────────\n")
+		sb.WriteString("─────────────────\n")
 	}
 
 	return sb.String()

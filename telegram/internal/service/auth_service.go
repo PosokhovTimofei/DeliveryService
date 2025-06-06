@@ -31,7 +31,7 @@ func (s *AuthService) LinkTelegramAccount(ctx context.Context, code string, tele
 		return fmt.Errorf("cannot validate code: %w", err)
 	}
 
-	err = s.Repo.SaveLink(telegramID, userID)
+	err = s.Repo.SaveLink(ctx, telegramID, userID)
 	if err != nil {
 		return fmt.Errorf("cannot save telegram link: %w", err)
 	}

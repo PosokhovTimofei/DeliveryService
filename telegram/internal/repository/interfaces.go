@@ -1,6 +1,9 @@
 package repository
 
+import "context"
+
 type Linker interface {
-	SaveLink(telegramID int64, userID string) error
-	GetUserIDByTelegramID(telegramID int64) (string, error)
+	SaveLink(ctx context.Context, telegramID int64, userID string) error
+	GetUserIDByTelegramID(ctx context.Context, telegramID int64) (string, error)
+	GetTelegramIDByUserID(ctx context.Context, userId string) (int64, error)
 }

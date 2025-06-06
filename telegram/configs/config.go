@@ -11,6 +11,7 @@ import (
 type Config struct {
 	Server     ServerConfig   `yaml:"server"`
 	Database   DatabaseConfig `yaml:"database"`
+	Kafka      KafkaConfig    `yaml:"kafka"`
 	Telegram   Telegram       `yaml:"telegram"`
 	GrpcConfig GRPCConfig     `yaml:"clients"`
 }
@@ -22,6 +23,12 @@ type ServerConfig struct {
 
 type Telegram struct {
 	TelegramToken string `yaml:"token"`
+}
+
+type KafkaConfig struct {
+	Brokers []string `yaml:"brokers"`
+	Topic   []string `yaml:"topics"`
+	GroupID string   `yaml:"groupID"`
 }
 
 type DatabaseConfig struct {

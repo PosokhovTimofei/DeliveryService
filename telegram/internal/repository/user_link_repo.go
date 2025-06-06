@@ -20,7 +20,7 @@ func NewUserLinkRepository(db *mongo.Database, collectionName string) *UserLinkR
 	}
 }
 
-func (r *UserLinkRepository) SaveLink(telegramID int64, userID string) error {
+func (r *UserLinkRepository) SaveLink(ctx context.Context, telegramID int64, userID string) error {
 	filter := bson.M{"telegram_id": telegramID}
 	update := bson.M{
 		"$set": models.TelegramUserLink{
@@ -34,11 +34,20 @@ func (r *UserLinkRepository) SaveLink(telegramID int64, userID string) error {
 	return err
 }
 
-func (r *UserLinkRepository) GetUserIDByTelegramID(telegramID int64) (string, error) {
+func (r *UserLinkRepository) GetUserIDByTelegramID(ctx context.Context, telegramID int64) (string, error) {
 	var link models.TelegramUserLink
 	err := r.collection.FindOne(context.Background(), bson.M{"telegram_id": telegramID}).Decode(&link)
 	if err != nil {
 		return "", err
 	}
 	return link.UserID, nil
+}
+
+func (r *UserLinkRepository) GetTelegramIDByUserID(ctx context.Context, userId string) (int64, error) {
+	var user models.TelegramUserLink
+	err := r.collection.FindOne(context.Background(), bson.M{"user_id": userId}).Decode(&user)
+	if err != nil {
+		return 0, err
+	}
+	return user.TelegramID, nil
 }

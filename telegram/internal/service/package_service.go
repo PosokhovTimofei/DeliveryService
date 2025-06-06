@@ -18,7 +18,7 @@ func NewPackageService(repo repository.Linker, client clients.Packager) *Package
 }
 
 func (s *PackageService) GetUserPackages(ctx context.Context, telegramID int64) (string, error) {
-	userID, err := s.Repo.GetUserIDByTelegramID(telegramID)
+	userID, err := s.Repo.GetUserIDByTelegramID(ctx, telegramID)
 	if err != nil {
 		return "", fmt.Errorf("user not linked")
 	}
