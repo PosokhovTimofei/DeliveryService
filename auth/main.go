@@ -39,8 +39,9 @@ func main() {
 
 	db := client.Database(cfg.DBName)
 	repo := repository.NewMongoRepository(db, "users")
+	telegramRepo := repository.NewTelegramAuthRepo(db, "telegram_auth_codes")
 	svc := service.NewAuthService(repo, cfg.JWTSecret)
-	authHandler := handler.NewAuthHandler(svc)
+	authHandler := handler.NewAuthHandler(svc, telegramRepo)
 
 	mainServer := createMainServer(authHandler, logger)
 	protectedServer := createProtectedServer(svc, repo, logger)
@@ -50,7 +51,7 @@ func main() {
 	grpcServer := grpc.NewServer(
 		grpc.UnaryInterceptor(authInterceptor.Unary()),
 	)
-	grpcHandler := handler.NewAuthGRPCServer(svc)
+	grpcHandler := handler.NewAuthGRPCServer(svc, telegramRepo)
 	authpb.RegisterAuthServiceServer(grpcServer, grpcHandler)
 
 	grpcLis, err := net.Listen("tcp", cfg.GRPCPort)

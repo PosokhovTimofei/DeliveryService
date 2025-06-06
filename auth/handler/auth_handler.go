@@ -7,18 +7,21 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/maksroxx/DeliveryService/auth/metrics"
 	"github.com/maksroxx/DeliveryService/auth/middleware"
 	"github.com/maksroxx/DeliveryService/auth/models"
+	"github.com/maksroxx/DeliveryService/auth/repository"
 	"github.com/maksroxx/DeliveryService/auth/service"
 )
 
 type AuthHandler struct {
 	service *service.AuthService
+	rep     repository.Telegramer
 }
 
-func NewAuthHandler(service *service.AuthService) *AuthHandler {
-	return &AuthHandler{service: service}
+func NewAuthHandler(service *service.AuthService, rep repository.Telegramer) *AuthHandler {
+	return &AuthHandler{service: service, rep: rep}
 }
 
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
@@ -152,6 +155,39 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	RespondJSON(w, http.StatusOK, map[string]string{"token": token, "role": user.Role})
+}
+
+func (h *AuthHandler) GenerateTelegramCode(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok {
+		RespondError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	code := "auth_" + uuid.NewString()[:8]
+	err := h.rep.Save(code, userID, 10*time.Minute)
+	if err != nil {
+		RespondError(w, http.StatusInternalServerError, "could not create auth code")
+		return
+	}
+
+	RespondJSON(w, http.StatusOK, map[string]string{"code": code})
+}
+
+func (h *AuthHandler) GetUserIDByTelegramCode(w http.ResponseWriter, r *http.Request) {
+	code := r.URL.Query().Get("code")
+	if code == "" {
+		RespondError(w, http.StatusBadRequest, "missing code")
+		return
+	}
+
+	userID, err := h.rep.FindUserIDByCode(code)
+	if err != nil {
+		RespondError(w, http.StatusNotFound, "code invalid or expired")
+		return
+	}
+
+	RespondJSON(w, http.StatusOK, map[string]string{"user_id": userID})
 }
 
 func validateEmail(email string) bool {

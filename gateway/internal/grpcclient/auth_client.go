@@ -84,3 +84,10 @@ func (c *AuthGRPCClient) Validate(token string) (*authpb.ValidateResponse, error
 
 	return c.client.Validate(ctx, &authpb.ValidateRequest{})
 }
+
+func (c *AuthGRPCClient) GenerateTelegramCode(userId string) (*authpb.TelegramCodeResponse, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	return c.client.GenerateTelegramCode(ctx, &authpb.TelegramCodeRequest{UserId: userId})
+}

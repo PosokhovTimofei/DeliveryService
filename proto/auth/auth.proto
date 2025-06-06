@@ -9,6 +9,9 @@ service AuthService {
   rpc RegisterModerator (RegisterRequest) returns (AuthResponse);
   rpc Login (LoginRequest) returns (AuthResponse);
   rpc Validate (ValidateRequest) returns (ValidateResponse);
+
+  rpc GetUserByTelegramCode (TelegramCodeLookupRequest) returns (TelegramCodeLookupResponse);
+  rpc GenerateTelegramCode (TelegramCodeRequest) returns (TelegramCodeResponse);
 }
 
 message RegisterRequest {
@@ -32,4 +35,20 @@ message AuthResponse {
 message ValidateResponse {
   string user_id = 1;
   string valid = 2;
+}
+
+message TelegramCodeRequest {
+  string user_id = 1;
+}
+
+message TelegramCodeResponse {
+  string code = 1;
+}
+
+message TelegramCodeLookupRequest {
+  string code = 1;
+}
+
+message TelegramCodeLookupResponse {
+  string user_id = 1;
 }

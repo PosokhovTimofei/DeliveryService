@@ -19,10 +19,12 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AuthService_Register_FullMethodName          = "/auth.AuthService/Register"
-	AuthService_RegisterModerator_FullMethodName = "/auth.AuthService/RegisterModerator"
-	AuthService_Login_FullMethodName             = "/auth.AuthService/Login"
-	AuthService_Validate_FullMethodName          = "/auth.AuthService/Validate"
+	AuthService_Register_FullMethodName              = "/auth.AuthService/Register"
+	AuthService_RegisterModerator_FullMethodName     = "/auth.AuthService/RegisterModerator"
+	AuthService_Login_FullMethodName                 = "/auth.AuthService/Login"
+	AuthService_Validate_FullMethodName              = "/auth.AuthService/Validate"
+	AuthService_GetUserByTelegramCode_FullMethodName = "/auth.AuthService/GetUserByTelegramCode"
+	AuthService_GenerateTelegramCode_FullMethodName  = "/auth.AuthService/GenerateTelegramCode"
 )
 
 // AuthServiceClient is the client API for AuthService service.
@@ -33,6 +35,8 @@ type AuthServiceClient interface {
 	RegisterModerator(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*AuthResponse, error)
 	Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*AuthResponse, error)
 	Validate(ctx context.Context, in *ValidateRequest, opts ...grpc.CallOption) (*ValidateResponse, error)
+	GetUserByTelegramCode(ctx context.Context, in *TelegramCodeLookupRequest, opts ...grpc.CallOption) (*TelegramCodeLookupResponse, error)
+	GenerateTelegramCode(ctx context.Context, in *TelegramCodeRequest, opts ...grpc.CallOption) (*TelegramCodeResponse, error)
 }
 
 type authServiceClient struct {
@@ -83,6 +87,26 @@ func (c *authServiceClient) Validate(ctx context.Context, in *ValidateRequest, o
 	return out, nil
 }
 
+func (c *authServiceClient) GetUserByTelegramCode(ctx context.Context, in *TelegramCodeLookupRequest, opts ...grpc.CallOption) (*TelegramCodeLookupResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(TelegramCodeLookupResponse)
+	err := c.cc.Invoke(ctx, AuthService_GetUserByTelegramCode_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authServiceClient) GenerateTelegramCode(ctx context.Context, in *TelegramCodeRequest, opts ...grpc.CallOption) (*TelegramCodeResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(TelegramCodeResponse)
+	err := c.cc.Invoke(ctx, AuthService_GenerateTelegramCode_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AuthServiceServer is the server API for AuthService service.
 // All implementations must embed UnimplementedAuthServiceServer
 // for forward compatibility.
@@ -91,6 +115,8 @@ type AuthServiceServer interface {
 	RegisterModerator(context.Context, *RegisterRequest) (*AuthResponse, error)
 	Login(context.Context, *LoginRequest) (*AuthResponse, error)
 	Validate(context.Context, *ValidateRequest) (*ValidateResponse, error)
+	GetUserByTelegramCode(context.Context, *TelegramCodeLookupRequest) (*TelegramCodeLookupResponse, error)
+	GenerateTelegramCode(context.Context, *TelegramCodeRequest) (*TelegramCodeResponse, error)
 	mustEmbedUnimplementedAuthServiceServer()
 }
 
@@ -112,6 +138,12 @@ func (UnimplementedAuthServiceServer) Login(context.Context, *LoginRequest) (*Au
 }
 func (UnimplementedAuthServiceServer) Validate(context.Context, *ValidateRequest) (*ValidateResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Validate not implemented")
+}
+func (UnimplementedAuthServiceServer) GetUserByTelegramCode(context.Context, *TelegramCodeLookupRequest) (*TelegramCodeLookupResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserByTelegramCode not implemented")
+}
+func (UnimplementedAuthServiceServer) GenerateTelegramCode(context.Context, *TelegramCodeRequest) (*TelegramCodeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GenerateTelegramCode not implemented")
 }
 func (UnimplementedAuthServiceServer) mustEmbedUnimplementedAuthServiceServer() {}
 func (UnimplementedAuthServiceServer) testEmbeddedByValue()                     {}
@@ -206,6 +238,42 @@ func _AuthService_Validate_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AuthService_GetUserByTelegramCode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TelegramCodeLookupRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServiceServer).GetUserByTelegramCode(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuthService_GetUserByTelegramCode_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServiceServer).GetUserByTelegramCode(ctx, req.(*TelegramCodeLookupRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AuthService_GenerateTelegramCode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TelegramCodeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServiceServer).GenerateTelegramCode(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuthService_GenerateTelegramCode_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServiceServer).GenerateTelegramCode(ctx, req.(*TelegramCodeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AuthService_ServiceDesc is the grpc.ServiceDesc for AuthService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -228,6 +296,14 @@ var AuthService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Validate",
 			Handler:    _AuthService_Validate_Handler,
+		},
+		{
+			MethodName: "GetUserByTelegramCode",
+			Handler:    _AuthService_GetUserByTelegramCode_Handler,
+		},
+		{
+			MethodName: "GenerateTelegramCode",
+			Handler:    _AuthService_GenerateTelegramCode_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

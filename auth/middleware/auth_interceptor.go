@@ -25,9 +25,11 @@ func NewAuthInterceptor(authService *service.AuthService) *AuthInterceptor {
 	return &AuthInterceptor{
 		authService: authService,
 		publicMethods: map[string]bool{
-			"/auth.AuthService/Register":          true,
-			"/auth.AuthService/RegisterModerator": true,
-			"/auth.AuthService/Login":             true,
+			"/auth.AuthService/Register":              true,
+			"/auth.AuthService/RegisterModerator":     true,
+			"/auth.AuthService/Login":                 true,
+			"/auth.AuthService/GetUserByTelegramCode": true,
+			"/auth.AuthService/GenerateTelegramCode":  true,
 		},
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/maksroxx/DeliveryService/gateway/internal/grpcclient"
+	"github.com/maksroxx/DeliveryService/gateway/internal/middleware"
 	"github.com/maksroxx/DeliveryService/gateway/internal/utils"
 	"github.com/sirupsen/logrus"
 )
@@ -95,4 +96,19 @@ func (h *AuthHandlers) Login(w http.ResponseWriter, r *http.Request) {
 		"token":   resp.Token,
 		"role":    resp.Role,
 	})
+}
+
+func (h *AuthHandlers) GenerateTelegramCode(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || userID == "" {
+		utils.RespondError(w, r, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+	resp, err := h.authClient.GenerateTelegramCode(userID)
+	if err != nil {
+		h.logger.Error("gRPC generate code error: ", err)
+		utils.RespondError(w, r, http.StatusUnauthorized, "Generate code failed")
+		return
+	}
+	utils.RespondJSON(w, r, http.StatusOK, resp)
 }

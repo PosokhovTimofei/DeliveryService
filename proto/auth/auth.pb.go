@@ -273,6 +273,182 @@ func (x *ValidateResponse) GetValid() string {
 	return ""
 }
 
+type TelegramCodeRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TelegramCodeRequest) Reset() {
+	*x = TelegramCodeRequest{}
+	mi := &file_auth_auth_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TelegramCodeRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TelegramCodeRequest) ProtoMessage() {}
+
+func (x *TelegramCodeRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_auth_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TelegramCodeRequest.ProtoReflect.Descriptor instead.
+func (*TelegramCodeRequest) Descriptor() ([]byte, []int) {
+	return file_auth_auth_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *TelegramCodeRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+type TelegramCodeResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Code          string                 `protobuf:"bytes,1,opt,name=code,proto3" json:"code,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TelegramCodeResponse) Reset() {
+	*x = TelegramCodeResponse{}
+	mi := &file_auth_auth_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TelegramCodeResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TelegramCodeResponse) ProtoMessage() {}
+
+func (x *TelegramCodeResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_auth_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TelegramCodeResponse.ProtoReflect.Descriptor instead.
+func (*TelegramCodeResponse) Descriptor() ([]byte, []int) {
+	return file_auth_auth_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *TelegramCodeResponse) GetCode() string {
+	if x != nil {
+		return x.Code
+	}
+	return ""
+}
+
+type TelegramCodeLookupRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Code          string                 `protobuf:"bytes,1,opt,name=code,proto3" json:"code,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TelegramCodeLookupRequest) Reset() {
+	*x = TelegramCodeLookupRequest{}
+	mi := &file_auth_auth_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TelegramCodeLookupRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TelegramCodeLookupRequest) ProtoMessage() {}
+
+func (x *TelegramCodeLookupRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_auth_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TelegramCodeLookupRequest.ProtoReflect.Descriptor instead.
+func (*TelegramCodeLookupRequest) Descriptor() ([]byte, []int) {
+	return file_auth_auth_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *TelegramCodeLookupRequest) GetCode() string {
+	if x != nil {
+		return x.Code
+	}
+	return ""
+}
+
+type TelegramCodeLookupResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TelegramCodeLookupResponse) Reset() {
+	*x = TelegramCodeLookupResponse{}
+	mi := &file_auth_auth_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TelegramCodeLookupResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TelegramCodeLookupResponse) ProtoMessage() {}
+
+func (x *TelegramCodeLookupResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_auth_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TelegramCodeLookupResponse.ProtoReflect.Descriptor instead.
+func (*TelegramCodeLookupResponse) Descriptor() ([]byte, []int) {
+	return file_auth_auth_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *TelegramCodeLookupResponse) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
 var File_auth_auth_proto protoreflect.FileDescriptor
 
 const file_auth_auth_proto_rawDesc = "" +
@@ -291,12 +467,22 @@ const file_auth_auth_proto_rawDesc = "" +
 	"\x04role\x18\x03 \x01(\tR\x04role\"A\n" +
 	"\x10ValidateResponse\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x14\n" +
-	"\x05valid\x18\x02 \x01(\tR\x05valid2\xf0\x01\n" +
+	"\x05valid\x18\x02 \x01(\tR\x05valid\".\n" +
+	"\x13TelegramCodeRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\"*\n" +
+	"\x14TelegramCodeResponse\x12\x12\n" +
+	"\x04code\x18\x01 \x01(\tR\x04code\"/\n" +
+	"\x19TelegramCodeLookupRequest\x12\x12\n" +
+	"\x04code\x18\x01 \x01(\tR\x04code\"5\n" +
+	"\x1aTelegramCodeLookupResponse\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId2\x9b\x03\n" +
 	"\vAuthService\x125\n" +
 	"\bRegister\x12\x15.auth.RegisterRequest\x1a\x12.auth.AuthResponse\x12>\n" +
 	"\x11RegisterModerator\x12\x15.auth.RegisterRequest\x1a\x12.auth.AuthResponse\x12/\n" +
 	"\x05Login\x12\x12.auth.LoginRequest\x1a\x12.auth.AuthResponse\x129\n" +
-	"\bValidate\x12\x15.auth.ValidateRequest\x1a\x16.auth.ValidateResponseB7Z5github.com/maksroxx/DeliveryService/proto/auth;authpbb\x06proto3"
+	"\bValidate\x12\x15.auth.ValidateRequest\x1a\x16.auth.ValidateResponse\x12Z\n" +
+	"\x15GetUserByTelegramCode\x12\x1f.auth.TelegramCodeLookupRequest\x1a .auth.TelegramCodeLookupResponse\x12M\n" +
+	"\x14GenerateTelegramCode\x12\x19.auth.TelegramCodeRequest\x1a\x1a.auth.TelegramCodeResponseB7Z5github.com/maksroxx/DeliveryService/proto/auth;authpbb\x06proto3"
 
 var (
 	file_auth_auth_proto_rawDescOnce sync.Once
@@ -310,25 +496,33 @@ func file_auth_auth_proto_rawDescGZIP() []byte {
 	return file_auth_auth_proto_rawDescData
 }
 
-var file_auth_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_auth_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_auth_auth_proto_goTypes = []any{
-	(*RegisterRequest)(nil),  // 0: auth.RegisterRequest
-	(*LoginRequest)(nil),     // 1: auth.LoginRequest
-	(*ValidateRequest)(nil),  // 2: auth.ValidateRequest
-	(*AuthResponse)(nil),     // 3: auth.AuthResponse
-	(*ValidateResponse)(nil), // 4: auth.ValidateResponse
+	(*RegisterRequest)(nil),            // 0: auth.RegisterRequest
+	(*LoginRequest)(nil),               // 1: auth.LoginRequest
+	(*ValidateRequest)(nil),            // 2: auth.ValidateRequest
+	(*AuthResponse)(nil),               // 3: auth.AuthResponse
+	(*ValidateResponse)(nil),           // 4: auth.ValidateResponse
+	(*TelegramCodeRequest)(nil),        // 5: auth.TelegramCodeRequest
+	(*TelegramCodeResponse)(nil),       // 6: auth.TelegramCodeResponse
+	(*TelegramCodeLookupRequest)(nil),  // 7: auth.TelegramCodeLookupRequest
+	(*TelegramCodeLookupResponse)(nil), // 8: auth.TelegramCodeLookupResponse
 }
 var file_auth_auth_proto_depIdxs = []int32{
 	0, // 0: auth.AuthService.Register:input_type -> auth.RegisterRequest
 	0, // 1: auth.AuthService.RegisterModerator:input_type -> auth.RegisterRequest
 	1, // 2: auth.AuthService.Login:input_type -> auth.LoginRequest
 	2, // 3: auth.AuthService.Validate:input_type -> auth.ValidateRequest
-	3, // 4: auth.AuthService.Register:output_type -> auth.AuthResponse
-	3, // 5: auth.AuthService.RegisterModerator:output_type -> auth.AuthResponse
-	3, // 6: auth.AuthService.Login:output_type -> auth.AuthResponse
-	4, // 7: auth.AuthService.Validate:output_type -> auth.ValidateResponse
-	4, // [4:8] is the sub-list for method output_type
-	0, // [0:4] is the sub-list for method input_type
+	7, // 4: auth.AuthService.GetUserByTelegramCode:input_type -> auth.TelegramCodeLookupRequest
+	5, // 5: auth.AuthService.GenerateTelegramCode:input_type -> auth.TelegramCodeRequest
+	3, // 6: auth.AuthService.Register:output_type -> auth.AuthResponse
+	3, // 7: auth.AuthService.RegisterModerator:output_type -> auth.AuthResponse
+	3, // 8: auth.AuthService.Login:output_type -> auth.AuthResponse
+	4, // 9: auth.AuthService.Validate:output_type -> auth.ValidateResponse
+	8, // 10: auth.AuthService.GetUserByTelegramCode:output_type -> auth.TelegramCodeLookupResponse
+	6, // 11: auth.AuthService.GenerateTelegramCode:output_type -> auth.TelegramCodeResponse
+	6, // [6:12] is the sub-list for method output_type
+	0, // [0:6] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -345,7 +539,7 @@ func file_auth_auth_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_auth_auth_proto_rawDesc), len(file_auth_auth_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
