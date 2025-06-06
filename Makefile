@@ -1,7 +1,7 @@
 BIN_DIR      := bin
 GO           := go
 
-.PHONY: client gateway calculate payment db insert testReq auth auction cron-scheduler test up down restart logs proto protodb protoauction
+.PHONY: client gateway calculate payment db insert testReq auth auction cron-scheduler telegram test up down restart logs proto protodb protoauction
 
 gateway:
 	@echo "🚀 Запуск gateway..."
@@ -42,6 +42,11 @@ cron-transfer:
 	@echo "🚀 Запуск cron-transfer..."
 	@$(GO) build -o $(BIN_DIR)/cront ./cron-transfer/cmd/
 	@$(BIN_DIR)/cront
+
+telegram:
+	@echo "🚀 Запуск telegram..."
+	@$(GO) build -o $(BIN_DIR)/telegram ./telegram/cmd/
+	@$(BIN_DIR)/telegram
 
 test:
 	@echo "🧪 Запуск тестов..."
