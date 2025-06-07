@@ -544,12 +544,13 @@ const file_auction_auction_proto_rawDesc = "" +
 	"\x05width\x18\n" +
 	" \x01(\x05R\x05width\x12\x16\n" +
 	"\x06height\x18\v \x01(\x05R\x06height\"\a\n" +
-	"\x05Empty2\x92\x03\n" +
+	"\x05Empty2\xcb\x03\n" +
 	"\x0eAuctionService\x125\n" +
 	"\bPlaceBid\x12\x13.auction.BidRequest\x1a\x14.auction.BidResponse\x12?\n" +
 	"\x10GetBidsByPackage\x12\x14.auction.BidsRequest\x1a\x15.auction.BidsResponse\x12:\n" +
 	"\x15GetAuctioningPackages\x12\x0e.auction.Empty\x1a\x11.auction.Packages\x126\n" +
-	"\x11GetFailedPackages\x12\x0e.auction.Empty\x1a\x11.auction.Packages\x12.\n" +
+	"\x11GetFailedPackages\x12\x0e.auction.Empty\x1a\x11.auction.Packages\x127\n" +
+	"\x12GetUserWonPackages\x12\x0e.auction.Empty\x1a\x11.auction.Packages\x12.\n" +
 	"\fStartAuction\x12\x0e.auction.Empty\x1a\x0e.auction.Empty\x120\n" +
 	"\x0eRepeateAuction\x12\x0e.auction.Empty\x1a\x0e.auction.Empty\x122\n" +
 	"\n" +
@@ -579,27 +580,29 @@ var file_auction_auction_proto_goTypes = []any{
 	(*Empty)(nil),        // 7: auction.Empty
 }
 var file_auction_auction_proto_depIdxs = []int32{
-	4, // 0: auction.BidsResponse.bids:type_name -> auction.Bid
-	6, // 1: auction.Packages.package:type_name -> auction.Package
-	0, // 2: auction.AuctionService.PlaceBid:input_type -> auction.BidRequest
-	2, // 3: auction.AuctionService.GetBidsByPackage:input_type -> auction.BidsRequest
-	7, // 4: auction.AuctionService.GetAuctioningPackages:input_type -> auction.Empty
-	7, // 5: auction.AuctionService.GetFailedPackages:input_type -> auction.Empty
-	7, // 6: auction.AuctionService.StartAuction:input_type -> auction.Empty
-	7, // 7: auction.AuctionService.RepeateAuction:input_type -> auction.Empty
-	2, // 8: auction.AuctionService.StreamBids:input_type -> auction.BidsRequest
-	1, // 9: auction.AuctionService.PlaceBid:output_type -> auction.BidResponse
-	3, // 10: auction.AuctionService.GetBidsByPackage:output_type -> auction.BidsResponse
-	5, // 11: auction.AuctionService.GetAuctioningPackages:output_type -> auction.Packages
-	5, // 12: auction.AuctionService.GetFailedPackages:output_type -> auction.Packages
-	7, // 13: auction.AuctionService.StartAuction:output_type -> auction.Empty
-	7, // 14: auction.AuctionService.RepeateAuction:output_type -> auction.Empty
-	4, // 15: auction.AuctionService.StreamBids:output_type -> auction.Bid
-	9, // [9:16] is the sub-list for method output_type
-	2, // [2:9] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	4,  // 0: auction.BidsResponse.bids:type_name -> auction.Bid
+	6,  // 1: auction.Packages.package:type_name -> auction.Package
+	0,  // 2: auction.AuctionService.PlaceBid:input_type -> auction.BidRequest
+	2,  // 3: auction.AuctionService.GetBidsByPackage:input_type -> auction.BidsRequest
+	7,  // 4: auction.AuctionService.GetAuctioningPackages:input_type -> auction.Empty
+	7,  // 5: auction.AuctionService.GetFailedPackages:input_type -> auction.Empty
+	7,  // 6: auction.AuctionService.GetUserWonPackages:input_type -> auction.Empty
+	7,  // 7: auction.AuctionService.StartAuction:input_type -> auction.Empty
+	7,  // 8: auction.AuctionService.RepeateAuction:input_type -> auction.Empty
+	2,  // 9: auction.AuctionService.StreamBids:input_type -> auction.BidsRequest
+	1,  // 10: auction.AuctionService.PlaceBid:output_type -> auction.BidResponse
+	3,  // 11: auction.AuctionService.GetBidsByPackage:output_type -> auction.BidsResponse
+	5,  // 12: auction.AuctionService.GetAuctioningPackages:output_type -> auction.Packages
+	5,  // 13: auction.AuctionService.GetFailedPackages:output_type -> auction.Packages
+	5,  // 14: auction.AuctionService.GetUserWonPackages:output_type -> auction.Packages
+	7,  // 15: auction.AuctionService.StartAuction:output_type -> auction.Empty
+	7,  // 16: auction.AuctionService.RepeateAuction:output_type -> auction.Empty
+	4,  // 17: auction.AuctionService.StreamBids:output_type -> auction.Bid
+	10, // [10:18] is the sub-list for method output_type
+	2,  // [2:10] is the sub-list for method input_type
+	2,  // [2:2] is the sub-list for extension type_name
+	2,  // [2:2] is the sub-list for extension extendee
+	0,  // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_auction_auction_proto_init() }

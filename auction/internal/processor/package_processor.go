@@ -56,6 +56,7 @@ func (p *PackageProcessor) handleExpiredPackages(session sarama.ConsumerGroupSes
 	}
 
 	pkg.Status = "Auctioning"
+	pkg.UserID = ""
 	pkg.UpdatedAt = time.Now()
 
 	savedPkg, err := p.repo.Create(ctx, &pkg)

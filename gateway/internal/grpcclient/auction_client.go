@@ -72,6 +72,12 @@ func (a *AuctionGRPCClient) GetFailedPackages(userID string) (*auctionpb.Package
 	return a.client.GetFailedPackages(ctx, &auctionpb.Empty{})
 }
 
+func (a *AuctionGRPCClient) GetUserWonPackages(userID string) (*auctionpb.Packages, error) {
+	ctx, cancel := a.withContext(userID)
+	defer cancel()
+	return a.client.GetUserWonPackages(ctx, &auctionpb.Empty{})
+}
+
 func (a *AuctionGRPCClient) StartAuction(userID string) (*auctionpb.Empty, error) {
 	ctx, cancel := a.withContext(userID)
 	defer cancel()

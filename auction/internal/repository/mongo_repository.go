@@ -42,6 +42,23 @@ func (r *PackageRepository) FindByID(ctx context.Context, packageID string) (*mo
 	return &pkg, nil
 }
 
+func (r *PackageRepository) FindUserPackages(ctx context.Context, userId string) ([]*models.Package, error) {
+	cursor, err := r.collection.Find(ctx, bson.M{"user_id": userId})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+	var packages []*models.Package
+	for cursor.Next(ctx) {
+		var pkg models.Package
+		if err := cursor.Decode(&pkg); err != nil {
+			continue
+		}
+		packages = append(packages, &pkg)
+	}
+	return packages, nil
+}
+
 func (r *PackageRepository) FindByAuctioningStatus(ctx context.Context) ([]*models.Package, error) {
 	cursor, err := r.collection.Find(ctx, bson.M{"status": "Auctioning"})
 	if err != nil {

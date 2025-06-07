@@ -23,6 +23,7 @@ const (
 	AuctionService_GetBidsByPackage_FullMethodName      = "/auction.AuctionService/GetBidsByPackage"
 	AuctionService_GetAuctioningPackages_FullMethodName = "/auction.AuctionService/GetAuctioningPackages"
 	AuctionService_GetFailedPackages_FullMethodName     = "/auction.AuctionService/GetFailedPackages"
+	AuctionService_GetUserWonPackages_FullMethodName    = "/auction.AuctionService/GetUserWonPackages"
 	AuctionService_StartAuction_FullMethodName          = "/auction.AuctionService/StartAuction"
 	AuctionService_RepeateAuction_FullMethodName        = "/auction.AuctionService/RepeateAuction"
 	AuctionService_StreamBids_FullMethodName            = "/auction.AuctionService/StreamBids"
@@ -36,6 +37,7 @@ type AuctionServiceClient interface {
 	GetBidsByPackage(ctx context.Context, in *BidsRequest, opts ...grpc.CallOption) (*BidsResponse, error)
 	GetAuctioningPackages(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Packages, error)
 	GetFailedPackages(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Packages, error)
+	GetUserWonPackages(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Packages, error)
 	StartAuction(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error)
 	RepeateAuction(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error)
 	StreamBids(ctx context.Context, in *BidsRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Bid], error)
@@ -89,6 +91,16 @@ func (c *auctionServiceClient) GetFailedPackages(ctx context.Context, in *Empty,
 	return out, nil
 }
 
+func (c *auctionServiceClient) GetUserWonPackages(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Packages, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Packages)
+	err := c.cc.Invoke(ctx, AuctionService_GetUserWonPackages_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *auctionServiceClient) StartAuction(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Empty)
@@ -136,6 +148,7 @@ type AuctionServiceServer interface {
 	GetBidsByPackage(context.Context, *BidsRequest) (*BidsResponse, error)
 	GetAuctioningPackages(context.Context, *Empty) (*Packages, error)
 	GetFailedPackages(context.Context, *Empty) (*Packages, error)
+	GetUserWonPackages(context.Context, *Empty) (*Packages, error)
 	StartAuction(context.Context, *Empty) (*Empty, error)
 	RepeateAuction(context.Context, *Empty) (*Empty, error)
 	StreamBids(*BidsRequest, grpc.ServerStreamingServer[Bid]) error
@@ -160,6 +173,9 @@ func (UnimplementedAuctionServiceServer) GetAuctioningPackages(context.Context, 
 }
 func (UnimplementedAuctionServiceServer) GetFailedPackages(context.Context, *Empty) (*Packages, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetFailedPackages not implemented")
+}
+func (UnimplementedAuctionServiceServer) GetUserWonPackages(context.Context, *Empty) (*Packages, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserWonPackages not implemented")
 }
 func (UnimplementedAuctionServiceServer) StartAuction(context.Context, *Empty) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method StartAuction not implemented")
@@ -263,6 +279,24 @@ func _AuctionService_GetFailedPackages_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AuctionService_GetUserWonPackages_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuctionServiceServer).GetUserWonPackages(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuctionService_GetUserWonPackages_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuctionServiceServer).GetUserWonPackages(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _AuctionService_StartAuction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Empty)
 	if err := dec(in); err != nil {
@@ -332,6 +366,10 @@ var AuctionService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetFailedPackages",
 			Handler:    _AuctionService_GetFailedPackages_Handler,
+		},
+		{
+			MethodName: "GetUserWonPackages",
+			Handler:    _AuctionService_GetUserWonPackages_Handler,
 		},
 		{
 			MethodName: "StartAuction",

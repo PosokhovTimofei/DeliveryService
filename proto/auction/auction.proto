@@ -9,6 +9,7 @@ service AuctionService {
   rpc GetBidsByPackage(BidsRequest) returns (BidsResponse);
   rpc GetAuctioningPackages(Empty) returns (Packages);
   rpc GetFailedPackages(Empty) returns (Packages);
+  rpc GetUserWonPackages(Empty) returns (Packages);
   rpc StartAuction(Empty) returns (Empty);
   rpc RepeateAuction(Empty) returns (Empty);
   rpc StreamBids(BidsRequest) returns (stream Bid);

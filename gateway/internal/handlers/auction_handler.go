@@ -121,6 +121,21 @@ func (h *AuctionHandler) GetFailedPackages(w http.ResponseWriter, r *http.Reques
 	utils.RespondJSON(w, r, http.StatusOK, resp)
 }
 
+func (h *AuctionHandler) GetUserWonPackages(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok {
+		utils.RespondError(w, r, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	resp, err := h.client.GetUserWonPackages(userID)
+	if err != nil {
+		h.logger.WithError(err).Error("GetUserWonPackages failed")
+		utils.RespondError(w, r, http.StatusInternalServerError, "GetUserWonPackages failed")
+		return
+	}
+	utils.RespondJSON(w, r, http.StatusOK, resp)
+}
+
 func (h *AuctionHandler) StartAuction(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.UserIDFromContext(r.Context())
 	if !ok {

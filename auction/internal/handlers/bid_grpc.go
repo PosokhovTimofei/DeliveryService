@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/maksroxx/DeliveryService/auction/internal/kafka"
+	"github.com/maksroxx/DeliveryService/auction/internal/middleware"
 	"github.com/maksroxx/DeliveryService/auction/internal/models"
 	"github.com/maksroxx/DeliveryService/auction/internal/repository"
 	"github.com/maksroxx/DeliveryService/auction/internal/service"
@@ -171,6 +172,36 @@ func (s *BidGRPCHandler) GetAuctioningPackages(ctx context.Context, req *auction
 
 func (s *BidGRPCHandler) GetFailedPackages(ctx context.Context, req *auctionpb.Empty) (*auctionpb.Packages, error) {
 	pkgs, err := s.packageRepo.FindByFailedStatus(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to fetch packages: %v", err)
+	}
+
+	var packges auctionpb.Packages
+	for _, p := range pkgs {
+		packges.Package = append(packges.Package, &auctionpb.Package{
+			PackageId:  p.PackageID,
+			Status:     p.Status,
+			From:       p.From,
+			To:         p.To,
+			Weight:     p.Weight,
+			Width:      int32(p.Width),
+			Length:     int32(p.Length),
+			Height:     int32(p.Height),
+			Cost:       p.Cost,
+			Currency:   p.Currency,
+			TariffCode: p.TariffCode,
+		})
+	}
+	return &packges, nil
+}
+
+func (s *BidGRPCHandler) GetUserWonPackages(ctx context.Context, req *auctionpb.Empty) (*auctionpb.Packages, error) {
+	userIDVal := ctx.Value(middleware.GRPCUserIDKey())
+	userID, ok := userIDVal.(string)
+	if !ok || userID == "" {
+		return nil, status.Error(codes.Unauthenticated, "unauthorized: userID not found in context")
+	}
+	pkgs, err := s.packageRepo.FindUserPackages(ctx, userID)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to fetch packages: %v", err)
 	}
