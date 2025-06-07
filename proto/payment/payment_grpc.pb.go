@@ -19,7 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	PaymentService_ConfirmPayment_FullMethodName = "/payment.PaymentService/ConfirmPayment"
+	PaymentService_ConfirmPayment_FullMethodName        = "/payment.PaymentService/ConfirmPayment"
+	PaymentService_ConfirmAuctionPayment_FullMethodName = "/payment.PaymentService/ConfirmAuctionPayment"
 )
 
 // PaymentServiceClient is the client API for PaymentService service.
@@ -27,6 +28,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type PaymentServiceClient interface {
 	ConfirmPayment(ctx context.Context, in *ConfirmPaymentRequest, opts ...grpc.CallOption) (*ConfirmPaymentResponse, error)
+	ConfirmAuctionPayment(ctx context.Context, in *ConfirmPaymentRequest, opts ...grpc.CallOption) (*ConfirmPaymentResponse, error)
 }
 
 type paymentServiceClient struct {
@@ -47,11 +49,22 @@ func (c *paymentServiceClient) ConfirmPayment(ctx context.Context, in *ConfirmPa
 	return out, nil
 }
 
+func (c *paymentServiceClient) ConfirmAuctionPayment(ctx context.Context, in *ConfirmPaymentRequest, opts ...grpc.CallOption) (*ConfirmPaymentResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ConfirmPaymentResponse)
+	err := c.cc.Invoke(ctx, PaymentService_ConfirmAuctionPayment_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PaymentServiceServer is the server API for PaymentService service.
 // All implementations must embed UnimplementedPaymentServiceServer
 // for forward compatibility.
 type PaymentServiceServer interface {
 	ConfirmPayment(context.Context, *ConfirmPaymentRequest) (*ConfirmPaymentResponse, error)
+	ConfirmAuctionPayment(context.Context, *ConfirmPaymentRequest) (*ConfirmPaymentResponse, error)
 	mustEmbedUnimplementedPaymentServiceServer()
 }
 
@@ -64,6 +77,9 @@ type UnimplementedPaymentServiceServer struct{}
 
 func (UnimplementedPaymentServiceServer) ConfirmPayment(context.Context, *ConfirmPaymentRequest) (*ConfirmPaymentResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ConfirmPayment not implemented")
+}
+func (UnimplementedPaymentServiceServer) ConfirmAuctionPayment(context.Context, *ConfirmPaymentRequest) (*ConfirmPaymentResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ConfirmAuctionPayment not implemented")
 }
 func (UnimplementedPaymentServiceServer) mustEmbedUnimplementedPaymentServiceServer() {}
 func (UnimplementedPaymentServiceServer) testEmbeddedByValue()                        {}
@@ -104,6 +120,24 @@ func _PaymentService_ConfirmPayment_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PaymentService_ConfirmAuctionPayment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ConfirmPaymentRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PaymentServiceServer).ConfirmAuctionPayment(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PaymentService_ConfirmAuctionPayment_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PaymentServiceServer).ConfirmAuctionPayment(ctx, req.(*ConfirmPaymentRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // PaymentService_ServiceDesc is the grpc.ServiceDesc for PaymentService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -114,6 +148,10 @@ var PaymentService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ConfirmPayment",
 			Handler:    _PaymentService_ConfirmPayment_Handler,
+		},
+		{
+			MethodName: "ConfirmAuctionPayment",
+			Handler:    _PaymentService_ConfirmAuctionPayment_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

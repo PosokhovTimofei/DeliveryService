@@ -37,7 +37,7 @@ type PostgresConfig struct {
 type KafkaConfig struct {
 	Brokers       []string `yaml:"brokers"`
 	ConsumerTopic string   `yaml:"consumerTopic"`
-	ProducerTopic string   `yaml:"producerTopic"`
+	ProducerTopic []string `yaml:"producerTopic"`
 	GroupID       string   `yaml:"groupID"`
 	Version       string   `yaml:"version"`
 }

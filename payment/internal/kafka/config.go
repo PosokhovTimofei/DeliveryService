@@ -4,7 +4,7 @@ import "github.com/IBM/sarama"
 
 type ConfigProducer struct {
 	Brokers []string
-	Topic   string
+	Topic   []string
 	Version string
 }
 

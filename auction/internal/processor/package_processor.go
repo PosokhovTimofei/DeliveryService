@@ -76,7 +76,7 @@ func (p *PackageProcessor) handlePaidPackage(session sarama.ConsumerGroupSession
 		return
 	}
 
-	if event.Status != "Paid" {
+	if event.Status != "PAID" {
 		p.log.Warn("Skipping non-paid status package")
 		return
 	}
@@ -84,6 +84,11 @@ func (p *PackageProcessor) handlePaidPackage(session sarama.ConsumerGroupSession
 	pkg, err := p.repo.FindByID(ctx, event.PackageID)
 	if err != nil {
 		p.log.WithError(err).Errorf("Failed to find package %s", event.PackageID)
+		return
+	}
+	pkg.Status = event.Status
+	if err := p.repo.Update(ctx, pkg); err != nil {
+		p.log.WithError(err).Errorf("Failed to update package %s", pkg.PackageID)
 		return
 	}
 

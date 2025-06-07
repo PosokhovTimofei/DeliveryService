@@ -50,3 +50,21 @@ func (p *PaymentGRPCClient) ConfirmPayment(ctx context.Context, userID, packageI
 
 	return resp.GetMessage(), nil
 }
+
+func (p *PaymentGRPCClient) ConfirmAuctionPayment(ctx context.Context, userID, packageID string) (string, error) {
+	md := metadata.New(map[string]string{"authorization": userID})
+	ctx = metadata.NewOutgoingContext(ctx, md)
+
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	resp, err := p.client.ConfirmAuctionPayment(ctx, &pb.ConfirmPaymentRequest{
+		UserId:    userID,
+		PackageId: packageID,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	return resp.GetMessage(), nil
+}

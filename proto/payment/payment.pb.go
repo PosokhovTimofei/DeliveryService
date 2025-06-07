@@ -127,9 +127,10 @@ const file_payment_payment_proto_rawDesc = "" +
 	"\n" +
 	"package_id\x18\x02 \x01(\tR\tpackageId\"2\n" +
 	"\x16ConfirmPaymentResponse\x12\x18\n" +
-	"\amessage\x18\x01 \x01(\tR\amessage2c\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage2\xbd\x01\n" +
 	"\x0ePaymentService\x12Q\n" +
-	"\x0eConfirmPayment\x12\x1e.payment.ConfirmPaymentRequest\x1a\x1f.payment.ConfirmPaymentResponseB=Z;github.com/maksroxx/DeliveryService/proto/payment;paymentpbb\x06proto3"
+	"\x0eConfirmPayment\x12\x1e.payment.ConfirmPaymentRequest\x1a\x1f.payment.ConfirmPaymentResponse\x12X\n" +
+	"\x15ConfirmAuctionPayment\x12\x1e.payment.ConfirmPaymentRequest\x1a\x1f.payment.ConfirmPaymentResponseB=Z;github.com/maksroxx/DeliveryService/proto/payment;paymentpbb\x06proto3"
 
 var (
 	file_payment_payment_proto_rawDescOnce sync.Once
@@ -150,9 +151,11 @@ var file_payment_payment_proto_goTypes = []any{
 }
 var file_payment_payment_proto_depIdxs = []int32{
 	0, // 0: payment.PaymentService.ConfirmPayment:input_type -> payment.ConfirmPaymentRequest
-	1, // 1: payment.PaymentService.ConfirmPayment:output_type -> payment.ConfirmPaymentResponse
-	1, // [1:2] is the sub-list for method output_type
-	0, // [0:1] is the sub-list for method input_type
+	0, // 1: payment.PaymentService.ConfirmAuctionPayment:input_type -> payment.ConfirmPaymentRequest
+	1, // 2: payment.PaymentService.ConfirmPayment:output_type -> payment.ConfirmPaymentResponse
+	1, // 3: payment.PaymentService.ConfirmAuctionPayment:output_type -> payment.ConfirmPaymentResponse
+	2, // [2:4] is the sub-list for method output_type
+	0, // [0:2] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name

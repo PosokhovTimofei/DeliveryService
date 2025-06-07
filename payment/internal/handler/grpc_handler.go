@@ -37,3 +37,22 @@ func (s *PaymentGRPCServer) ConfirmPayment(ctx context.Context, req *pb.ConfirmP
 		Message: "Payment confirmed and event sent",
 	}, nil
 }
+
+func (s *PaymentGRPCServer) ConfirmAuctionPayment(ctx context.Context, req *pb.ConfirmPaymentRequest) (*pb.ConfirmPaymentResponse, error) {
+	payment, err := s.repo.UpdatePayment(ctx, models.Payment{
+		UserID:    req.GetUserId(),
+		PackageID: req.GetPackageId(),
+		Status:    models.PaymentStatusPaid,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if err := s.producer.PaymentAucitonMessage(*payment, req.GetUserId()); err != nil {
+		return nil, err
+	}
+
+	return &pb.ConfirmPaymentResponse{
+		Message: "Payment confirmed and event sent",
+	}, nil
+}

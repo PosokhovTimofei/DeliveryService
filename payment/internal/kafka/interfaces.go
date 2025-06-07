@@ -13,5 +13,6 @@ type Consumerer interface {
 
 type Producerer interface {
 	PaymentMessage(payment models.Payment, userID string) error
+	PaymentAucitonMessage(payment models.Payment, userID string) error
 	Close() error
 }

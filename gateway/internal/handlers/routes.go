@@ -56,7 +56,9 @@ func RegisterRoutes(
 	mux.Handle("/api/auction/repeate", protectAndLog(http.HandlerFunc(auctionHandler.RepeateAuction), authClient, logger))
 
 	// Payment
-	mux.Handle("/api/payment/confirm", protectAndLog(NewPaymentHandler(paymentClient, logger), authClient, logger))
+	paymentHandler := NewPaymentHandler(paymentClient, logger)
+	mux.Handle("/api/payment/confirm", protectAndLog(http.HandlerFunc(paymentHandler.ServeHTTP), authClient, logger))
+	mux.Handle("/api/payment/auction/confirm", protectAndLog(http.HandlerFunc(paymentHandler.AuctionPayment), authClient, logger))
 
 	// Packages
 	// POST /packages/cancel?id=xxx

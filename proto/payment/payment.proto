@@ -6,6 +6,7 @@ option go_package = "github.com/maksroxx/DeliveryService/proto/payment;paymentpb
 
 service PaymentService {
   rpc ConfirmPayment(ConfirmPaymentRequest) returns (ConfirmPaymentResponse);
+  rpc ConfirmAuctionPayment(ConfirmPaymentRequest) returns (ConfirmPaymentResponse);
 }
 
 message ConfirmPaymentRequest {

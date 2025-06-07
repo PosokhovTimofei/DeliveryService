@@ -20,6 +20,8 @@ kafka:
   brokers:
     - "localhost:9092"
   consumerTopic: "payment-events"
-  producerTopic: "pay-events"
+  producerTopic:
+    - "pay-events"
+    - "paid-packages"
   groupID: "payment-consumers"
   version: "7.3.0"

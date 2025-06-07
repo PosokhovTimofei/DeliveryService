@@ -9,7 +9,7 @@ import (
 
 type Producer struct {
 	producer sarama.SyncProducer
-	topic    string
+	topics   []string
 }
 
 func NewProducer(cfg ConfigProducer) (*Producer, error) {
@@ -21,7 +21,7 @@ func NewProducer(cfg ConfigProducer) (*Producer, error) {
 	}
 	return &Producer{
 		producer: producer,
-		topic:    cfg.Topic,
+		topics:   cfg.Topic,
 	}, nil
 }
 
@@ -41,7 +41,30 @@ func (p *Producer) PaymentMessage(payment models.Payment, userID string) error {
 	msg := &sarama.ProducerMessage{
 		Headers: headers,
 		Key:     sarama.StringEncoder(payment.PackageID),
-		Topic:   p.topic,
+		Topic:   p.topics[0],
+		Value:   sarama.ByteEncoder(paymentJson),
+	}
+	_, _, err = p.producer.SendMessage(msg)
+	return err
+}
+
+func (p *Producer) PaymentAucitonMessage(payment models.Payment, userID string) error {
+	paymentJson, err := json.Marshal(payment)
+	if err != nil {
+		return err
+	}
+
+	headers := []sarama.RecordHeader{
+		{
+			Key:   []byte("User-ID"),
+			Value: []byte(userID),
+		},
+	}
+
+	msg := &sarama.ProducerMessage{
+		Headers: headers,
+		Key:     sarama.StringEncoder(payment.PackageID),
+		Topic:   p.topics[1],
 		Value:   sarama.ByteEncoder(paymentJson),
 	}
 	_, _, err = p.producer.SendMessage(msg)

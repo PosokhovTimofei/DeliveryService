@@ -34,6 +34,10 @@ func (m *mockProducer) PaymentMessage(p models.Payment, userID string) error {
 	return m.sendFn(p, userID)
 }
 
+func (m *mockProducer) PaymentAucitonMessage(p models.Payment, userID string) error {
+	return m.sendFn(p, userID)
+}
+
 func (m mockProducer) Close() error {
 	return nil
 }
