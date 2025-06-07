@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/maksroxx/DeliveryService/auction/internal/kafka"
@@ -57,10 +58,22 @@ func StartAuction(
 				FinishedAt: time.Now(),
 			}
 
-			if err := producer.Publish(ctx, result); err != nil {
+			if err := producer.PublishPayment(ctx, result); err != nil {
 				log.WithError(err).Error("Failed to publish auction result")
 			} else {
 				log.WithField("package_id", pkg.PackageID).Info("Auction result published successfully")
+			}
+
+			//
+			notification := &models.Notification{
+				UserID:  winner.UserID,
+				Message: fmt.Sprintf("Поздравляем! Вы выиграли аукцион на пакет %s за %.2f %s", pkg.PackageID, winner.Amount, pkg.Currency),
+			}
+
+			if err := producer.PublishNotification(ctx, notification); err != nil {
+				log.WithError(err).Error("Failed to send notification")
+			} else {
+				log.WithField("user_id", winner.UserID).Info("Notification sent to auction winner")
 			}
 		}
 	}()

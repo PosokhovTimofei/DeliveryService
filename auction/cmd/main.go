@@ -42,13 +42,13 @@ func main() {
 	bidRepo := repository.NewBidRepository(db, "bids")
 	auctionService := service.NewAuctionService(bidRepo)
 
-	producer, err := kafka.NewAuctionPublisher(cfg.Kafka.Brokers, cfg.Kafka.ProduceTopic[0], log)
+	producer, err := kafka.NewAuctionPublisher(cfg.Kafka.Brokers, cfg.Kafka.ProduceTopic, log)
 	if err != nil {
 		log.WithError(err).Fatal("Failed to create Kafka publisher")
 	}
 	defer producer.Close()
 
-	processor := processor.NewPackageProcessor(log, packageRepo)
+	processor := processor.NewPackageProcessor(log, packageRepo, producer)
 
 	consumer, err := kafka.NewConsumer(kafka.Config{
 		Brokers: cfg.Kafka.Brokers,

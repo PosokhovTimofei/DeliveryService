@@ -350,6 +350,10 @@ type Package struct {
 	Cost          float64                `protobuf:"fixed64,5,opt,name=cost,proto3" json:"cost,omitempty"`
 	Currency      string                 `protobuf:"bytes,6,opt,name=currency,proto3" json:"currency,omitempty"`
 	TariffCode    string                 `protobuf:"bytes,7,opt,name=tariff_code,json=tariffCode,proto3" json:"tariff_code,omitempty"`
+	Weight        float64                `protobuf:"fixed64,8,opt,name=weight,proto3" json:"weight,omitempty"`
+	Length        int32                  `protobuf:"varint,9,opt,name=length,proto3" json:"length,omitempty"`
+	Width         int32                  `protobuf:"varint,10,opt,name=width,proto3" json:"width,omitempty"`
+	Height        int32                  `protobuf:"varint,11,opt,name=height,proto3" json:"height,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -433,6 +437,34 @@ func (x *Package) GetTariffCode() string {
 	return ""
 }
 
+func (x *Package) GetWeight() float64 {
+	if x != nil {
+		return x.Weight
+	}
+	return 0
+}
+
+func (x *Package) GetLength() int32 {
+	if x != nil {
+		return x.Length
+	}
+	return 0
+}
+
+func (x *Package) GetWidth() int32 {
+	if x != nil {
+		return x.Width
+	}
+	return 0
+}
+
+func (x *Package) GetHeight() int32 {
+	if x != nil {
+		return x.Height
+	}
+	return 0
+}
+
 type Empty struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -496,7 +528,7 @@ const file_auction_auction_proto_rawDesc = "" +
 	"\x06amount\x18\x04 \x01(\x01R\x06amount\x12\x1c\n" +
 	"\ttimestamp\x18\x05 \x01(\tR\ttimestamp\"6\n" +
 	"\bPackages\x12*\n" +
-	"\apackage\x18\x01 \x03(\v2\x10.auction.PackageR\apackage\"\xb5\x01\n" +
+	"\apackage\x18\x01 \x03(\v2\x10.auction.PackageR\apackage\"\x93\x02\n" +
 	"\aPackage\x12\x1d\n" +
 	"\n" +
 	"package_id\x18\x01 \x01(\tR\tpackageId\x12\x16\n" +
@@ -506,7 +538,12 @@ const file_auction_auction_proto_rawDesc = "" +
 	"\x04cost\x18\x05 \x01(\x01R\x04cost\x12\x1a\n" +
 	"\bcurrency\x18\x06 \x01(\tR\bcurrency\x12\x1f\n" +
 	"\vtariff_code\x18\a \x01(\tR\n" +
-	"tariffCode\"\a\n" +
+	"tariffCode\x12\x16\n" +
+	"\x06weight\x18\b \x01(\x01R\x06weight\x12\x16\n" +
+	"\x06length\x18\t \x01(\x05R\x06length\x12\x14\n" +
+	"\x05width\x18\n" +
+	" \x01(\x05R\x05width\x12\x16\n" +
+	"\x06height\x18\v \x01(\x05R\x06height\"\a\n" +
 	"\x05Empty2\x92\x03\n" +
 	"\x0eAuctionService\x125\n" +
 	"\bPlaceBid\x12\x13.auction.BidRequest\x1a\x14.auction.BidResponse\x12?\n" +

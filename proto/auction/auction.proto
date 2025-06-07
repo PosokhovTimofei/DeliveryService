@@ -53,6 +53,10 @@ message Package {
   double cost = 5;
   string currency = 6;
   string tariff_code = 7;
+  double weight = 8;
+  int32 length = 9;
+  int32 width = 10;
+  int32 height = 11;
 }
 
 message Empty {}

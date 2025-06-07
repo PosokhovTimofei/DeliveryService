@@ -60,6 +60,10 @@ type ExpiredPackageEvent struct {
 	Address    string    `json:"address"`
 	From       string    `json:"from"`
 	To         string    `json:"to"`
+	Weight     float64   `json:"weight"`
+	Length     int       `json:"length"`
+	Width      int       `json:"width"`
+	Height     int       `json:"height"`
 	Cost       float64   `json:"cost"`
 	Currency   string    `json:"currency"`
 	TariffCode string    `json:"tariff_code"`

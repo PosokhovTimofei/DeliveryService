@@ -9,3 +9,8 @@ type AuctionResult struct {
 	Currency   string    `json:"currency"`
 	FinishedAt time.Time `json:"finished_at"`
 }
+
+type Notification struct {
+	UserID  string `json:"userId"`
+	Message string `json:"message"`
+}
