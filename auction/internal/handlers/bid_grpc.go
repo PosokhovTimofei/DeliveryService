@@ -226,23 +226,23 @@ func (s *BidGRPCHandler) GetUserWonPackages(ctx context.Context, req *auctionpb.
 }
 
 func (s *BidGRPCHandler) StartAuction(ctx context.Context, req *auctionpb.Empty) (*auctionpb.Empty, error) {
-	pkgs, err := s.packageRepo.FindByAuctioningStatus(ctx)
+	pkgs, err := s.packageRepo.FindByWaitingStatus(ctx)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to fetch packages: %v", err)
 	}
 	for _, p := range pkgs {
-		service.StartAuction(ctx, p, s.svc, s.producer, s.packageRepo, s.logger)
+		service.StartAuction(p, s.svc, s.producer, s.packageRepo, s.logger)
 	}
 	return &auctionpb.Empty{}, nil
 }
 
 func (s *BidGRPCHandler) RepeateAuction(ctx context.Context, req *auctionpb.Empty) (*auctionpb.Empty, error) {
-	pkgs, err := s.packageRepo.FindByAuctioningStatus(ctx)
+	pkgs, err := s.packageRepo.FindByFailedStatus(ctx)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to fetch packages: %v", err)
 	}
 	for _, p := range pkgs {
-		service.StartAuction(ctx, p, s.svc, s.producer, s.packageRepo, s.logger)
+		service.StartAuction(p, s.svc, s.producer, s.packageRepo, s.logger)
 	}
 	return &auctionpb.Empty{}, nil
 }

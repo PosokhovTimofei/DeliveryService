@@ -92,3 +92,20 @@ func (r *PackageRepository) FindByFailedStatus(ctx context.Context) ([]*models.P
 	}
 	return packages, nil
 }
+
+func (r *PackageRepository) FindByWaitingStatus(ctx context.Context) ([]*models.Package, error) {
+	cursor, err := r.collection.Find(ctx, bson.M{"status": "Waiting"})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+	var packages []*models.Package
+	for cursor.Next(ctx) {
+		var pkg models.Package
+		if err := cursor.Decode(&pkg); err != nil {
+			continue
+		}
+		packages = append(packages, &pkg)
+	}
+	return packages, nil
+}

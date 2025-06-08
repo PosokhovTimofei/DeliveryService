@@ -24,6 +24,9 @@ import (
 
 func main() {
 	log := logrus.New()
+	log.SetFormatter(&logrus.TextFormatter{
+		FullTimestamp: true,
+	})
 	cfg := configs.Load()
 	if err := configs.LoadAuthConfig(); err != nil {
 		log.WithError(err).Fatal("Failed to load auth config")

@@ -12,69 +12,69 @@ import (
 )
 
 func StartAuction(
-	ctx context.Context,
 	pkg *models.Package,
 	auctionSvc *AuctionService,
 	producer *kafka.AuctionPublisher,
 	repo repository.Packager,
 	log *logrus.Logger,
 ) {
-	timer := time.NewTimer(5 * time.Minute)
-
 	go func() {
-		select {
-		case <-ctx.Done():
-			log.Info("Auction cancelled before timeout")
+		timer := time.NewTimer(2 * time.Minute)
+		defer timer.Stop()
+
+		pkg.Status = "Auctioning"
+		if err := repo.Update(context.Background(), pkg); err != nil {
+			log.WithError(err).Error("Failed to update package when auction start")
 			return
+		}
 
-		case <-timer.C:
-			winner, err := auctionSvc.DetermineWinner(ctx, pkg.PackageID)
-			if err != nil || winner == nil {
-				log.Warnf("Auction finished with no winner for package %s", pkg.PackageID)
+		<-timer.C
 
-				pkg.Status = "Auction-failed"
-				pkg.UpdatedAt = time.Now()
-				if err := repo.Update(ctx, pkg); err != nil {
-					log.WithError(err).Error("Failed to update package status to 'auction-failed'")
-				}
-				return
-			}
+		winner, err := auctionSvc.DetermineWinner(context.Background(), pkg.PackageID)
+		if err != nil || winner == nil {
+			log.Warnf("Auction finished with no winner for package %s", pkg.PackageID)
 
-			pkg.Status = "Finished"
-			pkg.UserID = winner.UserID
-			pkg.Cost = winner.Amount
+			pkg.Status = "Auction-failed"
 			pkg.UpdatedAt = time.Now()
-
-			if err := repo.Update(ctx, pkg); err != nil {
-				log.WithError(err).Error("Failed to update package after auction win")
-				return
+			if err := repo.Update(context.Background(), pkg); err != nil {
+				log.WithError(err).Error("Failed to update package status to 'waiting'")
 			}
+			return
+		}
 
-			result := &models.AuctionResult{
-				PackageID:  pkg.PackageID,
-				WinnerID:   winner.UserID,
-				FinalPrice: winner.Amount,
-				Currency:   pkg.Currency,
-				FinishedAt: time.Now(),
-			}
+		pkg.Status = "Finished"
+		pkg.UserID = winner.UserID
+		pkg.Cost = winner.Amount
+		pkg.UpdatedAt = time.Now()
 
-			if err := producer.PublishPayment(ctx, result); err != nil {
-				log.WithError(err).Error("Failed to publish auction result")
-			} else {
-				log.WithField("package_id", pkg.PackageID).Info("Auction result published successfully")
-			}
+		if err := repo.Update(context.Background(), pkg); err != nil {
+			log.WithError(err).Error("Failed to update package after auction win")
+			return
+		}
 
-			//
-			notification := &models.Notification{
-				UserID:  winner.UserID,
-				Message: fmt.Sprintf("Поздравляем! Вы выиграли аукцион на пакет %s за %.2f %s", pkg.PackageID, winner.Amount, pkg.Currency),
-			}
+		result := &models.AuctionResult{
+			PackageID:  pkg.PackageID,
+			WinnerID:   winner.UserID,
+			FinalPrice: winner.Amount,
+			Currency:   pkg.Currency,
+			FinishedAt: time.Now(),
+		}
 
-			if err := producer.PublishNotification(ctx, notification); err != nil {
-				log.WithError(err).Error("Failed to send notification")
-			} else {
-				log.WithField("user_id", winner.UserID).Info("Notification sent to auction winner")
-			}
+		if err := producer.PublishPayment(context.Background(), result); err != nil {
+			log.WithError(err).Error("Failed to publish auction result")
+		} else {
+			log.WithField("package_id", pkg.PackageID).Info("Auction result published successfully")
+		}
+
+		notification := &models.Notification{
+			UserID:  winner.UserID,
+			Message: fmt.Sprintf("Поздравляем! Вы выиграли аукцион на пакет %s за %.2f %s", pkg.PackageID, winner.Amount, pkg.Currency),
+		}
+
+		if err := producer.PublishNotification(context.Background(), notification); err != nil {
+			log.WithError(err).Error("Failed to send notification")
+		} else {
+			log.WithField("user_id", winner.UserID).Info("Notification sent to auction winner")
 		}
 	}()
 }

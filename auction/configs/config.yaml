@@ -13,7 +13,7 @@ kafka:
   brokers:
     - "localhost:9092"
   ptopics:
-    - "auction-finished"
+    - "payment-events"
     - "telegram-notifications"
     - "register-delivery"
   ctopics: 

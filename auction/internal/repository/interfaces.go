@@ -19,4 +19,5 @@ type Packager interface {
 	FindUserPackages(ctx context.Context, userId string) ([]*models.Package, error)
 	FindByFailedStatus(ctx context.Context) ([]*models.Package, error)
 	FindByAuctioningStatus(ctx context.Context) ([]*models.Package, error)
+	FindByWaitingStatus(ctx context.Context) ([]*models.Package, error)
 }

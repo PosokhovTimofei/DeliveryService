@@ -55,7 +55,7 @@ func (p *PackageProcessor) handleExpiredPackages(session sarama.ConsumerGroupSes
 		return
 	}
 
-	pkg.Status = "Auctioning"
+	pkg.Status = "Waiting"
 	pkg.UserID = ""
 	pkg.UpdatedAt = time.Now()
 
