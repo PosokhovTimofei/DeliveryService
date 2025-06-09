@@ -26,7 +26,7 @@ func RegisterRoutes(
 	mux.Handle("/api/register", logAndCORS(http.HandlerFunc(authHandlers.Register), logger))
 	mux.Handle("/api/register-moderator", logAndCORS(http.HandlerFunc(authHandlers.RegisterModerator), logger))
 	mux.Handle("/api/login", logAndCORS(http.HandlerFunc(authHandlers.Login), logger))
-	mux.Handle("/api/code", protectAndLog(http.HandlerFunc(authHandlers.GenerateTelegramCode), authClient, logger))
+	mux.Handle("/api/telegram/code", protectAndLog(http.HandlerFunc(authHandlers.GenerateTelegramCode), authClient, logger))
 
 	// Calculate
 	calcHandler := NewCalculateHandler(calculatorClient, logger)

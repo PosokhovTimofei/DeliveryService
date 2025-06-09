@@ -142,13 +142,13 @@ func (h *AuctionHandler) StartAuction(w http.ResponseWriter, r *http.Request) {
 		utils.RespondError(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
-	resp, err := h.client.StartAuction(userID)
+	_, err := h.client.StartAuction(userID)
 	if err != nil {
 		h.logger.WithError(err).Error("StartAuction failed")
 		utils.RespondError(w, r, http.StatusInternalServerError, "StartAuction failed")
 		return
 	}
-	utils.RespondJSON(w, r, http.StatusOK, resp)
+	utils.RespondJSON(w, r, http.StatusOK, map[string]string{"status": "started"})
 }
 
 func (h *AuctionHandler) RepeateAuction(w http.ResponseWriter, r *http.Request) {
@@ -157,13 +157,13 @@ func (h *AuctionHandler) RepeateAuction(w http.ResponseWriter, r *http.Request) 
 		utils.RespondError(w, r, http.StatusUnauthorized, "unauthorized")
 		return
 	}
-	resp, err := h.client.RepeateAuction(userID)
+	_, err := h.client.RepeateAuction(userID)
 	if err != nil {
 		h.logger.WithError(err).Error("RepeateAuction failed")
 		utils.RespondError(w, r, http.StatusInternalServerError, "RepeateAuction failed")
 		return
 	}
-	utils.RespondJSON(w, r, http.StatusOK, resp)
+	utils.RespondJSON(w, r, http.StatusOK, map[string]string{"status": "started"})
 }
 
 func (h *AuctionHandler) WebSocketStream(w http.ResponseWriter, r *http.Request) {
