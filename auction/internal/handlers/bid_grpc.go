@@ -54,7 +54,7 @@ func (s *BidGRPCHandler) PlaceBid(ctx context.Context, req *auctionpb.BidRequest
 	}
 
 	// через сколько аукцион на поссылку закончится
-	auctionEnd := pkg.UpdatedAt.Add(5 * time.Minute)
+	auctionEnd := pkg.UpdatedAt.Add(2 * time.Minute)
 	if time.Now().After(auctionEnd) {
 		return &auctionpb.BidResponse{Status: "error", Message: "Auction ended"}, nil
 	}
@@ -106,43 +106,45 @@ func (s *BidGRPCHandler) StreamBids(req *auctionpb.BidsRequest, stream auctionpb
 		return status.Error(codes.InvalidArgument, "package_id is required")
 	}
 
-	lastSent := make(map[string]bool)
+	ctx := stream.Context()
 
-	ticker := time.NewTicker(2 * time.Second)
-	defer ticker.Stop()
+	changeStream, err := s.bidRepo.WatchBidsByPackage(ctx, req.PackageId)
+	if err != nil {
+		s.logger.WithError(err).Error("Failed to open MongoDB change stream")
+		return status.Errorf(codes.Internal, "change stream failed: %v", err)
+	}
+	defer changeStream.Close(ctx)
 
-	for {
-		select {
-		case <-stream.Context().Done():
-			s.logger.Info("Client disconnected from stream")
-			return nil
+	for changeStream.Next(ctx) {
+		var event struct {
+			FullDocument models.Bid `bson:"fullDocument"`
+		}
 
-		case <-ticker.C:
-			bids, err := s.bidRepo.GetBidsByPackage(stream.Context(), req.PackageId)
-			if err != nil {
-				s.logger.WithError(err).Error("Failed to fetch bids for stream")
-				return status.Errorf(codes.Internal, "fetch failed: %v", err)
-			}
+		if err := changeStream.Decode(&event); err != nil {
+			s.logger.WithError(err).Error("Change stream decode error")
+			continue
+		}
 
-			for _, b := range bids {
-				if lastSent[b.BidID] {
-					continue
-				}
-				lastSent[b.BidID] = true
+		bid := event.FullDocument
 
-				if err := stream.Send(&auctionpb.Bid{
-					BidId:     b.BidID,
-					PackageId: b.PackageID,
-					UserId:    b.UserID,
-					Amount:    b.Amount,
-					Timestamp: b.Timestamp.Format(time.RFC3339),
-				}); err != nil {
-					s.logger.WithError(err).Error("Stream send failed")
-					return err
-				}
-			}
+		if err := stream.Send(&auctionpb.Bid{
+			BidId:     bid.BidID,
+			PackageId: bid.PackageID,
+			UserId:    bid.UserID,
+			Amount:    bid.Amount,
+			Timestamp: bid.Timestamp.Format(time.RFC3339),
+		}); err != nil {
+			s.logger.WithError(err).Error("Stream send failed")
+			return err
 		}
 	}
+
+	if err := changeStream.Err(); err != nil {
+		s.logger.WithError(err).Error("Change stream closed with error")
+		return err
+	}
+
+	return nil
 }
 
 func (s *BidGRPCHandler) GetAuctioningPackages(ctx context.Context, req *auctionpb.Empty) (*auctionpb.Packages, error) {

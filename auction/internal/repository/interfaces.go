@@ -4,11 +4,13 @@ import (
 	"context"
 
 	"github.com/maksroxx/DeliveryService/auction/internal/models"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type Bidder interface {
 	PlaceBid(ctx context.Context, bid *models.Bid) error
 	GetBidsByPackage(ctx context.Context, packageID string) ([]*models.Bid, error)
+	WatchBidsByPackage(ctx context.Context, packageID string) (*mongo.ChangeStream, error)
 	GetTopBidByPackage(ctx context.Context, packageID string) (*models.Bid, error)
 }
 

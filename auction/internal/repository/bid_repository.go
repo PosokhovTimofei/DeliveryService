@@ -45,6 +45,22 @@ func (r *BidRepository) GetBidsByPackage(ctx context.Context, packageID string) 
 	return bids, nil
 }
 
+func (r *BidRepository) WatchBidsByPackage(ctx context.Context, packageID string) (*mongo.ChangeStream, error) {
+	pipeline := mongo.Pipeline{
+		{{Key: "$match", Value: bson.D{
+			{Key: "fullDocument.package_id", Value: packageID},
+			{Key: "operationType", Value: "insert"},
+		}}},
+	}
+
+	opts := options.ChangeStream().SetFullDocument(options.UpdateLookup)
+	stream, err := r.collection.Watch(ctx, pipeline, opts)
+	if err != nil {
+		return nil, err
+	}
+	return stream, nil
+}
+
 func (r *BidRepository) GetTopBidByPackage(ctx context.Context, packageID string) (*models.Bid, error) {
 	filter := bson.M{"package_id": packageID}
 	opts := options.FindOne().SetSort(bson.D{{Key: "amount", Value: -1}})

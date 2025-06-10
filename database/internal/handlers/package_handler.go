@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/maksroxx/DeliveryService/database/internal/clients"
 	"github.com/maksroxx/DeliveryService/database/internal/kafka"
 	"github.com/maksroxx/DeliveryService/database/internal/models"
 	"github.com/maksroxx/DeliveryService/database/internal/repository"
@@ -16,15 +17,15 @@ import (
 
 type PackageHandler struct {
 	rep      repository.RouteRepository
-	calc     *CalculatorGRPCClient
+	calc     clients.Calculator
 	producer *kafka.Producer
 	log      *logrus.Logger
 }
 
-func NewPackageHandler(rep repository.RouteRepository, calc *CalculatorGRPCClient, producer *kafka.Producer, logger *logrus.Logger) *PackageHandler {
+func NewPackageHandler(rep repository.RouteRepository, calculator clients.Calculator, producer *kafka.Producer, logger *logrus.Logger) *PackageHandler {
 	return &PackageHandler{
 		rep:      rep,
-		calc:     calc,
+		calc:     calculator,
 		producer: producer,
 		log:      logger,
 	}

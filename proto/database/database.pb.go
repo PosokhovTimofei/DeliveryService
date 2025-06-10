@@ -533,12 +533,13 @@ const file_database_database_proto_rawDesc = "" +
 	"\x06status\x18\x01 \x01(\tR\x06status\"\a\n" +
 	"\x05Empty\"<\n" +
 	"\vPackageList\x12-\n" +
-	"\bpackages\x18\x01 \x03(\v2\x11.delivery.PackageR\bpackages2\xa5\x05\n" +
+	"\bpackages\x18\x01 \x03(\v2\x11.delivery.PackageR\bpackages2\xe2\x05\n" +
 	"\x0ePackageService\x124\n" +
 	"\n" +
 	"GetPackage\x12\x13.delivery.PackageID\x1a\x11.delivery.Package\x12@\n" +
 	"\x0eGetAllPackages\x12\x17.delivery.PackageFilter\x1a\x15.delivery.PackageList\x12<\n" +
-	"\x12GetExpiredPackages\x12\x0f.delivery.Empty\x1a\x15.delivery.PackageList\x12A\n" +
+	"\x12GetExpiredPackages\x12\x0f.delivery.Empty\x1a\x15.delivery.PackageList\x12;\n" +
+	"\x11MarkAsExpiredByID\x12\x13.delivery.PackageID\x1a\x11.delivery.Package\x12A\n" +
 	"\x0fGetUserPackages\x12\x17.delivery.PackageFilter\x1a\x15.delivery.PackageList\x125\n" +
 	"\rCreatePackage\x12\x11.delivery.Package\x1a\x11.delivery.Package\x12=\n" +
 	"\x15CreatePackageWithCalc\x12\x11.delivery.Package\x1a\x11.delivery.Package\x125\n" +
@@ -578,27 +579,29 @@ var file_database_database_proto_depIdxs = []int32{
 	3,  // 3: delivery.PackageService.GetPackage:input_type -> delivery.PackageID
 	1,  // 4: delivery.PackageService.GetAllPackages:input_type -> delivery.PackageFilter
 	5,  // 5: delivery.PackageService.GetExpiredPackages:input_type -> delivery.Empty
-	1,  // 6: delivery.PackageService.GetUserPackages:input_type -> delivery.PackageFilter
-	0,  // 7: delivery.PackageService.CreatePackage:input_type -> delivery.Package
-	0,  // 8: delivery.PackageService.CreatePackageWithCalc:input_type -> delivery.Package
-	0,  // 9: delivery.PackageService.UpdatePackage:input_type -> delivery.Package
-	3,  // 10: delivery.PackageService.DeletePackage:input_type -> delivery.PackageID
-	3,  // 11: delivery.PackageService.CancelPackage:input_type -> delivery.PackageID
-	3,  // 12: delivery.PackageService.GetPackageStatus:input_type -> delivery.PackageID
-	5,  // 13: delivery.PackageService.TransferExpiredPackages:input_type -> delivery.Empty
-	0,  // 14: delivery.PackageService.GetPackage:output_type -> delivery.Package
-	6,  // 15: delivery.PackageService.GetAllPackages:output_type -> delivery.PackageList
-	6,  // 16: delivery.PackageService.GetExpiredPackages:output_type -> delivery.PackageList
-	6,  // 17: delivery.PackageService.GetUserPackages:output_type -> delivery.PackageList
-	0,  // 18: delivery.PackageService.CreatePackage:output_type -> delivery.Package
-	0,  // 19: delivery.PackageService.CreatePackageWithCalc:output_type -> delivery.Package
-	0,  // 20: delivery.PackageService.UpdatePackage:output_type -> delivery.Package
-	5,  // 21: delivery.PackageService.DeletePackage:output_type -> delivery.Empty
-	0,  // 22: delivery.PackageService.CancelPackage:output_type -> delivery.Package
-	4,  // 23: delivery.PackageService.GetPackageStatus:output_type -> delivery.PackageStatus
-	5,  // 24: delivery.PackageService.TransferExpiredPackages:output_type -> delivery.Empty
-	14, // [14:25] is the sub-list for method output_type
-	3,  // [3:14] is the sub-list for method input_type
+	3,  // 6: delivery.PackageService.MarkAsExpiredByID:input_type -> delivery.PackageID
+	1,  // 7: delivery.PackageService.GetUserPackages:input_type -> delivery.PackageFilter
+	0,  // 8: delivery.PackageService.CreatePackage:input_type -> delivery.Package
+	0,  // 9: delivery.PackageService.CreatePackageWithCalc:input_type -> delivery.Package
+	0,  // 10: delivery.PackageService.UpdatePackage:input_type -> delivery.Package
+	3,  // 11: delivery.PackageService.DeletePackage:input_type -> delivery.PackageID
+	3,  // 12: delivery.PackageService.CancelPackage:input_type -> delivery.PackageID
+	3,  // 13: delivery.PackageService.GetPackageStatus:input_type -> delivery.PackageID
+	5,  // 14: delivery.PackageService.TransferExpiredPackages:input_type -> delivery.Empty
+	0,  // 15: delivery.PackageService.GetPackage:output_type -> delivery.Package
+	6,  // 16: delivery.PackageService.GetAllPackages:output_type -> delivery.PackageList
+	6,  // 17: delivery.PackageService.GetExpiredPackages:output_type -> delivery.PackageList
+	0,  // 18: delivery.PackageService.MarkAsExpiredByID:output_type -> delivery.Package
+	6,  // 19: delivery.PackageService.GetUserPackages:output_type -> delivery.PackageList
+	0,  // 20: delivery.PackageService.CreatePackage:output_type -> delivery.Package
+	0,  // 21: delivery.PackageService.CreatePackageWithCalc:output_type -> delivery.Package
+	0,  // 22: delivery.PackageService.UpdatePackage:output_type -> delivery.Package
+	5,  // 23: delivery.PackageService.DeletePackage:output_type -> delivery.Empty
+	0,  // 24: delivery.PackageService.CancelPackage:output_type -> delivery.Package
+	4,  // 25: delivery.PackageService.GetPackageStatus:output_type -> delivery.PackageStatus
+	5,  // 26: delivery.PackageService.TransferExpiredPackages:output_type -> delivery.Empty
+	15, // [15:27] is the sub-list for method output_type
+	3,  // [3:15] is the sub-list for method input_type
 	3,  // [3:3] is the sub-list for extension type_name
 	3,  // [3:3] is the sub-list for extension extendee
 	0,  // [0:3] is the sub-list for field type_name

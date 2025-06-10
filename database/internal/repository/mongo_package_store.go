@@ -198,6 +198,33 @@ func (r *MongoRepository) DeletePackage(ctx context.Context, packageID string) e
 	return nil
 }
 
+func (r *MongoRepository) MarkAsExpiredByID(ctx context.Context, packageID string) (*models.Package, error) {
+	expiredTime := time.Now().AddDate(0, 0, -60)
+
+	filter := bson.M{"package_id": packageID}
+
+	update := bson.M{
+		"$set": bson.M{
+			"status":     "In pick-up point",
+			"created_at": expiredTime,
+			"updated_at": expiredTime,
+		},
+	}
+
+	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
+
+	var updatedPackage models.Package
+	err := r.collection.FindOneAndUpdate(ctx, filter, update, opts).Decode(&updatedPackage)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, fmt.Errorf("no active package found with ID: %s", packageID)
+		}
+		return nil, err
+	}
+
+	return &updatedPackage, nil
+}
+
 func (r *MongoRepository) GetExpiredPackages(ctx context.Context) ([]*models.Package, error) {
 	cutoff := time.Now().AddDate(0, 0, -60)
 

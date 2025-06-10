@@ -9,11 +9,13 @@ import (
 	"syscall"
 
 	"github.com/maksroxx/DeliveryService/database/configs"
+	"github.com/maksroxx/DeliveryService/database/internal/clients"
 	"github.com/maksroxx/DeliveryService/database/internal/handlers"
 	"github.com/maksroxx/DeliveryService/database/internal/kafka"
 	"github.com/maksroxx/DeliveryService/database/internal/middleware"
 	"github.com/maksroxx/DeliveryService/database/internal/processor"
 	"github.com/maksroxx/DeliveryService/database/internal/repository"
+	"github.com/maksroxx/DeliveryService/database/internal/service"
 	pb "github.com/maksroxx/DeliveryService/proto/database"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
@@ -42,7 +44,7 @@ func main() {
 	}()
 	db := mongoClient.Database(mongoCfg.Database)
 
-	calcClient, err := handlers.NewCalculatorClient(cfg.Calculator.GRPCAddress)
+	calcClient, err := clients.NewCalculatorClient(cfg.Calculator.GRPCAddress)
 	if err != nil {
 		logger.Fatal("Failed to connect to calculator:", err)
 	}
@@ -53,10 +55,11 @@ func main() {
 	}
 	defer producer.Close()
 	repo := repository.NewMongoRepository(db, "packages")
+	service := service.NewPackageService(repo, calcClient, producer, logger)
 	grpcServer := grpc.NewServer(
 		grpc.UnaryInterceptor(middleware.GRPCAuthInterceptor()),
 	)
-	pb.RegisterPackageServiceServer(grpcServer, handlers.NewGrpcPackageHandler(repo, calcClient, producer, logger))
+	pb.RegisterPackageServiceServer(grpcServer, handlers.NewGrpcPackageHandler(service, logger))
 
 	go func() {
 		listener, err := net.Listen("tcp", ":50054")

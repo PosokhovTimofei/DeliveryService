@@ -3,13 +3,9 @@ package handlers
 import (
 	"context"
 	"fmt"
-	"time"
 
-	"github.com/google/uuid"
-	"github.com/maksroxx/DeliveryService/database/internal/kafka"
 	"github.com/maksroxx/DeliveryService/database/internal/models"
-	"github.com/maksroxx/DeliveryService/database/internal/repository"
-	calculatorpb "github.com/maksroxx/DeliveryService/proto/calculator"
+	"github.com/maksroxx/DeliveryService/database/internal/service"
 	pb "github.com/maksroxx/DeliveryService/proto/database"
 	"github.com/sirupsen/logrus"
 )
@@ -22,23 +18,18 @@ var (
 
 type GrpcPackageHandler struct {
 	pb.UnimplementedPackageServiceServer
-	rep        repository.RouteRepository
-	calculator Calculator
-	producer   kafka.PaymentProducer
-	logger     *logrus.Logger
+	service service.PackageService
+	logger  *logrus.Logger
 }
 
-func NewGrpcPackageHandler(rep repository.RouteRepository, calculator Calculator, producer kafka.PaymentProducer, log *logrus.Logger) *GrpcPackageHandler {
+func NewGrpcPackageHandler(service service.PackageService, log *logrus.Logger) *GrpcPackageHandler {
 	return &GrpcPackageHandler{
-		rep:        rep,
-		calculator: calculator,
-		producer:   producer,
-		logger:     log,
+		logger: log,
 	}
 }
 
 func (h *GrpcPackageHandler) GetPackage(ctx context.Context, req *pb.PackageID) (*pb.Package, error) {
-	pkg, err := h.rep.GetByID(ctx, req.PackageId)
+	pkg, err := h.service.GetPackageByID(ctx, req.PackageId)
 	if err != nil {
 		return nil, err
 	}
@@ -54,12 +45,10 @@ func (h *GrpcPackageHandler) GetAllPackages(ctx context.Context, req *pb.Package
 	if req.CreatedAfter != nil {
 		filter.CreatedAfter = req.CreatedAfter.AsTime()
 	}
-
-	pkgs, err := h.rep.GetAllPackages(ctx, filter)
+	pkgs, err := h.service.GetAllPackages(ctx, filter)
 	if err != nil {
 		return nil, err
 	}
-
 	return toProtoList(pkgs), nil
 }
 
@@ -73,8 +62,7 @@ func (h *GrpcPackageHandler) GetUserPackages(ctx context.Context, req *pb.Packag
 	if req.CreatedAfter != nil {
 		filter.CreatedAfter = req.CreatedAfter.AsTime()
 	}
-
-	pkgs, err := h.rep.GetAllPackages(ctx, filter)
+	pkgs, err := h.service.GetAllPackages(ctx, filter)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +73,6 @@ func (h *GrpcPackageHandler) CreatePackage(ctx context.Context, req *pb.Package)
 	if req.Weight <= 0 || req.From == "" || req.To == "" || req.Address == "" || req.Length <= 0 || req.Width <= 0 || req.Height <= 0 {
 		return nil, ErrInvalidInput
 	}
-
 	pkg := &models.Package{
 		PackageID:      req.PackageId,
 		UserID:         req.UserId,
@@ -100,73 +87,12 @@ func (h *GrpcPackageHandler) CreatePackage(ctx context.Context, req *pb.Package)
 		Cost:           req.Cost,
 		EstimatedHours: int(req.EstimatedHours),
 		Currency:       req.Currency,
-		CreatedAt:      time.Now(),
 	}
-
-	created, err := h.rep.Create(ctx, pkg)
+	created, err := h.service.CreatePackage(ctx, pkg)
 	if err != nil {
 		return nil, err
 	}
 	return toProto(created), nil
-}
-
-func (h *GrpcPackageHandler) CreatePackageWithCalc(ctx context.Context, req *pb.Package) (*pb.Package, error) {
-
-	if req.Weight <= 0 || req.From == "" || req.To == "" || req.Address == "" || req.Length <= 0 || req.Width <= 0 || req.Height <= 0 {
-		return nil, ErrInvalidInput
-	}
-
-	var (
-		result *calculatorpb.CalculateDeliveryCostResponse
-		err    error
-	)
-	tariffCode := req.TariffCode
-	if tariffCode == "" {
-		result, err = h.calculator.Calculate(req.Weight, req.UserId, req.From, req.To, req.Address, int(req.Length), int(req.Width), int(req.Height))
-		tariffCode = "DEFAULT"
-	} else {
-		result, err = h.calculator.CalculateByTariff(req.Weight, req.UserId, req.From, req.To, req.Address, tariffCode, int(req.Length), int(req.Width), int(req.Height))
-	}
-	if err != nil {
-		return nil, fmt.Errorf("calculation failed: %w", err)
-	}
-
-	model := &models.Package{
-		PackageID:      "PKG-" + uuid.New().String(),
-		UserID:         req.UserId,
-		Weight:         req.Weight,
-		Length:         int(req.Length),
-		Width:          int(req.Width),
-		Height:         int(req.Height),
-		From:           req.From,
-		To:             req.To,
-		Address:        req.Address,
-		Status:         "Created",
-		PaymentStatus:  "PENDING",
-		Cost:           result.Cost,
-		EstimatedHours: int(result.EstimatedHours),
-		Currency:       result.Currency,
-		CreatedAt:      time.Now(),
-		TariffCode:     tariffCode,
-	}
-
-	_, err = h.rep.Create(ctx, model)
-	if err != nil {
-		return nil, err
-	}
-
-	payment := models.Payment{
-		UserID:    model.UserID,
-		PackageID: model.PackageID,
-		Cost:      model.Cost,
-		Currency:  model.Currency,
-	}
-
-	if err := h.producer.SendPaymentEvent(payment); err != nil {
-		return nil, fmt.Errorf("failed to send payment event: %w", err)
-	}
-
-	return toProto(model), nil
 }
 
 func (h *GrpcPackageHandler) UpdatePackage(ctx context.Context, req *pb.Package) (*pb.Package, error) {
@@ -174,7 +100,7 @@ func (h *GrpcPackageHandler) UpdatePackage(ctx context.Context, req *pb.Package)
 		Status:        req.Status,
 		PaymentStatus: req.PaymentStatus,
 	}
-	updated, err := h.rep.UpdatePackage(ctx, req.PackageId, update)
+	updated, err := h.service.UpdatePackage(ctx, req.PackageId, update)
 	if err != nil {
 		return nil, err
 	}
@@ -182,7 +108,7 @@ func (h *GrpcPackageHandler) UpdatePackage(ctx context.Context, req *pb.Package)
 }
 
 func (h *GrpcPackageHandler) DeletePackage(ctx context.Context, req *pb.PackageID) (*pb.Empty, error) {
-	err := h.rep.DeletePackage(ctx, req.PackageId)
+	err := h.service.DeletePackage(ctx, req.PackageId)
 	if err != nil {
 		return nil, err
 	}
@@ -190,29 +116,15 @@ func (h *GrpcPackageHandler) DeletePackage(ctx context.Context, req *pb.PackageI
 }
 
 func (h *GrpcPackageHandler) CancelPackage(ctx context.Context, req *pb.PackageID) (*pb.Package, error) {
-	pkg, err := h.rep.GetByID(ctx, req.PackageId)
+	pkg, err := h.service.CancelPackage(ctx, req.PackageId)
 	if err != nil {
 		return nil, err
 	}
-	if pkg.Status == "Delivered" {
-		return nil, ErrCannotCancelDelivered
-	}
-	if pkg.Status == "Сanceled" {
-		return nil, ErrAlreadyCanceled
-	}
-
-	update := models.PackageUpdate{
-		Status: "Сanceled",
-	}
-	updated, err := h.rep.UpdatePackage(ctx, req.PackageId, update)
-	if err != nil {
-		return nil, err
-	}
-	return toProto(updated), nil
+	return toProto(pkg), nil
 }
 
 func (h *GrpcPackageHandler) GetPackageStatus(ctx context.Context, req *pb.PackageID) (*pb.PackageStatus, error) {
-	pkg, err := h.rep.GetByID(ctx, req.PackageId)
+	pkg, err := h.service.GetPackageByID(ctx, req.PackageId)
 	if err != nil {
 		return nil, err
 	}
@@ -220,31 +132,43 @@ func (h *GrpcPackageHandler) GetPackageStatus(ctx context.Context, req *pb.Packa
 }
 
 func (h *GrpcPackageHandler) GetExpiredPackages(ctx context.Context, req *pb.Empty) (*pb.PackageList, error) {
-	pkgs, err := h.rep.GetExpiredPackages(ctx)
+	pkgs, err := h.service.GetExpiredPackages(ctx)
 	if err != nil {
 		return nil, err
 	}
-
 	return toProtoList(pkgs), nil
 }
 
-func (h *GrpcPackageHandler) TransferExpiredPackages(ctx context.Context, req *pb.Empty) (*pb.Empty, error) {
-	expiredPackages, err := h.rep.GetExpiredPackages(ctx)
+func (h *GrpcPackageHandler) MarkAsExpiredByID(ctx context.Context, req *pb.PackageID) (*pb.Package, error) {
+	pkg, err := h.service.MarkPackageAsExpired(ctx, req.PackageId)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch expired packages: %w", err)
+		return nil, err
 	}
+	return toProto(pkg), nil
+}
 
-	for _, pkg := range expiredPackages {
-		if err := h.producer.SendExpiredPackageEvent(*pkg); err != nil {
-			h.logger.WithError(err).Errorf("failed to send expired event for package %s", pkg.PackageID)
-			continue
-		}
-
-		if err := h.rep.DeletePackage(ctx, pkg.PackageID); err != nil {
-			h.logger.WithError(err).Errorf("failed to delete package %s after transfer", pkg.PackageID)
-			continue
-		}
+func (h *GrpcPackageHandler) CreatePackageWithCalc(ctx context.Context, req *pb.Package) (*pb.Package, error) {
+	model := &models.Package{
+		UserID:     req.UserId,
+		Weight:     req.Weight,
+		Length:     int(req.Length),
+		Width:      int(req.Width),
+		Height:     int(req.Height),
+		From:       req.From,
+		To:         req.To,
+		Address:    req.Address,
+		TariffCode: req.TariffCode,
 	}
+	created, err := h.service.CreatePackageWithCalculation(ctx, model)
+	if err != nil {
+		return nil, err
+	}
+	return toProto(created), nil
+}
 
+func (h *GrpcPackageHandler) TransferExpiredPackages(ctx context.Context, _ *pb.Empty) (*pb.Empty, error) {
+	if err := h.service.TransferExpiredPackages(ctx); err != nil {
+		return nil, err
+	}
 	return &pb.Empty{}, nil
 }

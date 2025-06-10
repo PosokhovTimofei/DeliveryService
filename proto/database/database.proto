@@ -57,6 +57,7 @@ service PackageService {
   rpc GetPackage(PackageID) returns (Package);
   rpc GetAllPackages(PackageFilter) returns (PackageList);
   rpc GetExpiredPackages(Empty) returns (PackageList);
+  rpc MarkAsExpiredByID(PackageID) returns (Package);
   rpc GetUserPackages(PackageFilter) returns (PackageList);
   rpc CreatePackage(Package) returns (Package);
   rpc CreatePackageWithCalc(Package) returns (Package);

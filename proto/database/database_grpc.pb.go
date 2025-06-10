@@ -22,6 +22,7 @@ const (
 	PackageService_GetPackage_FullMethodName              = "/delivery.PackageService/GetPackage"
 	PackageService_GetAllPackages_FullMethodName          = "/delivery.PackageService/GetAllPackages"
 	PackageService_GetExpiredPackages_FullMethodName      = "/delivery.PackageService/GetExpiredPackages"
+	PackageService_MarkAsExpiredByID_FullMethodName       = "/delivery.PackageService/MarkAsExpiredByID"
 	PackageService_GetUserPackages_FullMethodName         = "/delivery.PackageService/GetUserPackages"
 	PackageService_CreatePackage_FullMethodName           = "/delivery.PackageService/CreatePackage"
 	PackageService_CreatePackageWithCalc_FullMethodName   = "/delivery.PackageService/CreatePackageWithCalc"
@@ -39,6 +40,7 @@ type PackageServiceClient interface {
 	GetPackage(ctx context.Context, in *PackageID, opts ...grpc.CallOption) (*Package, error)
 	GetAllPackages(ctx context.Context, in *PackageFilter, opts ...grpc.CallOption) (*PackageList, error)
 	GetExpiredPackages(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*PackageList, error)
+	MarkAsExpiredByID(ctx context.Context, in *PackageID, opts ...grpc.CallOption) (*Package, error)
 	GetUserPackages(ctx context.Context, in *PackageFilter, opts ...grpc.CallOption) (*PackageList, error)
 	CreatePackage(ctx context.Context, in *Package, opts ...grpc.CallOption) (*Package, error)
 	CreatePackageWithCalc(ctx context.Context, in *Package, opts ...grpc.CallOption) (*Package, error)
@@ -81,6 +83,16 @@ func (c *packageServiceClient) GetExpiredPackages(ctx context.Context, in *Empty
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(PackageList)
 	err := c.cc.Invoke(ctx, PackageService_GetExpiredPackages_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *packageServiceClient) MarkAsExpiredByID(ctx context.Context, in *PackageID, opts ...grpc.CallOption) (*Package, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Package)
+	err := c.cc.Invoke(ctx, PackageService_MarkAsExpiredByID_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -174,6 +186,7 @@ type PackageServiceServer interface {
 	GetPackage(context.Context, *PackageID) (*Package, error)
 	GetAllPackages(context.Context, *PackageFilter) (*PackageList, error)
 	GetExpiredPackages(context.Context, *Empty) (*PackageList, error)
+	MarkAsExpiredByID(context.Context, *PackageID) (*Package, error)
 	GetUserPackages(context.Context, *PackageFilter) (*PackageList, error)
 	CreatePackage(context.Context, *Package) (*Package, error)
 	CreatePackageWithCalc(context.Context, *Package) (*Package, error)
@@ -200,6 +213,9 @@ func (UnimplementedPackageServiceServer) GetAllPackages(context.Context, *Packag
 }
 func (UnimplementedPackageServiceServer) GetExpiredPackages(context.Context, *Empty) (*PackageList, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetExpiredPackages not implemented")
+}
+func (UnimplementedPackageServiceServer) MarkAsExpiredByID(context.Context, *PackageID) (*Package, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MarkAsExpiredByID not implemented")
 }
 func (UnimplementedPackageServiceServer) GetUserPackages(context.Context, *PackageFilter) (*PackageList, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserPackages not implemented")
@@ -296,6 +312,24 @@ func _PackageService_GetExpiredPackages_Handler(srv interface{}, ctx context.Con
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(PackageServiceServer).GetExpiredPackages(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PackageService_MarkAsExpiredByID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PackageID)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PackageServiceServer).MarkAsExpiredByID(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PackageService_MarkAsExpiredByID_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PackageServiceServer).MarkAsExpiredByID(ctx, req.(*PackageID))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -462,6 +496,10 @@ var PackageService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetExpiredPackages",
 			Handler:    _PackageService_GetExpiredPackages_Handler,
+		},
+		{
+			MethodName: "MarkAsExpiredByID",
+			Handler:    _PackageService_MarkAsExpiredByID_Handler,
 		},
 		{
 			MethodName: "GetUserPackages",
