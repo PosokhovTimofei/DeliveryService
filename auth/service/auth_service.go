@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"github.com/maksroxx/DeliveryService/auth/models"
 	"github.com/maksroxx/DeliveryService/auth/repository"
 	"golang.org/x/crypto/bcrypt"
@@ -12,12 +13,14 @@ import (
 
 type AuthService struct {
 	repo      repository.UserRepository
+	tgRepo    repository.Telegramer
 	jwtSecret string
 }
 
-func NewAuthService(repo repository.UserRepository, jwtSecret string) *AuthService {
+func NewAuthService(userRepo repository.UserRepository, tgRepo repository.Telegramer, jwtSecret string) *AuthService {
 	return &AuthService{
-		repo:      repo,
+		repo:      userRepo,
+		tgRepo:    tgRepo,
 		jwtSecret: jwtSecret,
 	}
 }
@@ -121,4 +124,17 @@ func (s *AuthService) ValidateToken(tokenString string) (*models.JWTClaims, erro
 	}
 
 	return nil, models.ErrInvalidToken
+}
+
+func (s *AuthService) GetUserIDByTelegramCode(code string) (string, error) {
+	return s.tgRepo.FindUserIDByCode(code)
+}
+
+func (s *AuthService) GenerateTelegramCode(userID string) (string, error) {
+	code := "auth_" + uuid.NewString()[:8]
+	err := s.tgRepo.Save(code, userID, 10*time.Minute)
+	if err != nil {
+		return "", err
+	}
+	return code, nil
 }

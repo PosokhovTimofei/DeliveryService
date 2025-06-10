@@ -78,10 +78,6 @@ func (s *packageService) MarkPackageAsExpired(ctx context.Context, packageID str
 }
 
 func (s *packageService) CreatePackageWithCalculation(ctx context.Context, pkg *models.Package) (*models.Package, error) {
-	if pkg.Weight <= 0 || pkg.From == "" || pkg.To == "" || pkg.Address == "" || pkg.Length <= 0 || pkg.Width <= 0 || pkg.Height <= 0 {
-		return nil, errors.New("invalid input")
-	}
-
 	var result *calculatorpb.CalculateDeliveryCostResponse
 	var err error
 

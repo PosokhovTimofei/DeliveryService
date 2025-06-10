@@ -115,3 +115,9 @@ func (p *PackageGRPCClient) TransferExpiredPackages(userID string) (*databasepb.
 	defer cancel()
 	return p.client.TransferExpiredPackages(ctx, &databasepb.Empty{})
 }
+
+func (p *PackageGRPCClient) MarkAsExpiredByID(userID, packageID string) (*databasepb.Package, error) {
+	ctx, cancel := p.withContext(userID)
+	defer cancel()
+	return p.client.MarkAsExpiredByID(ctx, &databasepb.PackageID{PackageId: packageID})
+}

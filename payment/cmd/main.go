@@ -18,6 +18,7 @@ import (
 	"github.com/maksroxx/DeliveryService/payment/internal/handler"
 	"github.com/maksroxx/DeliveryService/payment/internal/kafka"
 	"github.com/maksroxx/DeliveryService/payment/internal/processor"
+	"github.com/maksroxx/DeliveryService/payment/internal/service"
 	pb "github.com/maksroxx/DeliveryService/proto/payment"
 	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -30,6 +31,7 @@ var (
 	cfg         *configs.Config
 	mongoClient *mongo.Client
 	pgPool      *pgxpool.Pool
+	svc         service.PaymentService
 	repo        db.Paymenter
 	producer    kafka.Producerer
 	consumer    kafka.Consumerer
@@ -51,6 +53,7 @@ func main() {
 
 	setupKafka()
 	startConsumer()
+	svc = service.NewPaymentService(repo, producer)
 	setupHTTPServer()
 	setupGRPCServer()
 	gracefulShutdown()
@@ -160,7 +163,7 @@ func setupGRPCServer() {
 	}
 
 	grpcServer = grpc.NewServer()
-	pb.RegisterPaymentServiceServer(grpcServer, handler.NewPaymentGRPCServer(repo, producer))
+	pb.RegisterPaymentServiceServer(grpcServer, handler.NewPaymentGRPCServer(svc))
 
 	go func() {
 		logger.Infof("gRPC server started at %s", cfg.Server.GRPCAddress)

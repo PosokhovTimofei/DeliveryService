@@ -2,12 +2,9 @@ package handler
 
 import (
 	"context"
-	"time"
 
-	"github.com/google/uuid"
 	"github.com/maksroxx/DeliveryService/auth/middleware"
 	"github.com/maksroxx/DeliveryService/auth/models"
-	"github.com/maksroxx/DeliveryService/auth/repository"
 	"github.com/maksroxx/DeliveryService/auth/service"
 	authpb "github.com/maksroxx/DeliveryService/proto/auth"
 	"google.golang.org/grpc/codes"
@@ -17,11 +14,10 @@ import (
 type AuthGRPCServer struct {
 	authpb.UnimplementedAuthServiceServer
 	service *service.AuthService
-	repo    repository.Telegramer
 }
 
-func NewAuthGRPCServer(service *service.AuthService, repo repository.Telegramer) *AuthGRPCServer {
-	return &AuthGRPCServer{service: service, repo: repo}
+func NewAuthGRPCServer(service *service.AuthService) *AuthGRPCServer {
+	return &AuthGRPCServer{service: service}
 }
 
 func (s *AuthGRPCServer) Register(ctx context.Context, req *authpb.RegisterRequest) (*authpb.AuthResponse, error) {
@@ -75,7 +71,7 @@ func (s *AuthGRPCServer) Validate(ctx context.Context, req *authpb.ValidateReque
 }
 
 func (s *AuthGRPCServer) GetUserByTelegramCode(ctx context.Context, req *authpb.TelegramCodeLookupRequest) (*authpb.TelegramCodeLookupResponse, error) {
-	userId, err := s.repo.FindUserIDByCode(req.Code)
+	userId, err := s.service.GetUserIDByTelegramCode(req.Code)
 	if err != nil {
 		return nil, grpcError(err)
 	}
@@ -86,13 +82,13 @@ func (s *AuthGRPCServer) GenerateTelegramCode(ctx context.Context, req *authpb.T
 	if req.UserId == "" {
 		return nil, status.Error(codes.Unauthenticated, "unauthorized")
 	}
-	code := "auth_" + uuid.NewString()[:8]
-	err := s.repo.Save(code, req.UserId, 10*time.Minute)
+	code, err := s.service.GenerateTelegramCode(req.UserId)
 	if err != nil {
 		return nil, grpcError(err)
 	}
 	return &authpb.TelegramCodeResponse{Code: code}, nil
 }
+
 func grpcError(err error) error {
 	switch err {
 	case models.ErrEmailAlreadyExists:

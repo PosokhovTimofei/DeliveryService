@@ -274,6 +274,29 @@ func (h *PackageHandler) TransferExpiredPackages(w http.ResponseWriter, r *http.
 	utils.RespondJSON(w, r, http.StatusOK, map[string]string{"status": "ok"})
 }
 
+func (h *PackageHandler) MarkAsExpiredByID(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || userID == "" {
+		utils.RespondError(w, r, http.StatusUnauthorized, "Missing user ID")
+		return
+	}
+
+	packageID := r.URL.Query().Get("id")
+	if packageID == "" {
+		utils.RespondError(w, r, http.StatusBadRequest, "Missing package ID")
+		return
+	}
+
+	_, err := h.client.MarkAsExpiredByID(userID, packageID)
+	if err != nil {
+		h.logger.Errorf("Failed to MarkAsExpiredByID: %v", err)
+		utils.RespondError(w, r, http.StatusInternalServerError, "Failed to MarkAsExpiredByID")
+		return
+	}
+
+	utils.RespondJSON(w, r, http.StatusOK, map[string]string{"status": "ok"})
+}
+
 func NewPackageHTTPHandler(handler *PackageHandler) http.Handler {
 	mux := http.NewServeMux()
 
@@ -299,6 +322,7 @@ func NewPackageHTTPHandler(handler *PackageHandler) http.Handler {
 	mux.HandleFunc("/api/packages/my", handler.GetAllUserPackages)
 	mux.HandleFunc("/api/packages/expired", handler.GetExpiredPackages)
 	mux.HandleFunc("/api/packages/transfer", handler.TransferExpiredPackages)
+	mux.HandleFunc("/api/packages/mark", handler.MarkAsExpiredByID)
 	mux.HandleFunc("/api/packages/cancel", handler.CancelPackage)
 	mux.HandleFunc("/api/packages/status", handler.GetPackageStatus)
 	mux.HandleFunc("/api/packages/create", handler.CreatePackageWithCalc)

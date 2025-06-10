@@ -2,57 +2,33 @@ package handler
 
 import (
 	"context"
+	"fmt"
 
-	"github.com/maksroxx/DeliveryService/payment/internal/db"
-	"github.com/maksroxx/DeliveryService/payment/internal/kafka"
-	"github.com/maksroxx/DeliveryService/payment/internal/models"
+	"github.com/maksroxx/DeliveryService/payment/internal/service"
 	pb "github.com/maksroxx/DeliveryService/proto/payment"
 )
 
 type PaymentGRPCServer struct {
 	pb.UnimplementedPaymentServiceServer
-	repo     db.Paymenter
-	producer kafka.Producerer
+	svc service.PaymentService
 }
 
-func NewPaymentGRPCServer(repo db.Paymenter, producer kafka.Producerer) *PaymentGRPCServer {
-	return &PaymentGRPCServer{repo: repo, producer: producer}
+func NewPaymentGRPCServer(svc service.PaymentService) *PaymentGRPCServer {
+	return &PaymentGRPCServer{svc: svc}
 }
 
 func (s *PaymentGRPCServer) ConfirmPayment(ctx context.Context, req *pb.ConfirmPaymentRequest) (*pb.ConfirmPaymentResponse, error) {
-	payment, err := s.repo.UpdatePayment(ctx, models.Payment{
-		UserID:    req.GetUserId(),
-		PackageID: req.GetPackageId(),
-		Status:    models.PaymentStatusPaid,
-	})
+	payment, err := s.svc.ConfirmPayment(ctx, req.GetUserId(), req.GetPackageId())
 	if err != nil {
 		return nil, err
 	}
-
-	if err := s.producer.PaymentMessage(*payment, req.GetUserId()); err != nil {
-		return nil, err
-	}
-
-	return &pb.ConfirmPaymentResponse{
-		Message: "Payment confirmed and event sent",
-	}, nil
+	return &pb.ConfirmPaymentResponse{Message: fmt.Sprintf("Payment confirmed: %s", payment.PackageID)}, nil
 }
 
 func (s *PaymentGRPCServer) ConfirmAuctionPayment(ctx context.Context, req *pb.ConfirmPaymentRequest) (*pb.ConfirmPaymentResponse, error) {
-	payment, err := s.repo.UpdatePayment(ctx, models.Payment{
-		UserID:    req.GetUserId(),
-		PackageID: req.GetPackageId(),
-		Status:    models.PaymentStatusPaid,
-	})
+	payment, err := s.svc.ConfirmAuctionPayment(ctx, req.GetUserId(), req.GetPackageId())
 	if err != nil {
 		return nil, err
 	}
-
-	if err := s.producer.PaymentAucitonMessage(*payment, req.GetUserId()); err != nil {
-		return nil, err
-	}
-
-	return &pb.ConfirmPaymentResponse{
-		Message: "Payment confirmed and event sent",
-	}, nil
+	return &pb.ConfirmPaymentResponse{Message: fmt.Sprintf("Auction payment confirmed: %s", payment.PackageID)}, nil
 }

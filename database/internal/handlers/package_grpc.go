@@ -148,6 +148,9 @@ func (h *GrpcPackageHandler) MarkAsExpiredByID(ctx context.Context, req *pb.Pack
 }
 
 func (h *GrpcPackageHandler) CreatePackageWithCalc(ctx context.Context, req *pb.Package) (*pb.Package, error) {
+	if req.Weight <= 0 || req.From == "" || req.To == "" || req.Address == "" || req.Length <= 0 || req.Width <= 0 || req.Height <= 0 || req.TariffCode == "" {
+		return nil, ErrInvalidInput
+	}
 	model := &models.Package{
 		UserID:     req.UserId,
 		Weight:     req.Weight,

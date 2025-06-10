@@ -139,6 +139,7 @@ telegramClient := grpcclient.NewTelegramClient("localhost:50055")
 | PUT     | `/api/packages`                 | ✅      | Обновление посылки                | — (в теле JSON)                             |
 | DELETE  | `/api/packages`                 | ✅      | Удаление посылки                  | `id`                                        |
 | GET     | `/api/packages/status`          | ✅      | Получение статуса посылки         | `id`                                        |
+| GET     | `/api/packages/mark`            | ✅      | Сделать посылку просроченной      | `id`                                        |
 | POST    | `/api/packages/cancel`          | ✅      | Отмена посылки                    | `id`                                        |
 | GET     | `/api/auction/items`            | ✅      | Получение текущих аукционов       | -                          |
 | GET     | `/api/auction/start`            | ✅      | Старт аукциона                    | -                          |
