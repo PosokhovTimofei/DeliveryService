@@ -43,7 +43,6 @@ func main() {
 	db := mongoClient.Database(cfg.Database.Database.Database)
 	packageRepo := repository.NewPackageRepository(db, "auctioned")
 	bidRepo := repository.NewBidRepository(db, "bids")
-	auctionService := service.NewAuctionService(bidRepo)
 
 	producer, err := kafka.NewAuctionPublisher(cfg.Kafka.Brokers, cfg.Kafka.ProduceTopic, log)
 	if err != nil {
@@ -63,7 +62,8 @@ func main() {
 	}
 	defer consumer.Close()
 
-	bidHandler := handlers.NewBidGRPCHandler(bidRepo, packageRepo, auctionService, producer, log)
+	auctionService := service.NewAuctionService(bidRepo, packageRepo, producer, log)
+	bidHandler := handlers.NewBidGRPCHandler(auctionService, log)
 	go func() {
 		lis, err := net.Listen("tcp", cfg.Server.GRPCAddress)
 		if err != nil {
