@@ -2,16 +2,20 @@ package service
 
 import (
 	"context"
-	"log"
 	"math"
 	"time"
 
 	"github.com/maksroxx/DeliveryService/calculator/internal/repository"
 	"github.com/maksroxx/DeliveryService/calculator/models"
+	"github.com/sirupsen/logrus"
 )
 
 type Calculator interface {
 	Calculate(ctx context.Context, pkg models.Package) (models.CalculationResult, error)
+	CalculateByTariffCode(ctx context.Context, pkg models.Package, code string) (models.CalculationResult, error)
+	GetTariffs(ctx context.Context) ([]models.Tariff, error)
+	CreateTariff(ctx context.Context, tariff *models.Tariff) (*models.Tariff, error)
+	DeleteTariff(ctx context.Context, code string) error
 }
 
 type DefaultCalculator struct {
@@ -20,48 +24,46 @@ type DefaultCalculator struct {
 }
 
 func NewCalculator(rep repository.CountryRepository) *DefaultCalculator {
-	tariff := models.Tariff{
-		Code:              "DEFAULT",
-		Name:              "Default",
-		BaseRate:          300,
-		PricePerKm:        5,
-		PricePerKg:        50,
-		Currency:          "RUB",
-		VolumetricDivider: 5000,
-		SpeedKmph:         60,
-	}
 	return &DefaultCalculator{
-		defaultTariff: tariff,
-		repository:    rep,
+		defaultTariff: models.Tariff{
+			Code:              "DEFAULT",
+			Name:              "Default",
+			BaseRate:          300,
+			PricePerKm:        5,
+			PricePerKg:        50,
+			Currency:          "RUB",
+			VolumetricDivider: 5000,
+			SpeedKmph:         60,
+		},
+		repository: rep,
 	}
 }
 
 func (c *DefaultCalculator) Calculate(ctx context.Context, pkg models.Package) (models.CalculationResult, error) {
 	from, err := c.repository.GetCoordinates(ctx, pkg.From)
 	if err != nil {
-		log.Printf("Failed to get coordinates for origin country '%s': %v", pkg.From, err)
+		logrus.Printf("Failed to get coordinates for origin country '%s': %v", pkg.From, err)
 		return fallbackResult(pkg, c.defaultTariff.Currency), nil
 	}
 
 	to, err := c.repository.GetCoordinates(ctx, pkg.To)
 	if err != nil {
-		log.Printf("Failed to get coordinates for destination country '%s': %v", pkg.To, err)
+		logrus.Printf("Failed to get coordinates for destination country '%s': %v", pkg.To, err)
 		return fallbackResult(pkg, c.defaultTariff.Currency), nil
 	}
 
 	distance := haversine(from.Latitude, from.Longitude, to.Latitude, to.Longitude)
 	volumetricWeight := float64(pkg.Length*pkg.Width*pkg.Height) / c.defaultTariff.VolumetricDivider
 	effectiveWeight := math.Max(pkg.Weight, volumetricWeight)
-
-	baseCost := c.defaultTariff.BaseRate + (distance * c.defaultTariff.PricePerKm) + (effectiveWeight * c.defaultTariff.PricePerKg)
-	cost := baseCost * timeMultiplier() * zoneMultiplier(distance)
-
+	cost := c.defaultTariff.BaseRate +
+		distance*c.defaultTariff.PricePerKm +
+		effectiveWeight*c.defaultTariff.PricePerKg
+	cost *= timeMultiplier() * zoneMultiplier(distance)
 	speed := c.defaultTariff.SpeedKmph
 	if speed <= 0 {
 		speed = 50
 	}
-
-	estimatedHours := int(math.Ceil(distance / speed * timeDelayMultiplier(distance)))
+	estimatedHours := int(math.Ceil(distance / float64(speed) * timeDelayMultiplier(distance)))
 	if estimatedHours < 6 {
 		estimatedHours = 6
 	}
@@ -102,19 +104,18 @@ func (c *ExtendedCalculator) CalculateByTariffCode(ctx context.Context, pkg mode
 	}
 
 	distance := haversine(from.Latitude, from.Longitude, to.Latitude, to.Longitude)
-	log.Printf("Distance '%s': %0.2f", pkg.To, distance)
+	logrus.Printf("Distance '%s': %0.2f", pkg.To, distance)
 	volumetricWeight := float64(pkg.Length*pkg.Width*pkg.Height) / tariff.VolumetricDivider
 	effectiveWeight := math.Max(pkg.Weight, volumetricWeight)
-
-	cost := tariff.BaseRate + (distance * tariff.PricePerKm) + (effectiveWeight * tariff.PricePerKg)
+	cost := tariff.BaseRate +
+		distance*tariff.PricePerKm +
+		effectiveWeight*tariff.PricePerKg
 	cost *= timeMultiplier() * zoneMultiplier(distance)
-
 	speed := tariff.SpeedKmph
 	if speed <= 0 {
 		speed = 50
 	}
-
-	estimatedHours := int(math.Ceil(distance / speed * timeDelayMultiplier(distance)))
+	estimatedHours := int(math.Ceil(distance / float64(speed) * timeDelayMultiplier(distance)))
 	if estimatedHours < 6 {
 		estimatedHours = 6
 	}
@@ -128,6 +129,14 @@ func (c *ExtendedCalculator) CalculateByTariffCode(ctx context.Context, pkg mode
 
 func (c *ExtendedCalculator) GetTariffs(ctx context.Context) ([]models.Tariff, error) {
 	return c.tariffRepo.GetAll(ctx)
+}
+
+func (c *ExtendedCalculator) CreateTariff(ctx context.Context, tariff *models.Tariff) (*models.Tariff, error) {
+	return c.tariffRepo.CreateTariff(ctx, tariff)
+}
+
+func (c *ExtendedCalculator) DeleteTariff(ctx context.Context, code string) error {
+	return c.tariffRepo.DeleteTariff(ctx, code)
 }
 
 func fallbackResult(pkg models.Package, currency string) models.CalculationResult {

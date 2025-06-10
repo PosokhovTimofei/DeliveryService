@@ -52,47 +52,6 @@ func (h *HTTPHandler) HandleCalculate(w http.ResponseWriter, r *http.Request) {
 	RespondJSON(w, http.StatusOK, result)
 }
 
-func (h *HTTPHandler) HandleCalculateByTariff(w http.ResponseWriter, r *http.Request) {
-	var request struct {
-		models.Package
-		TariffCode string `json:"tariff_code"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		RespondError(w, http.StatusBadRequest, "Invalid JSON: "+err.Error())
-		return
-	}
-
-	extCalc, ok := h.service.(*service.ExtendedCalculator)
-	if !ok {
-		RespondError(w, http.StatusInternalServerError, "Internal error: calculator not extended")
-		return
-	}
-
-	result, err := extCalc.CalculateByTariffCode(context.Background(), request.Package, request.TariffCode)
-	if err != nil {
-		RespondError(w, http.StatusInternalServerError, "Calculation error: "+err.Error())
-		return
-	}
-
-	RespondJSON(w, http.StatusOK, result)
-}
-
-func (h *HTTPHandler) HandleTariffList(w http.ResponseWriter, r *http.Request) {
-	extCalc, ok := h.service.(*service.ExtendedCalculator)
-	if !ok {
-		RespondError(w, http.StatusInternalServerError, "Internal error: calculator not extended")
-		return
-	}
-
-	tariffs, err := extCalc.GetTariffs(context.Background())
-	if err != nil {
-		RespondError(w, http.StatusInternalServerError, "Failed to fetch tariffs")
-		return
-	}
-
-	RespondJSON(w, http.StatusOK, tariffs)
-}
-
 func (h *HTTPHandler) CreateTariff(w http.ResponseWriter, r *http.Request) {
 	var tariff models.Tariff
 	if err := json.NewDecoder(r.Body).Decode(&tariff); err != nil {
