@@ -3,9 +3,11 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/maksroxx/DeliveryService/gateway/internal/grpcclient"
+	"github.com/maksroxx/DeliveryService/gateway/internal/metrics"
 	"github.com/maksroxx/DeliveryService/gateway/internal/middleware"
 	"github.com/maksroxx/DeliveryService/gateway/internal/utils"
 	"github.com/sirupsen/logrus"
@@ -167,6 +169,8 @@ func (h *AuctionHandler) RepeateAuction(w http.ResponseWriter, r *http.Request) 
 }
 
 func (h *AuctionHandler) WebSocketStream(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+
 	packageID := r.URL.Query().Get("package_id")
 	userID := r.URL.Query().Get("user_id")
 
@@ -182,6 +186,15 @@ func (h *AuctionHandler) WebSocketStream(w http.ResponseWriter, r *http.Request)
 	}
 	defer conn.Close()
 
+	metrics.WSConnectionsTotal.Inc()
+	metrics.WSActiveConnections.Inc()
+	defer func() {
+		duration := time.Since(start).Seconds()
+		metrics.WSConnectionDuration.Observe(duration)
+		metrics.WSDisconnectionsTotal.Inc()
+		metrics.WSActiveConnections.Dec()
+	}()
+
 	stream, cancel, err := h.client.StreamBids(userID, packageID)
 	if err != nil {
 		conn.WriteMessage(websocket.TextMessage, []byte("stream error"))
@@ -192,8 +205,18 @@ func (h *AuctionHandler) WebSocketStream(w http.ResponseWriter, r *http.Request)
 	for {
 		bid, err := stream.Recv()
 		if err != nil {
+			h.logger.WithError(err).Error("Stream receive failed")
 			break
 		}
-		conn.WriteJSON(bid)
+
+		metrics.WSMessagesReceivedTotal.Inc()
+
+		err = conn.WriteJSON(bid)
+		if err != nil {
+			h.logger.WithError(err).Error("WebSocket send failed")
+			break
+		}
+
+		metrics.WSMessagesSentTotal.Inc()
 	}
 }

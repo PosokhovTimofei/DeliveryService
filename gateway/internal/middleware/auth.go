@@ -37,7 +37,7 @@ func NewAuthMiddleware(next http.Handler, logger *logrus.Logger, authClient *grp
 
 func (m *AuthMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
-	lrw := utils.NewLoggingResponseWriter(w)
+	lrw := utils.NewLoggingResponseWriter(w, http.StatusOK)
 
 	if r.Method == "OPTIONS" {
 		m.next.ServeHTTP(lrw, r)

@@ -6,6 +6,7 @@ import (
 
 	"github.com/IBM/sarama"
 	"github.com/maksroxx/DeliveryService/auction/internal/kafka"
+	"github.com/maksroxx/DeliveryService/auction/internal/metrics"
 	"github.com/maksroxx/DeliveryService/auction/internal/models"
 	"github.com/maksroxx/DeliveryService/auction/internal/repository"
 	"github.com/sirupsen/logrus"
@@ -37,7 +38,10 @@ func (p *PackageProcessor) Cleanup(sarama.ConsumerGroupSession) error {
 
 func (p *PackageProcessor) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 	for message := range claim.Messages() {
-		switch string(message.Topic) {
+		topic := string(message.Topic)
+		metrics.MessagesConsumed.WithLabelValues(topic).Inc()
+
+		switch topic {
 		case "expired-packages":
 			p.handleExpiredPackages(session, message)
 		case "paid-packages":
@@ -51,6 +55,7 @@ func (p *PackageProcessor) handleExpiredPackages(session sarama.ConsumerGroupSes
 	ctx := session.Context()
 	var pkg models.Package
 	if err := json.Unmarshal(msg.Value, &pkg); err != nil {
+		metrics.MessagesFailed.WithLabelValues("expired-packages", "unmarshal").Inc()
 		p.log.WithError(err).Error("Failed to decode package event")
 		return
 	}
@@ -61,6 +66,7 @@ func (p *PackageProcessor) handleExpiredPackages(session sarama.ConsumerGroupSes
 
 	savedPkg, err := p.repo.Create(ctx, &pkg)
 	if err != nil {
+		metrics.MessagesFailed.WithLabelValues("expired-packages", "db_create").Inc()
 		p.log.WithError(err).Error("Failed to save package to repository")
 		return
 	}
@@ -73,22 +79,26 @@ func (p *PackageProcessor) handlePaidPackage(session sarama.ConsumerGroupSession
 	ctx := session.Context()
 	var event models.PaidPackageEvent
 	if err := json.Unmarshal(msg.Value, &event); err != nil {
+		metrics.MessagesFailed.WithLabelValues("paid-packages", "unmarshal").Inc()
 		p.log.WithError(err).Error("Failed to decode paid package event")
 		return
 	}
 
 	if event.Status != "PAID" {
+		metrics.MessagesFailed.WithLabelValues("paid-packages", "not_paid").Inc()
 		p.log.Warn("Skipping non-paid status package")
 		return
 	}
 
 	pkg, err := p.repo.FindByID(ctx, event.PackageID)
 	if err != nil {
+		metrics.MessagesFailed.WithLabelValues("paid-packages", "not_found").Inc()
 		p.log.WithError(err).Errorf("Failed to find package %s", event.PackageID)
 		return
 	}
 	pkg.Status = event.Status
 	if err := p.repo.Update(ctx, pkg); err != nil {
+		metrics.MessagesFailed.WithLabelValues("paid-packages", "update_failed").Inc()
 		p.log.WithError(err).Errorf("Failed to update package %s", pkg.PackageID)
 		return
 	}
@@ -107,8 +117,10 @@ func (p *PackageProcessor) handlePaidPackage(session sarama.ConsumerGroupSession
 	}
 
 	if err := p.producer.PublishDeliveryInit(ctx, init); err != nil {
+		metrics.MessagesFailed.WithLabelValues("paid-packages", "publish_failed").Inc()
 		p.log.WithError(err).Error("Failed to publish delivery init")
 	} else {
+		metrics.DeliveryInitPublished.Inc()
 		p.log.WithField("package_id", pkg.PackageID).Info("Delivery init published to register-delivery")
 	}
 	session.MarkMessage(msg, "")

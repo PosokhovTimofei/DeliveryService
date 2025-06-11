@@ -7,8 +7,8 @@ type LoggingResponseWriter struct {
 	StatusCode int
 }
 
-func NewLoggingResponseWriter(w http.ResponseWriter) *LoggingResponseWriter {
-	return &LoggingResponseWriter{w, http.StatusInternalServerError}
+func NewLoggingResponseWriter(w http.ResponseWriter, code int) *LoggingResponseWriter {
+	return &LoggingResponseWriter{w, code}
 }
 
 func (lwr *LoggingResponseWriter) WriteHeader(code int) {

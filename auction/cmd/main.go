@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -16,6 +17,7 @@ import (
 	"github.com/maksroxx/DeliveryService/auction/internal/repository"
 	"github.com/maksroxx/DeliveryService/auction/internal/service"
 	auctionpb "github.com/maksroxx/DeliveryService/proto/auction"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -35,6 +37,16 @@ func main() {
 	defer cancel()
 
 	go handleShutdown(cancel, cfg.Server.ShutdownTimeout, log)
+
+	go func() {
+		mux := http.NewServeMux()
+		mux.Handle("/metrics", promhttp.Handler())
+		addr := cfg.Server.Address
+		log.Infof("Metrics endpoint started on %s/metrics", addr)
+		if err := http.ListenAndServe(addr, mux); err != nil {
+			log.WithError(err).Error("Metrics HTTP server stopped")
+		}
+	}()
 
 	mongoClient, err := mongo.Connect(ctx, options.Client().ApplyURI(cfg.Database.Database.URI))
 	if err != nil {

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/IBM/sarama"
+	"github.com/maksroxx/DeliveryService/auction/internal/metrics"
 	"github.com/sirupsen/logrus"
 )
 
@@ -41,7 +42,10 @@ func (c *Consumer) Run(ctx context.Context) {
 			c.log.Info("Stopping consumer")
 			return
 		default:
+			start := time.Now()
 			err := c.consume(ctx)
+			metrics.KafkaConsumeDuration.Observe(time.Since(start).Seconds())
+
 			if err != nil {
 				if errors.Is(err, sarama.ErrClosedConsumerGroup) {
 					c.log.Warn("Consumer group closed, exiting")
@@ -49,6 +53,9 @@ func (c *Consumer) Run(ctx context.Context) {
 				}
 
 				retryCount++
+				metrics.KafkaConsumerRetries.Inc()
+				metrics.KafkaConsumerRestarts.Inc()
+
 				backoffDuration := calculateBackoff(retryCount)
 				c.log.WithFields(logrus.Fields{
 					"error":            err,

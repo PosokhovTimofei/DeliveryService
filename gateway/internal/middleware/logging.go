@@ -32,7 +32,7 @@ func NewLogMiddleware(
 
 func (m *LogMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
-	lrw := utils.NewLoggingResponseWriter(w)
+	lrw := utils.NewLoggingResponseWriter(w, http.StatusOK)
 
 	defer func() {
 		duration := time.Since(start).Seconds()

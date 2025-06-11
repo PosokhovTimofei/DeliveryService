@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/maksroxx/DeliveryService/auction/internal/kafka"
+	"github.com/maksroxx/DeliveryService/auction/internal/metrics"
 	"github.com/maksroxx/DeliveryService/auction/internal/models"
 	"github.com/maksroxx/DeliveryService/auction/internal/repository"
 	"github.com/sirupsen/logrus"
@@ -43,19 +44,27 @@ func NewAuctionService(bidRepo repository.Bidder, packageRepo repository.Package
 func (s *AuctionService) PlaceBid(ctx context.Context, bid *models.Bid) error {
 	pkg, err := s.packageRepo.FindByID(ctx, bid.PackageID)
 	if err != nil {
+		metrics.BidErrorsTotal.WithLabelValues("package_not_found").Inc()
 		return err
 	}
 	if pkg.Status != "Auctioning" {
+		metrics.BidErrorsTotal.WithLabelValues("auction_not_active").Inc()
 		return errors.New("auction not active")
 	}
 	if time.Now().After(pkg.UpdatedAt.Add(2 * time.Minute)) {
+		metrics.BidErrorsTotal.WithLabelValues("auction_ended").Inc()
 		return errors.New("auction ended")
 	}
 	topBid, err := s.bidRepo.GetTopBidByPackage(ctx, bid.PackageID)
 	if err == nil && topBid != nil && bid.Amount <= topBid.Amount {
+		metrics.BidErrorsTotal.WithLabelValues("bid_too_low").Inc()
 		return errors.New("bid must be greater than current highest")
 	}
-	return s.bidRepo.PlaceBid(ctx, bid)
+	err = s.bidRepo.PlaceBid(ctx, bid)
+	if err == nil {
+		metrics.BidsPlacedTotal.Inc()
+	}
+	return err
 }
 
 func (s *AuctionService) GetBidsByPackage(ctx context.Context, packageID string) ([]*models.Bid, error) {

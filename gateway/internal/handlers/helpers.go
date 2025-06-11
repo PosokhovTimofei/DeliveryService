@@ -9,19 +9,27 @@ import (
 )
 
 func logAndCORS(h http.Handler, logger *logrus.Logger) http.Handler {
-	return middleware.NewLogMiddleware(
-		middleware.NewCORSMiddleware(h),
-		logger,
+	return middleware.MetricsMiddleware(
+		middleware.NewLogMiddleware(
+			middleware.NewCORSMiddleware(h),
+			logger,
+		),
 	)
 }
 
 func protectAndLog(h http.Handler, authClient interface{}, logger *logrus.Logger) http.Handler {
 	authGRPCClient := authClient.(*grpcclient.AuthGRPCClient)
 
-	return middleware.NewLogMiddleware(
-		middleware.NewCORSMiddleware(
-			middleware.NewAuthMiddleware(h, logger, authGRPCClient),
+	return middleware.MetricsMiddleware(
+		middleware.NewLogMiddleware(
+			middleware.NewCORSMiddleware(
+				middleware.NewAuthMiddleware(
+					h,
+					logger,
+					authGRPCClient,
+				),
+			),
+			logger,
 		),
-		logger,
 	)
 }
