@@ -43,7 +43,12 @@ type KafkaConfig struct {
 }
 
 func Load() *Config {
-	data, err := os.ReadFile("./payment/configs/config.yaml")
+	configPath := os.Getenv("PAYMENT_CONFIG")
+	if configPath == "" {
+		configPath = "./payment/configs/config.yaml" // путь по умолчанию
+	}
+
+	data, err := os.ReadFile(configPath)
 	if err != nil {
 		panic(fmt.Sprintf("Error reading config file: %v", err))
 	}

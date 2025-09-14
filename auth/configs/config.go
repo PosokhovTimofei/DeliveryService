@@ -18,7 +18,12 @@ type Config struct {
 }
 
 func Load() *Config {
-	data, err := os.ReadFile("./auth/configs/config.yaml")
+	configPath := os.Getenv("AUTH_CONFIG")
+	if configPath == "" {
+		configPath = "./auth/configs/config.yaml"
+	}
+
+	data, err := os.ReadFile(configPath)
 	if err != nil {
 		panic(fmt.Sprintf("Error reading config file: %v", err))
 	}

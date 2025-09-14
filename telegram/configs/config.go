@@ -47,7 +47,12 @@ type GRPCConfig struct {
 }
 
 func Load() *Config {
-	data, err := os.ReadFile("./telegram/configs/config.yaml")
+	configPath := os.Getenv("TELEGRAM_CONFIG")
+	if configPath == "" {
+		configPath = "./telegram/configs/config.yaml"
+	}
+
+	data, err := os.ReadFile(configPath)
 	if err != nil {
 		panic(fmt.Sprintf("Error reading config file: %v", err))
 	}

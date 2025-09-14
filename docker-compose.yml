@@ -9,6 +9,8 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - mynetwork
 
   kafka:
     image: confluentinc/cp-kafka:7.3.0
@@ -27,6 +29,8 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+    networks:
+      - mynetwork
 
   kafka-exporter:
     image: danielqsj/kafka-exporter:latest
@@ -37,6 +41,8 @@ services:
       KAFKA_SERVER: kafka:29092
     depends_on:
       - kafka
+    networks:
+      - mynetwork
 
   mongo:
     image: mongo:6
@@ -46,12 +52,16 @@ services:
     volumes:
       - mongo_data:/data/db
       - ./mongo-init:/docker-entrypoint-initdb.d
+    environment:
+      MONGO_INITDB_DATABASE: logistics
     healthcheck:
       test: echo 'db.runCommand("ping").ok' | mongo localhost:27017/test --quiet
       interval: 10s
       timeout: 5s
       retries: 5
     restart: always
+    networks:
+      - mynetwork
 
   mongodb-exporter:
     image: bitnami/mongodb-exporter:latest
@@ -62,6 +72,8 @@ services:
       - "9216:9216"
     depends_on:
       - mongo
+    networks:
+      - mynetwork
 
   prometheus:
     image: prom/prometheus
@@ -73,6 +85,8 @@ services:
     depends_on:
       - kafka-exporter
       - mongodb-exporter
+    networks:
+      - mynetwork
 
   grafana:
     image: grafana/grafana
@@ -90,6 +104,8 @@ services:
       - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
     depends_on:
       - prometheus
+    networks:
+      - mynetwork
 
   kafdrop:
     image: obsidiandynamics/kafdrop
@@ -101,7 +117,114 @@ services:
       JVM_OPTS: "-Xms32M -Xmx64M"
     depends_on:
       - kafka
+    networks:
+      - mynetwork
+
+  payment:
+    build:
+      context: .
+      dockerfile: ./payment/Dockerfile
+    container_name: payment
+    ports:
+      - "8081:8081"
+      - "50053:50053"
+    environment:
+      - PAYMENT_CONFIG=/root/configs/payment/config.yaml
+    depends_on:
+      - mongo
+      - kafka
+      - postgres
+    restart: always
+    networks:
+      - mynetwork
+
+  auction:
+    build:
+      context: .
+      dockerfile: ./auction/Dockerfile
+    container_name: auction
+    ports:
+      - "8777:8777"
+      - "50055:50055"
+    environment:
+      - AUCTION_CONFIG=/root/configs/auction/config.yaml
+    depends_on:
+      - mongo
+      - kafka
+    restart: always
+    networks:
+      - mynetwork
+
+  auth:
+    build:
+      context: .
+      dockerfile: ./auth/Dockerfile
+    container_name: auth
+    ports:
+      - "1703:1703"
+      - "1704:1704"
+      - "1705:1705"
+      - "50052:50052"
+    environment:
+      - AUTH_CONFIG=/root/configs/auth/config.yaml
+    depends_on:
+      - mongo
+    restart: always
+    networks:
+      - mynetwork
+
+  telegram:
+    build:
+      context: .
+      dockerfile: ./telegram/Dockerfile
+    container_name: telegram
+    ports:
+      - "8555:8555"
+    environment:
+      - TELEGRAM_CONFIG=/root/configs/telegram/config.yaml
+    depends_on:
+      - mongo
+      - kafka
+      - auth
+      - package
+    restart: always
+    networks:
+      - mynetwork
   
+  package:
+    build:
+      context: .
+      dockerfile: ./database/Dockerfile
+    container_name: package
+    ports:
+      - "8333:8333"
+      - "50054:50054"
+    environment:
+      - PACKAGE_CONFIG=/root/configs/database/config.yaml
+    depends_on:
+      - mongo
+      - kafka
+      - calculator
+    restart: always
+    networks:
+      - mynetwork
+
+  calculator:
+    build:
+      context: .
+      dockerfile: ./calculator/Dockerfile
+    container_name: calculator
+    ports:
+      - "8121:8121"
+      - "50051:50051"
+    environment:
+      - CALCULATOR_CONFIG=/root/configs/calculator/config.yaml
+    depends_on:
+      - mongo
+    restart: always
+    networks:
+      - mynetwork
+
   postgres:
     image: postgres:latest
     container_name: postgres-db
@@ -113,6 +236,7 @@ services:
       - "5432:5432"
     volumes:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "myuser", "-d", "mydatabase"]
       interval: 10s

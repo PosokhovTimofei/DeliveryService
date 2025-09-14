@@ -4,12 +4,11 @@ server:
 
 database:
   driver: "mongo"
-  uri: "mongodb://localhost:27017"
+  uri: "mongodb://mongo:27017"
   name: "logistics"
 
-
 postgres:
-  host: "localhost"
+  host: "postgres-db"
   port: 5432
   user: "myuser"
   password: "mypassword"
@@ -18,7 +17,7 @@ postgres:
 
 kafka:
   brokers:
-    - "localhost:9092"
+    - "kafka:29092"
   consumerTopic: "payment-events"
   producerTopic:
     - "pay-events"

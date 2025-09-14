@@ -1,7 +1,7 @@
 database:
   type: "mongodb"
   mongodb:
-    uri: "mongodb://localhost:27017"
+    uri: "mongodb://mongo:27017"
     database: "logistics"
 
 http_port: "8121"

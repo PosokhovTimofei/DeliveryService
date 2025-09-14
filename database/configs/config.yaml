@@ -5,12 +5,12 @@ server:
 database:
   type: "mongodb"
   mongodb:
-    uri: "mongodb://localhost:27017"
+    uri: "mongodb://mongo:27017"
     database: "logistics"
 
 kafka:
   brokers:
-    - "localhost:9092"
+    - "kafka:29092"
   topics: 
     - "pay-events"
     - "payment-events"
@@ -19,4 +19,4 @@ kafka:
   version: "7.3.0"
 
 calculator:
-  grpc_address: "localhost:50051"
+  grpc_address: "calculator:50051"

@@ -24,7 +24,12 @@ type MongoDBConfig struct {
 }
 
 func Load() *Config {
-	data, err := os.ReadFile("./calculator/configs/config.yaml")
+	configPath := os.Getenv("CALCULATOR_CONFIG")
+	if configPath == "" {
+		configPath = "./calculator/configs/config.yaml"
+	}
+
+	data, err := os.ReadFile(configPath)
 	if err != nil {
 		panic(fmt.Sprintf("Error reading config file: %v", err))
 	}

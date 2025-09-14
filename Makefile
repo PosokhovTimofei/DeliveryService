@@ -30,7 +30,7 @@ db:
 
 auth:
 	@echo "🚀 Запуск auth..."
-	@$(GO) build -o $(BIN_DIR)/auth ./auth/
+	@$(GO) build -o $(BIN_DIR)/auth ./auth/cmd/
 	@$(BIN_DIR)/auth
 
 auction:

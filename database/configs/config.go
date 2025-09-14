@@ -41,7 +41,12 @@ type CalculatorConfig struct {
 }
 
 func Load() *Config {
-	data, err := os.ReadFile("./database/configs/config.yaml")
+	configPath := os.Getenv("PACKAGE_CONFIG")
+	if configPath == "" {
+		configPath = "./database/configs/config.yaml"
+	}
+
+	data, err := os.ReadFile(configPath)
 	if err != nil {
 		panic(fmt.Sprintf("Error reading config file: %v", err))
 	}

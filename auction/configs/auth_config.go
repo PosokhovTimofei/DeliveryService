@@ -1,7 +1,9 @@
 package configs
 
 import (
+	"fmt"
 	"os"
+	"path/filepath"
 
 	"gopkg.in/yaml.v3"
 )
@@ -13,9 +15,16 @@ type AuthConfig struct {
 var authConfig AuthConfig
 
 func LoadAuthConfig() error {
-	data, err := os.ReadFile("./auction/configs/auth.yaml")
+	configDir := filepath.Dir(os.Getenv("AUCTION_CONFIG"))
+	if configDir == "" {
+		configDir = "./auction/configs"
+	}
+
+	authConfigPath := filepath.Join(configDir, "auth.yaml")
+
+	data, err := os.ReadFile(authConfigPath)
 	if err != nil {
-		return err
+		return fmt.Errorf("error reading auth config file: %v", err)
 	}
 	return yaml.Unmarshal(data, &authConfig)
 }

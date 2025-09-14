@@ -6,12 +6,12 @@ server:
 database:
   type: "mongodb"
   mongodb:
-    uri: "mongodb://localhost:27017"
+    uri: "mongodb://mongo:27017"  # Изменено с localhost на mongo
     database: "logistics"
 
 kafka:
   brokers:
-    - "localhost:9092"
+    - "kafka:29092"  # Изменено с localhost на kafka
   ptopics:
     - "payment-events"
     - "telegram-notifications"
