@@ -26,4 +26,4 @@ go.work.sum
 /bin/
 
 # private
-/telegram/configs/config.yaml
+/telegram/configs/config_real.yaml

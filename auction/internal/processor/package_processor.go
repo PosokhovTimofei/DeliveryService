@@ -15,10 +15,10 @@ import (
 type PackageProcessor struct {
 	log      *logrus.Logger
 	repo     repository.Packager
-	producer *kafka.AuctionPublisher
+	producer kafka.AucPublisher
 }
 
-func NewPackageProcessor(logger *logrus.Logger, repo repository.Packager, producer *kafka.AuctionPublisher) *PackageProcessor {
+func NewPackageProcessor(logger *logrus.Logger, repo repository.Packager, producer kafka.AucPublisher) *PackageProcessor {
 	return &PackageProcessor{
 		log:      logger,
 		repo:     repo,

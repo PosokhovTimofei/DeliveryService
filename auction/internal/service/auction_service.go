@@ -23,21 +23,24 @@ type AuctionServicer interface {
 	StartWaitingAuctions(ctx context.Context) error
 	RepeatFailedAuctions(ctx context.Context) error
 	DetermineWinner(ctx context.Context, packageID string) (*models.Bid, error)
+	SetAuctionDuration(duration time.Duration)
 }
 
 type AuctionService struct {
-	bidRepo     repository.Bidder
-	packageRepo repository.Packager
-	producer    *kafka.AuctionPublisher
-	logger      *logrus.Logger
+	bidRepo         repository.Bidder
+	packageRepo     repository.Packager
+	producer        kafka.AucPublisher
+	logger          *logrus.Logger
+	auctionDuration time.Duration
 }
 
-func NewAuctionService(bidRepo repository.Bidder, packageRepo repository.Packager, producer *kafka.AuctionPublisher, logger *logrus.Logger) *AuctionService {
+func NewAuctionService(bidRepo repository.Bidder, packageRepo repository.Packager, producer kafka.AucPublisher, logger *logrus.Logger) *AuctionService {
 	return &AuctionService{
-		bidRepo:     bidRepo,
-		packageRepo: packageRepo,
-		producer:    producer,
-		logger:      logger,
+		bidRepo:         bidRepo,
+		packageRepo:     packageRepo,
+		producer:        producer,
+		logger:          logger,
+		auctionDuration: 2 * time.Minute,
 	}
 }
 
@@ -51,7 +54,7 @@ func (s *AuctionService) PlaceBid(ctx context.Context, bid *models.Bid) error {
 		metrics.BidErrorsTotal.WithLabelValues("auction_not_active").Inc()
 		return errors.New("auction not active")
 	}
-	if time.Now().After(pkg.UpdatedAt.Add(2 * time.Minute)) {
+	if time.Now().After(pkg.UpdatedAt.Add(s.auctionDuration)) {
 		metrics.BidErrorsTotal.WithLabelValues("auction_ended").Inc()
 		return errors.New("auction ended")
 	}
@@ -93,7 +96,7 @@ func (s *AuctionService) StartWaitingAuctions(ctx context.Context) error {
 		return err
 	}
 	for _, p := range pkgs {
-		StartAuction(p, s, s.producer, s.packageRepo, s.logger)
+		StartAuction(p, s, s.producer, s.packageRepo, s.logger, s.auctionDuration)
 	}
 	return nil
 }
@@ -104,11 +107,15 @@ func (s *AuctionService) RepeatFailedAuctions(ctx context.Context) error {
 		return err
 	}
 	for _, p := range pkgs {
-		StartAuction(p, s, s.producer, s.packageRepo, s.logger)
+		StartAuction(p, s, s.producer, s.packageRepo, s.logger, s.auctionDuration)
 	}
 	return nil
 }
 
 func (s *AuctionService) DetermineWinner(ctx context.Context, packageID string) (*models.Bid, error) {
 	return s.bidRepo.GetTopBidByPackage(ctx, packageID)
+}
+
+func (s *AuctionService) SetAuctionDuration(duration time.Duration) {
+	s.auctionDuration = duration
 }

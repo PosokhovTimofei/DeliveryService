@@ -12,13 +12,20 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+type AucPublisher interface {
+	PublishPayment(ctx context.Context, result *models.AuctionResult) error
+	PublishNotification(ctx context.Context, note *models.Notification) error
+	PublishDeliveryInit(ctx context.Context, init *models.DeliveryInit) error
+	Close() error
+}
+
 type AuctionPublisher struct {
 	producer sarama.SyncProducer
 	topics   []string
 	log      *logrus.Logger
 }
 
-func NewAuctionPublisher(brokers []string, topic []string, log *logrus.Logger) (*AuctionPublisher, error) {
+func NewAuctionPublisher(brokers []string, topic []string, log *logrus.Logger) (AucPublisher, error) {
 	config := sarama.NewConfig()
 	config.Producer.Return.Successes = true
 	config.Producer.RequiredAcks = sarama.WaitForAll

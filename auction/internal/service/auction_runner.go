@@ -15,14 +15,15 @@ import (
 func StartAuction(
 	pkg *models.Package,
 	auctionSvc *AuctionService,
-	producer *kafka.AuctionPublisher,
+	producer kafka.AucPublisher,
 	repo repository.Packager,
 	log *logrus.Logger,
+	auctionDuration time.Duration,
 ) {
 	go func() {
 		metrics.AuctionStartedTotal.Inc()
 
-		timer := time.NewTimer(2 * time.Minute)
+		timer := time.NewTimer(auctionDuration)
 		defer timer.Stop()
 
 		pkg.Status = "Auctioning"
