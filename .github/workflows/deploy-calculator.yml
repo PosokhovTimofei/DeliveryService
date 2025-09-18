@@ -1,0 +1,43 @@
+name: CI/CD Calculator
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Log in to Yandex Container Registry
+      uses: docker/login-action@v2
+      with:
+        registry: cr.yandex
+        username: ${{ secrets.YC_SERVICE_ACCOUNT_ID }}
+        password: ${{ secrets.YC_KEY }}
+
+    - name: Build Docker image
+      run: |
+        docker build -t cr.yandex/<folder>/<image>:latest ./calculator
+
+    - name: Push Docker image
+      run: |
+        docker push cr.yandex/<folder>/<image>:latest
+
+    - name: Deploy to Yandex Serverless Container
+      run: |
+        yc serverless container revision create \
+          --container-name calculator \
+          --image cr.yandex/<folder>/<image>:latest \
+          --memory 256m \
+          --execution-timeout 30s \
+          --concurrency 1
