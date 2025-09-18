@@ -13,12 +13,16 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
+    - name: Install YC CLI
+      run: |
+        curl https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
+        export PATH=$PATH:$HOME/bin
+
     - name: Log in to Yandex Container Registry
-      uses: docker/login-action@v2
-      with:
-        registry: cr.yandex
-        username: iam
-        password: ${{ secrets.YC_KEY }}
+      run: |
+        echo "${{ secrets.YC_KEY }}" > key.json
+        IAM_TOKEN=$(yc iam create-token --key key.json)
+        echo $IAM_TOKEN | docker login cr.yandex --username iam --password-stdin
 
     - name: Build Docker image
       run: |
@@ -26,17 +30,14 @@ jobs:
 
     - name: Push Docker image
       run: |
-        docker push cr.yandex/<folder>/<image>:latest
+        docker push cr.yandex/my-registry/calculator:latest
 
     - name: Deploy to Yandex Serverless Container
-      env:
-        YC_KEY: ${{ secrets.YC_KEY }}
       run: |
-        echo "$YC_KEY" > yc_key.json
-        yc config set token "$(jq -r .iam_token yc_key.json)"
+        echo "${{ secrets.YC_KEY }}" > key.json
         yc serverless container revision create \
           --container-name calculator \
-          --image cr.yandex/<folder>/<image>:latest \
+          --image cr.yandex/my-registry/calculator:latest \
           --memory 256m \
           --execution-timeout 30s \
           --concurrency 1
