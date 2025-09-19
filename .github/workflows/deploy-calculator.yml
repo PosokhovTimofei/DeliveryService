@@ -18,9 +18,19 @@ jobs:
         curl https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
         echo "$HOME/yandex-cloud/bin" >> $GITHUB_PATH
 
-    - name: Log in to Yandex Container Registry
+    - name: Configure YC CLI
       run: |
         echo '${{ secrets.YC_KEY }}' > key.json
+        yc config set service-account-key key.json
+        yc config set folder-id b1gvah34lgscqb451gl4
+
+    - name: Verify YC configuration
+      run: |
+        yc config list
+        yc iam whoami
+
+    - name: Log in to Yandex Container Registry
+      run: |
         cat key.json | docker login --username json_key --password-stdin cr.yandex
 
     - name: Build Docker image
@@ -31,6 +41,15 @@ jobs:
       run: |
         docker push cr.yandex/crppuidkaulklqnfg8l7/calculator:latest
 
+    - name: Check if container exists
+      run: |
+        if ! yc serverless container get --name calculator 2>/dev/null; then
+          echo "Container does not exist, creating..."
+          yc serverless container create --name calculator
+        else
+          echo "Container already exists"
+        fi
+
     - name: Deploy to Yandex Serverless Container
       run: |
         yc serverless container revision deploy \
@@ -39,3 +58,7 @@ jobs:
           --memory 256m \
           --execution-timeout 30s \
           --concurrency 1
+
+    - name: Verify deployment
+      run: |
+        yc serverless container revision list --container-name calculator
