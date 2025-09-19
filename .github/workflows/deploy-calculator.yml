@@ -20,12 +20,12 @@ jobs:
 
     - name: Log in to Yandex Container Registry
       run: |
-        echo '${{ secrets.YC_KEY }}' > key.json
+        echo "${{ secrets.YC_KEY }}" > key.json
         cat key.json | docker login --username json_key --password-stdin cr.yandex
 
     - name: Build Docker image
       run: |
-        docker build -t cr.yandex/my-registry/calculator:latest ./calculator
+        docker build -t cr.yandex/my-registry/calculator:latest ./ -f ./calculator/Dockerfile
 
     - name: Push Docker image
       run: |
