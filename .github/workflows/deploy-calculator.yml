@@ -10,35 +10,33 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
-      - name: Install YC CLI
-        run: |
-          curl https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
-          echo "$HOME/yandex-cloud/bin" >> $GITHUB_PATH
+    - name: Install YC CLI
+      run: |
+        curl https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
+        echo "$HOME/yandex-cloud/bin" >> $GITHUB_PATH
 
-      - name: Log in to Yandex Container Registry
-  run: |
-    echo '${{ secrets.YC_KEY }}' > key.json
-    IAM_TOKEN=$(yc iam key create-token --key-file key.json)
-    echo $IAM_TOKEN | docker login cr.yandex --username iam --password-stdin
+    - name: Log in to Yandex Container Registry
+      run: |
+        echo '${{ secrets.YC_KEY }}' > key.json
+        IAM_TOKEN=$(yc iam key create-token --key-file key.json)
+        echo $IAM_TOKEN | docker login cr.yandex --username iam --password-stdin
 
+    - name: Build Docker image
+      run: |
+        docker build -t cr.yandex/my-registry/calculator:latest ./calculator
 
-      - name: Build Docker image
-        run: |
-          docker build -t cr.yandex/my-registry/calculator:latest ./calculator
+    - name: Push Docker image
+      run: |
+        docker push cr.yandex/my-registry/calculator:latest
 
-      - name: Push Docker image
-        run: |
-          docker push cr.yandex/my-registry/calculator:latest
-
-      - name: Deploy to Yandex Serverless Container
-        run: |
-          echo '${{ secrets.YC_KEY }}' > key.json
-          yc serverless container revision create \
-            --container-name calculator \
-            --image cr.yandex/my-registry/calculator:latest \
-            --memory 256m \
-            --execution-timeout 30s \
-            --concurrency 1
+    - name: Deploy to Yandex Serverless Container
+      run: |
+        yc serverless container revision create \
+          --container-name calculator \
+          --image cr.yandex/my-registry/calculator:latest \
+          --memory 256m \
+          --execution-timeout 30s \
+          --concurrency 1
