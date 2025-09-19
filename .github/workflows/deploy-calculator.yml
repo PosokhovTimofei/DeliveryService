@@ -37,17 +37,17 @@ jobs:
 
     - name: Build Docker image
       run: |
-        docker build -t cr.yandex/crppuidkaulklqnfg8l7/calculator:latest ./ -f ./calculator/Dockerfile
+        docker build -t cr.yandex/aje0tavll0u90r918av5/calculator:latest ./ -f ./calculator/Dockerfile
 
     - name: Push Docker image
       run: |
-        docker push cr.yandex/crppuidkaulklqnfg8l7/calculator:latest
+        docker push cr.yandex/aje0tavll0u90r918av5/calculator:latest
 
     - name: Try to deploy
       run: |
         yc serverless container revision deploy \
           --container-name calculator \
-          --image cr.yandex/crppuidkaulklqnfg8l7/calculator:latest \
+          --image cr.yandex/aje0tavll0u90r918av5/calculator:latest \
           --memory 256m \
           --execution-timeout 30s \
           --concurrency 1
