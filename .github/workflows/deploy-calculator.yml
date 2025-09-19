@@ -25,17 +25,17 @@ jobs:
 
     - name: Build Docker image
       run: |
-        docker build -t cr.yandex/my-registry/calculator:latest ./ -f ./calculator/Dockerfile
+        docker build -t cr.yandex/delivery/calculator:latest ./ -f ./calculator/Dockerfile
 
     - name: Push Docker image
       run: |
-        docker push cr.yandex/my-registry/calculator:latest
+        docker push cr.yandex/delivery/calculator:latest
 
     - name: Deploy to Yandex Serverless Container
       run: |
         yc serverless container revision create \
           --container-name calculator \
-          --image cr.yandex/my-registry/calculator:latest \
+          --image cr.yandex/delivery/calculator:latest \
           --memory 256m \
           --execution-timeout 30s \
           --concurrency 1
