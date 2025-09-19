@@ -21,7 +21,7 @@ jobs:
     - name: Log in to Yandex Container Registry
       run: |
         echo '${{ secrets.YC_KEY }}' > key.json
-        IAM_TOKEN=$(yc iam key create-token --key-file key.json)
+        IAM_TOKEN=$(yc iam create-token --key key.json)
         echo $IAM_TOKEN | docker login cr.yandex --username iam --password-stdin
 
     - name: Build Docker image
