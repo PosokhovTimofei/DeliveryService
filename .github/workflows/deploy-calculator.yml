@@ -45,7 +45,3 @@ jobs:
           --execution-timeout 30s \
           --concurrency 1 \
           --service-account-id aje0tavll0u90r918av5
-
-    - name: Verify deployment
-      run: |
-        yc serverless container revision list --container-name calculator
