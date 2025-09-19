@@ -20,11 +20,20 @@ jobs:
 
     - name: Configure YC CLI with delivery service account
       run: |
-        # Создаем ключ для сервисного аккаунта delivery (если его нет)
-        # Или используем существующий ключ
         echo '${{ secrets.YC_KEY }}' > key.json
         yc config set service-account-key key.json
         yc config set folder-id b1gvah34lgscqb451gl4
+
+    - name: Debug Service Account Info
+      run: |
+        echo "=== Service Account ID from key.json ==="
+        cat key.json | jq -r '.service_account_id'
+        
+        echo "=== Current YC CLI configuration ==="
+        yc config list
+        
+        echo "=== Whoami ==="
+        yc iam whoami
 
     - name: Verify YC configuration
       run: |
