@@ -18,27 +18,11 @@ jobs:
         curl https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
         echo "$HOME/yandex-cloud/bin" >> $GITHUB_PATH
 
-    - name: Configure YC CLI with delivery service account
+    - name: Configure YC CLI
       run: |
         echo '${{ secrets.YC_KEY }}' > key.json
         yc config set service-account-key key.json
         yc config set folder-id b1gvah34lgscqb451gl4
-
-    - name: Debug Service Account Info
-      run: |
-        echo "=== Service Account ID from key.json ==="
-        cat key.json | jq -r '.service_account_id'
-        
-        echo "=== Current YC CLI configuration ==="
-        yc config list
-        
-        echo "=== Whoami ==="
-        yc iam whoami
-
-    - name: Verify YC configuration
-      run: |
-        yc config list
-        yc iam whoami
 
     - name: Log in to Yandex Container Registry
       run: |
@@ -52,14 +36,15 @@ jobs:
       run: |
         docker push cr.yandex/crppuidkaulklqnfg8l7/calculator:latest
 
-    - name: Try to deploy
+    - name: Deploy to Yandex Serverless Container
       run: |
         yc serverless container revision deploy \
           --container-name calculator \
           --image cr.yandex/crppuidkaulklqnfg8l7/calculator:latest \
           --memory 256m \
           --execution-timeout 30s \
-          --concurrency 1
+          --concurrency 1 \
+          --service-account-id aje0tavll0u90r918av5
 
     - name: Verify deployment
       run: |
