@@ -33,7 +33,7 @@ jobs:
 
     - name: Deploy to Yandex Serverless Container
       run: |
-        yc serverless container revision create \
+        yc serverless container revision deploy \
           --container-name calculator \
           --image cr.yandex/crppuidkaulklqnfg8l7/calculator:latest \
           --memory 256m \
